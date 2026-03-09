@@ -8,7 +8,7 @@
 
 ## Summary
 
-単一ページとフラットなテキストブロック集合を最小のドメイン境界として定義し，React 19 + Tauri 2 + Rust 2024 で，ローカル専用の自動保存付きエディタを構成する。保存は 1 ページ集約のスナップショットを SQLite にトランザクション保存し，成功済み状態だけをバックアップ側ファイルへ複製することで，保存失敗時は最後の整合済み状態を維持しつつ，画面上の未保存編集をセッション内に保持する，
+単一ページとフラットなテキストブロック集合を最小のドメイン境界として定義し，React 19 + Tauri 2 + Rust 2024 で，ローカル専用の自動保存付きエディタを構成する。並び替えは明示的な move-up / move-down 操作に限定し，保存は 1 ページ集約のスナップショットを SQLite にトランザクション保存し，成功済み状態だけをバックアップ側ファイルへ複製することで，保存失敗時は最後の整合済み状態を維持しつつ，画面上の未保存編集をセッション内に保持する，
 
 ## Technical Context
 
@@ -27,8 +27,9 @@
 **Testing**: `cargo test`，`cargo clippy`，`cargo doc --no-deps`，`pnpm test`，`pnpm lint`，`pnpm playwright test`
 **Target Platform**: デスクトップアプリ。Windows を優先対象とし，Linux と macOS は同一保存モデルでのスモーク確認を行う
 **Project Type**: desktop-app
-**Performance Goals**: 保存済み 200 ブロックの起動復元を 1 秒以内に知覚可能，ブロック追加と並び替え反映を 1 秒以内，タイトルと本文編集は入力停止後 500ms 以内に保存開始
-**Constraints**: 完全オフライン，単一ページのみ，ブロック削除なし，外部通信なし，`unsafe` と `unwrap()` と `expect()` と `panic!()` 禁止
+**Performance Baseline Machine**: Windows 11 x86_64，4 物理コア以上，16GB RAM 以上，SSD 搭載，release build 実行環境
+**Performance Goals**: release build を標準開発機で 3 回計測した中央値で，保存済み 200 ブロックの起動復元，ブロック追加反映，並び替え反映をそれぞれ 1 秒以内，タイトルと本文編集は入力停止後 500ms 以内に保存開始し，30 秒間の連続入力検証で入力欠落 0 件
+**Constraints**: 完全オフライン，単一ページのみ，ブロック削除なし，並び替えは明示的な move-up / move-down 操作に限定，drag-and-drop なし，外部通信なし，`unsafe` と `unwrap()` と `expect()` と `panic!()` と `unreachable!()` 禁止
 **Scale/Scope**: 常時管理ページ 1 件，ブロック 0-200 件，単一ユーザー，単一ウィンドウ
 
 ## Constitution Check
@@ -40,8 +41,8 @@
 - **Local-First Product Integrity**: すべての保存はローカル SQLite に限定し，ページ集約の保存を 1 トランザクションで完了させる。コミット成功後のみ `notes.sqlite3.bak` を更新し，保存失敗時は最後の整合済み状態を保持する。起動時に読取不能または形式不正が検出された場合は，失敗通知を返したうえで破損ファイルを隔離し，新しい空ページを生成して継続する，
 - **Domain-Faithful Information Model**: 本 increment の実体は page と block のみとし，database，view，property は将来の語彙として予約し，ページ属性や巨大テキストへ折り畳まない。ブロックは単一ページ配下のフラットな順序付き集合として扱う，
 - **Typed Boundaries and Bounded Contexts**: Rust 側は `domain::page_block` 集約，`application::page_block` ユースケース，`infrastructure::sqlite` 永続化，`ipc::page_block` コマンド境界に分割する。TypeScript 側は `PageSnapshotDto`，`BlockDto`，`EditorSessionState`，`PersistPageSnapshotRequest` を Rust の `serde` DTO と 1 対 1 対応させる。ストレージ変更は `pages` と `blocks` と `save_metadata` の初回マイグレーションを追加する，
-- **Test-First Delivery and Quality Gates**: 実装前に，初回起動で空ページ生成，ブロック追加，500ms 自動保存，並び替え保存，再起動復元，保存失敗時の未保存保持，保存失敗後リトライ，破損データ起動回復の失敗テストを先に作る。品質ゲートは `cargo fmt --all`，`cargo clippy`，`cargo test`，`cargo doc --no-deps`，`pnpm lint`，`pnpm test`，`pnpm playwright test` とする，
-- **Safe Rust and Maintainability First**: `unsafe` と強制アンラップ系は使わず，すべての永続化失敗を `Result` と明示的なエラー DTO で返す。公開 Rust API と IPC で共有される型には `///` ドキュメントコメントを付与し，エラー条件を記述する，
+- **Test-First Delivery and Quality Gates**: 実装前に，初回起動で空ページ生成，ブロック追加，FR-007a / FR-007b に対応する自動保存，move-up / move-down による並び替え保存，再起動復元，保存失敗時の未保存保持，保存失敗後リトライ，破損データ起動回復，ブロック削除非搭載回帰，200 ブロック性能計測の失敗テストまたは実行可能検証を先に作る。品質ゲートは `cargo fmt --all`，`cargo clippy`，`cargo test`，`cargo doc --no-deps`，`pnpm lint`，`pnpm test`，`pnpm playwright test` とする，
+- **Safe Rust and Maintainability First**: `unsafe` と `unwrap()` と `expect()` と `panic!()` と `unreachable!()` は使わず，すべての永続化失敗を `Result` と明示的なエラー DTO で返す。公開 Rust API と IPC で共有される型には英語の `///` ドキュメントコメントを付与し，エラー条件を記述する，
 
 ## Project Structure
 

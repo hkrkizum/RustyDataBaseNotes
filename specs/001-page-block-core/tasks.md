@@ -38,7 +38,7 @@ description: "Task list for Page Block Core implementation"
 - [ ] T006 [P] Implement app-local-data path resolution and backup file helpers in `src-tauri/src/infrastructure/sqlite/paths.rs` and `src-tauri/src/infrastructure/sqlite/recovery.rs`
 - [ ] T007 [P] Implement page aggregate validation and domain errors in `src-tauri/src/domain/page_block/mod.rs` and `src-tauri/src/domain/page_block/errors.rs`
 - [ ] T008 [P] Lock down offline-only desktop capabilities in `src-tauri/capabilities/default.json` and `src-tauri/tauri.conf.json`
-- [ ] T009 Add module-level bounded-context and `///` API documentation in `src-tauri/src/application/page_block/mod.rs` and `src-tauri/src/domain/page_block/mod.rs`
+- [ ] T009 Add module-level bounded-context and English `///` API documentation in `src-tauri/src/application/page_block/mod.rs` and `src-tauri/src/domain/page_block/mod.rs`
 
 **Checkpoint**: SQLite schema，typed IPC，domain invariants，and offline boundaries are ready。
 
@@ -63,7 +63,7 @@ description: "Task list for Page Block Core implementation"
 - [ ] T015 [US1] Implement initial load，auto-create-empty-page，and persist use cases in `src-tauri/src/application/page_block/service.rs`
 - [ ] T016 [US1] Implement SQLite page snapshot repository for page create，block append，and text edits in `src-tauri/src/infrastructure/sqlite/page_store.rs`
 - [ ] T017 [US1] Wire the feature into the desktop shell in `src/app/App.tsx` and `src-tauri/src/main.rs`
-- [ ] T018 [US1] Add `///` docs and user-facing save status copy for empty-title fallback and autosave states in `src-tauri/src/ipc/page_block.rs` and `src/features/page-block-core/saveStatus.ts`
+- [ ] T018 [US1] Add English `///` docs and user-facing save status copy for empty-title fallback and autosave states in `src-tauri/src/ipc/page_block.rs` and `src/features/page-block-core/saveStatus.ts`
 - [ ] T019 [US1] Record US1 QA steps and outcomes in `specs/001-page-block-core/quickstart.md`
 
 **Parallel Example**: `T012` と `T014` は並列実行できる。その後に `T013` と `T015` を進め，最後に `T016`，`T017`，`T018` を統合する。
@@ -74,9 +74,9 @@ description: "Task list for Page Block Core implementation"
 
 ## Phase 4: User Story 2 - ブロック順序を整える (Priority: P2)
 
-**Goal**: 同一 page 内で block を並び替え，表示順と保存順を一致させる。
+**Goal**: 同一 page 内で move-up / move-down 操作により block を並び替え，表示順と保存順を一致させる。
 
-**Independent Test**: 5 個以上の block を持つ page で 1 件を別位置へ移動し，再起動後も同じ順序が復元されることを確認する。
+**Independent Test**: 5 個以上の block を持つ page で 1 件を上へ移動または下へ移動し，再起動後も同じ順序が復元されることを確認する。
 
 ### Tests for User Story 2
 
@@ -85,7 +85,7 @@ description: "Task list for Page Block Core implementation"
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Implement reorder helpers and optimistic ordering updates in `src/features/page-block-core/reorderBlocks.ts` and `src/features/page-block-core/PageEditor.tsx`
+- [ ] T022 [P] [US2] Implement move-up / move-down reorder controls and optimistic ordering updates in `src/features/page-block-core/reorderBlocks.ts` and `src/features/page-block-core/PageEditor.tsx`
 - [ ] T023 [P] [US2] Extend page aggregate reorder validation and application logic in `src-tauri/src/domain/page_block/mod.rs` and `src-tauri/src/application/page_block/service.rs`
 - [ ] T024 [US2] Persist contiguous block positions atomically during reorder in `src-tauri/src/infrastructure/sqlite/page_store.rs`
 - [ ] T025 [US2] Handle the `block_reordered` trigger in `src/lib/page-block-core/contracts.ts` and `src-tauri/src/ipc/page_block.rs`
@@ -113,8 +113,8 @@ description: "Task list for Page Block Core implementation"
 - [ ] T029 [P] [US3] Implement recovery notice，dirty banner，and retry-save UI state in `src/features/page-block-core/recoveryNotice.ts` and `src/features/page-block-core/PageEditor.tsx`
 - [ ] T030 [P] [US3] Extend editor orchestration for restart restore，failed-save retention，and retry scheduling in `src/features/page-block-core/usePageEditor.ts`
 - [ ] T031 [P] [US3] Implement backup copy，corruption isolation，and last-consistent-state recovery in `src-tauri/src/infrastructure/sqlite/recovery.rs` and `src-tauri/src/infrastructure/sqlite/page_store.rs`
-- [ ] T032 [US3] Implement startup fallback，revision conflict handling，and retryable persistence errors in `src-tauri/src/application/page_block/service.rs` and `src-tauri/src/ipc/page_block.rs`
-- [ ] T033 [US3] Add `///` docs and user-facing recovery error copy in `src-tauri/src/ipc/page_block.rs` and `src/features/page-block-core/saveStatus.ts`
+- [ ] T032 [US3] Implement startup fallback and retryable persistence errors in `src-tauri/src/application/page_block/service.rs` and `src-tauri/src/ipc/page_block.rs`
+- [ ] T033 [US3] Add English `///` docs and user-facing recovery error copy in `src-tauri/src/ipc/page_block.rs` and `src/features/page-block-core/saveStatus.ts`
 - [ ] T034 [US3] Record US3 restart，failure，retry，and corruption QA outcomes in `specs/001-page-block-core/quickstart.md`
 
 **Parallel Example**: `T027` と `T028` を並列で起こし，`T029` と `T031` を別レイヤーで並列実装できる。`T030` と `T032` は統合点として後続に置く。
@@ -129,9 +129,11 @@ description: "Task list for Page Block Core implementation"
 
 - [ ] T035 [P] Update developer run instructions and local-first guarantees in `README.md`
 - [ ] T036 Simplify temporary scaffolding and tighten exports in `src/features/page-block-core/index.ts` and `src-tauri/src/application/page_block/mod.rs`
-- [ ] T037 Verify the 200-block performance target and document the measurements in `specs/001-page-block-core/quickstart.md`
+- [ ] T037 Verify the 200-block performance target on the baseline machine defined in `specs/001-page-block-core/plan.md` using release build with 3-run median measurements for startup restore，block append，and reorder reflect time，plus a 30-second continuous typing check with zero dropped input，and document the results in `specs/001-page-block-core/quickstart.md`
 - [ ] T038 [P] Add cross-story migration，backup，and end-to-end regression coverage in `tests/e2e/page-block-core.spec.ts` and `src-tauri/tests/page_block_core_migration.rs`
 - [ ] T039 Run full QA and record the command results in `specs/001-page-block-core/quickstart.md`
+- [ ] T040 [P] Add regression coverage asserting no block-delete control is rendered in `src/features/page-block-core/PageEditor.test.tsx` and `tests/e2e/page-block-core.spec.ts`
+- [ ] T041 [P] Verify no block-delete invoke contract or IPC command is exposed in `src/lib/page-block-core/contracts.ts` and `src-tauri/src/ipc/page_block.rs`
 
 ---
 
@@ -164,7 +166,7 @@ description: "Task list for Page Block Core implementation"
 - US1 では `T010`，`T011`，`T012`，`T014` が契約固定後に並列候補。
 - US2 では `T020` と `T021`，`T022` と `T023` が並列候補。
 - US3 では `T027` と `T028`，`T029` と `T031` が並列候補。
-- Polish では `T035` と `T038` が並列候補。
+- Polish では `T035`，`T038`，`T040`，`T041` が並列候補。
 
 ---
 
@@ -189,5 +191,6 @@ description: "Task list for Page Block Core implementation"
 
 - すべてのタスクは checklist 形式，Task ID，必要な `[P]`，必要な `[USn]`，exact file path を含む。
 - テストを optional として扱わない。
-- `unsafe`，`unwrap()`，`expect()`，`panic!()` を導入するタスクは作らない。
+- `unsafe`，`unwrap()`，`expect()`，`panic!()`，`unreachable!()` を導入するタスクは作らない。
+- Rust の公開 `///` ドキュメントコメントは英語で記述する。
 - backup，migration，recovery を polish へ先送りせず，story 完了条件に含める。

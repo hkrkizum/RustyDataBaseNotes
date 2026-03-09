@@ -56,12 +56,12 @@
 
 **Why this priority**: ブロックが単なる配列ではなく，順序を持つ編集対象であることを早期に確定するため。
 
-**Independent Test**: 5 個以上のブロックを持つページで並び替えを行い，表示順と保存対象の順序が一致すれば
+**Independent Test**: 5 個以上のブロックを持つページで上へ移動または下へ移動操作による並び替えを行い，表示順と保存対象の順序が一致すれば
 検証できる。
 
 **Acceptance Scenarios**:
 
-1. **Given** 複数のテキストブロックを持つページがある，**When** ユーザーが 1 つのブロックを別位置へ移動する，
+1. **Given** 複数のテキストブロックを持つページがある，**When** ユーザーが 1 つのブロックに対して上へ移動または下へ移動操作を行う，
    **Then** ページ内のブロック順序が更新され，重複や欠落が発生しない。
 2. **Given** ブロック順序を変更したページがある，**When** ユーザーが続けて別のブロックを追加する，
    **Then** 新しいブロックは更新後の順序体系に従って配置される。
@@ -120,6 +120,7 @@
 - **FR-005**: System MUST preserve an explicit order for blocks within a page.
 - **FR-005a**: System MUST model blocks in this increment as a single flat ordered list within one page.
 - **FR-006**: System MUST allow the user to reorder blocks within the same page without losing content or duplicating blocks.
+- **FR-006a**: System MUST provide block reordering in this increment via explicit move-up and move-down actions and MUST NOT require drag-and-drop UI.
 - **FR-007**: System MUST persist the page title, block content, block identifiers, and block order to local storage.
 - **FR-007a**: System MUST automatically save the page after page creation, block addition, and block reorder completion.
 - **FR-007b**: System MUST automatically save the page after page title edits and block content edits once input has paused for 500ms.
@@ -146,13 +147,12 @@
 
 - **CC-001 Data Integrity**: ページ作成，ブロック追加，ブロック並び替え，保存は，ユーザーから見て
   常に整合した状態として完了または失敗しなければならない。
-- **CC-001a Data Integrity**: 保存は明示操作に依存せず，各変更操作の完了時点で自動的に成立しなければならない。
-- **CC-001b Data Integrity**: ページタイトル編集とブロック本文編集も，他の変更操作と同様に，入力停止から 500ms 経過時点で自動保存対象にならなければならない。
+- **CC-001a Data Integrity**: 自動保存の適用契機は FR-007a および FR-007b を正本とし，実装はそれらの契機ごとに整合済み状態または明示的な失敗のいずれかだけをユーザーへ観測させなければならない。
+- **CC-001b Data Integrity**: FR-007a および FR-007b で定義した自動保存契機は，ページとブロックの部分更新を露出させず，最後の整合済み保存状態を常に保全しなければならない。
 - **CC-002 Privacy**: 本機能はローカル環境のみで完結し，アカウント作成，通信許可，外部サービス接続を
   必須にしてはならない。
-- **CC-003 Performance**: 単一ページに 200 個のテキストブロックがある状態でも，ページ再表示，
-  ブロック追加，並び替え結果の反映は 1 秒以内に知覚できることを目標とする。
-- **CC-003a Performance**: ページタイトル編集とブロック本文編集の自動保存は，入力停止から 500ms 以内に保存開始され，通常利用時に入力体験を阻害しないことを目標とする。
+- **CC-003 Performance**: 単一ページに 200 個のテキストブロックがある状態で，release build を標準開発機で 3 回計測した中央値について，ページ再表示完了，ブロック追加反映，並び替え結果の反映がそれぞれ 1 秒以内であること。
+- **CC-003a Performance**: ページタイトル編集とブロック本文編集の自動保存は，入力停止から 500ms 以内に保存開始され，30 秒間の連続入力検証で入力欠落が 0 件であること。
 - **CC-004 Boundary Types**: ページとブロックの作成，更新，再読み込みで受け渡すデータは，タイトル，
   本文，識別子，順序といった明示的な項目を持ち，曖昧な巨大テキスト 1 件へ折り畳まれてはならない。
 - **CC-005 Testability**: 各ユーザーストーリーは，作成，追加，並び替え，再起動復元，保存失敗時の保全を
@@ -171,6 +171,7 @@
 - 起動時に自動生成される空ページは，ブロックを含まない初期状態で表示される。
 - テキストブロックはプレーンテキストのみを対象とし，画像，チェックボックス，データベース行は含めない。
 - ブロック配置は単一ページ内のフラットな順序列のみを扱い，ネスト構造は扱わない。
+- 性能計測に用いる標準開発機は，Windows 11 x86_64，4 物理コア以上，16GB RAM 以上，SSD 搭載，release build 実行環境とする。
 
 ## Dependencies
 
@@ -196,7 +197,8 @@
 - **SC-002**: 20 回連続の保存と再起動の確認で，ページタイトル，ブロック内容，ブロック順序が毎回一致する。
 - **SC-002a**: ページタイトル編集とブロック本文編集をそれぞれ 20 回連続で保存確認しても，最新の編集内容が再起動後に毎回一致する。
 - **SC-002b**: ページタイトル編集とブロック本文編集の各操作で，入力停止から 500ms 後に自動保存が開始されることを 20 回連続で確認できる。
-- **SC-003**: 200 個のテキストブロックを含むページでも，ブロック追加または並び替えの結果が 1 秒以内に確認できる。
+- **SC-003**: 200 個のテキストブロックを含むページについて，release build を標準開発機で 3 回計測した中央値で，起動復元完了，ブロック追加反映，並び替え結果反映がそれぞれ 1 秒以内である。
+- **SC-003a**: ページタイトル編集とブロック本文編集の各操作について，30 秒間の連続入力検証で入力欠落が 0 件であり，入力停止後 500ms 以内に自動保存が開始される。
 - **SC-004**: 保存不能な状況を再現した確認で，既存の保存済み内容が失われず，ユーザーが失敗を認識できる案内が毎回表示される。
 - **SC-005**: 保存不能な状況を再現した確認で，画面上の未保存編集が維持され，再試行前に消失しないことが毎回確認できる。
 - **SC-006**: 保存失敗後に未保存編集を残したまま再起動しても，最後の整合済み保存状態のみが毎回復元され，失敗時の未保存編集は復元されない。
