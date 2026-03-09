@@ -5,11 +5,22 @@
 **Status**: Draft
 **Input**: User description: "単一ページ，テキストブロック，永続化を対象とした最小ドメインモデルを定義する"
 
+## Clarifications
+
+### Session 2026-03-10
+
+- Q: 保存はどの契機で成立するか。→ A: ページ作成，ブロック追加，並び替えのたびに自動保存する。
+- Q: ブロック構造はどこまで持つか。→ A: ブロックは同一ページ内でフラットに並び，親子関係を持たない。
+- Q: タイトルが空のページをどう扱うか。→ A: タイトルは空でもよく，表示時は固定の仮タイトルを使う。
+- Q: この increment で保存対象に含めるページ数はいくつか。→ A: 保存対象は常に 1 ページだけとする。
+- Q: 自動保存に失敗した直後の編集状態をどう扱うか。→ A: 画面上の未保存編集は残し，未保存状態を明示する。
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - ページを作って書き始める (Priority: P1)
 
-ユーザーとして，空のページを 1 つ作成し，そのページ内に複数のテキストブロックを追加したい。
+ユーザーとして，この increment の作業対象である空のページを 1 つ作成し，そのページ内に複数の
+テキストブロックを追加したい。
 これにより，後続の高度な機能が無くても，ノートアプリとして最小限の記述を開始できる。
 
 **Why this priority**: すべての後続機能は，ページとブロックが安定して存在することを前提とするため。
@@ -64,10 +75,12 @@
 
 ### Edge Cases
 
-- ページタイトルが空のまま作成された場合でも，一意なページとして扱い，後から識別可能であること。
+- ページタイトルが空のまま作成された場合でも，一意なページとして扱い，表示時は固定の仮タイトルで識別可能であること。
 - 空文字のテキストブロックを追加した場合でも，順序管理が壊れないこと。
 - 保存処理の途中でアプリが終了しても，部分的にだけ反映された順序や内容が表示されないこと。
 - ローカル保存先へ書き込めない場合，既存データを壊さずに，ユーザーへ再試行可能な失敗を伝えること。
+- ローカル保存先へ書き込めない場合，既存の保存済み状態は壊さず，画面上の未保存編集は保持したまま，
+  未保存状態であることを明示すること。
 - ブロック数が増えても，最小スコープとして想定する通常利用量では編集や再表示に目立つ遅延が出ないこと。
 
 ## Requirements *(mandatory)*
@@ -75,15 +88,20 @@
 ### Functional Requirements
 
 - **FR-001**: System MUST allow the user to create a single page as the primary container for text blocks.
+- **FR-001a**: System MUST limit this increment to exactly one managed page and MUST NOT require page switching or multi-page recovery.
 - **FR-002**: System MUST assign every page a stable unique identifier that remains unchanged across reloads.
+- **FR-002a**: System MUST allow an empty page title and MUST display a fixed fallback title whenever the stored title is empty.
 - **FR-003**: System MUST allow the user to add multiple text blocks to a page.
 - **FR-004**: System MUST assign every block a stable unique identifier and associate it with exactly one page.
 - **FR-005**: System MUST preserve an explicit order for blocks within a page.
+- **FR-005a**: System MUST model blocks in this increment as a single flat ordered list within one page.
 - **FR-006**: System MUST allow the user to reorder blocks within the same page without losing content or duplicating blocks.
 - **FR-007**: System MUST persist the page title, block content, block identifiers, and block order to local storage.
+- **FR-007a**: System MUST automatically save the page after page creation, block addition, and block reorder completion.
 - **FR-008**: System MUST restore the last consistent saved state of the page and its blocks after application restart.
 - **FR-009**: System MUST treat each user action that changes page or block state as all-or-nothing from the user's perspective.
 - **FR-010**: System MUST present a clear failure message when a save cannot be completed and MUST keep the last consistent saved state intact.
+- **FR-010a**: System MUST preserve the user's unsaved on-screen edits after an auto-save failure and MUST clearly indicate that those edits are not yet persisted.
 - **FR-011**: System MUST operate fully offline and MUST NOT require sign-in, cloud sync, or external network access for this feature.
 - **FR-012**: System MUST limit this feature to plain text blocks inside a single page and MUST NOT include databases, multiple views,
   nested pages, or advanced editing behaviors in this increment.
@@ -93,12 +111,13 @@
 - **Page**: ユーザーがノート内容を保持する最上位単位。識別子，タイトル，作成日時，更新日時を持ち，
   配下のブロック集合を管理する。
 - **Block**: ページ内に配置される最小のテキスト要素。識別子，所属ページ識別子，本文，順序位置，
-  作成日時，更新日時を持つ。
+  作成日時，更新日時を持ち，本 increment では親子関係を持たない。
 
 ## Constraints & Compliance *(mandatory)*
 
 - **CC-001 Data Integrity**: ページ作成，ブロック追加，ブロック並び替え，保存は，ユーザーから見て
   常に整合した状態として完了または失敗しなければならない。
+- **CC-001a Data Integrity**: 保存は明示操作に依存せず，各変更操作の完了時点で自動的に成立しなければならない。
 - **CC-002 Privacy**: 本機能はローカル環境のみで完結し，アカウント作成，通信許可，外部サービス接続を
   必須にしてはならない。
 - **CC-003 Performance**: 単一ページに 200 個のテキストブロックがある状態でも，ページ再表示，
@@ -107,12 +126,15 @@
   本文，識別子，順序といった明示的な項目を持ち，曖昧な巨大テキスト 1 件へ折り畳まれてはならない。
 - **CC-005 Testability**: 各ユーザーストーリーは，作成，追加，並び替え，再起動復元，保存失敗時の保全を
   独立に確認できる受け入れ試験を持たなければならない。
+- **CC-005a Testability**: 保存失敗時の確認では，保存済み状態の保全と未保存画面状態の保持が同時に検証できなければならない。
 
 ## Assumptions
 
 - 本機能の利用者は単一ユーザーであり，同時編集や共有は想定しない。
 - 初回スコープでは，1 回の作業対象は単一ページとし，ページ間移動や階層ページは扱わない。
+- 本 increment では，永続化と復元の対象は単一ページのみとし，複数ページの管理は後続段階へ送る。
 - テキストブロックはプレーンテキストのみを対象とし，画像，チェックボックス，データベース行は含めない。
+- ブロック配置は単一ページ内のフラットな順序列のみを扱い，ネスト構造は扱わない。
 
 ## Dependencies
 
@@ -124,6 +146,7 @@
 - データベース機能，リストビュー，ボードビュー，ガントチャート。
 - スラッシュコマンド，ドラッグ＆ドロップ UI，複雑なショートカット編集。
 - ネストされたページ，複数ページ管理，共有，クラウド同期。
+- 親子ブロック，アウトライン折りたたみ，入れ子編集。
 - リッチテキスト装飾，添付ファイル，検索，フィルタ。
 
 ## Success Criteria *(mandatory)*
@@ -134,3 +157,4 @@
 - **SC-002**: 20 回連続の保存と再起動の確認で，ページタイトル，ブロック内容，ブロック順序が毎回一致する。
 - **SC-003**: 200 個のテキストブロックを含むページでも，ブロック追加または並び替えの結果が 1 秒以内に確認できる。
 - **SC-004**: 保存不能な状況を再現した確認で，既存の保存済み内容が失われず，ユーザーが失敗を認識できる案内が毎回表示される。
+- **SC-005**: 保存不能な状況を再現した確認で，画面上の未保存編集が維持され，再試行前に消失しないことが毎回確認できる。
