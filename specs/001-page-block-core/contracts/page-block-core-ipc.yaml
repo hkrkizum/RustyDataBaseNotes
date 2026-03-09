@@ -1,0 +1,145 @@
+contract: page-block-core-ipc
+version: 1
+transport: tauri-invoke
+description: >
+  単一 page 集約の読込と保存だけを IPC 境界に出す。block 追加，本文編集，reorder は
+  フロントエンドのドラフト操作として行い，保存時に完全な snapshot を Rust 側へ渡す。
+
+commands:
+  - name: load_page_core
+    direction: frontend-to-rust
+    description: >
+      最後の整合済み page snapshot を返す。保存データが存在しない場合は空 page を生成する。
+      読取不能または構造不正の場合は通知文付きで新規 page を返す。
+    request: {}
+    response:
+      type: object
+      required:
+        - page
+        - persistedRevision
+        - saveStatus
+      properties:
+        page:
+          $ref: "#/schemas/PageSnapshotDto"
+        persistedRevision:
+          type: integer
+          minimum: 0
+        saveStatus:
+          type: string
+          enum: [clean]
+        recoveryNotice:
+          type: string
+          description: 保存データ回復に失敗して新規 page を生成した場合のみ設定する
+
+  - name: persist_page_snapshot
+    direction: frontend-to-rust
+    description: >
+      フロントエンドが保持する完全な page snapshot を，単一トランザクションで保存する。
+      成功時のみ revision を更新し，副次的にバックアップファイルを更新する。
+    request:
+      type: object
+      required:
+        - expectedPersistedRevision
+        - page
+        - trigger
+      properties:
+        expectedPersistedRevision:
+          type: integer
+          minimum: 0
+        trigger:
+          type: string
+          enum: [page_created, title_idle, block_content_idle, block_added, block_reordered]
+        page:
+          $ref: "#/schemas/PageSnapshotDto"
+    response:
+      type: object
+      required:
+        - persistedRevision
+        - persistedAt
+        - saveStatus
+      properties:
+        persistedRevision:
+          type: integer
+          minimum: 1
+        persistedAt:
+          type: string
+          format: date-time
+        saveStatus:
+          type: string
+          enum: [clean]
+
+errors:
+  - code: PAGE_STORE_UNAVAILABLE
+    message: ローカル保存先へ書き込めない
+    frontend_behavior: 最後の整合済み state を維持しつつ，ドラフトを `save_failed` 状態で保持する
+  - code: PAGE_STORE_CORRUPTED
+    message: 保存データが読めないか構造不正
+    frontend_behavior: 起動時に通知を表示し，新しい空 page を読込む
+  - code: REVISION_CONFLICT
+    message: フロントエンドの保存基準 revision が古い
+    frontend_behavior: 最新 snapshot を再読込し，未保存ドラフトの再適用を判断する
+  - code: VALIDATION_FAILED
+    message: page snapshot が単一 page 制約または block 順序制約に違反している
+    frontend_behavior: エラー通知を出し，保存を中断する
+
+schemas:
+  PageSnapshotDto:
+    type: object
+    required:
+      - id
+      - title
+      - displayTitle
+      - createdAt
+      - updatedAt
+      - lastPersistedRevision
+      - blocks
+    properties:
+      id:
+        type: string
+        format: uuid
+      title:
+        type: string
+      displayTitle:
+        type: string
+        description: title が空のときは `無題`
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+      lastPersistedRevision:
+        type: integer
+        minimum: 0
+      blocks:
+        type: array
+        items:
+          $ref: "#/schemas/BlockDto"
+
+  BlockDto:
+    type: object
+    required:
+      - id
+      - pageId
+      - body
+      - position
+      - createdAt
+      - updatedAt
+    properties:
+      id:
+        type: string
+        format: uuid
+      pageId:
+        type: string
+        format: uuid
+      body:
+        type: string
+      position:
+        type: integer
+        minimum: 0
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
