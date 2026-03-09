@@ -1,1 +1,6 @@
+# Cordex
 .codex/
+
+# Nix
+.direnv/
+.envrc
