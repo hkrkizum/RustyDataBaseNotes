@@ -18,24 +18,29 @@
 - Q: 保存失敗後に再起動した場合，未保存編集を復元対象に含めるか。→ A: 保存失敗後の未保存編集は現在セッションだけ保持し，再起動後は最後の整合済み保存状態を復元する。
 - Q: ページタイトル編集とブロック本文編集の自動保存は，どのタイミングで成立するか。→ A: 入力停止から 500ms 後に自動保存する。
 - Q: ページタイトル編集とブロック本文編集の自動保存待機時間はどれくらいか。→ A: 入力停止から 500ms 後に自動保存する。
+- Q: ブロック削除はこの increment に含めますか。→ A: ブロック削除はこの increment の対象外にする。
+- Q: 自動保存に失敗した後，次の保存はどう扱いますか。→ A: 失敗後も，次の編集停止や並び替え完了時に自動で再試行する。
+- Q: 保存済みページが存在しない初回起動時は，ページをどう用意しますか。→ A: 初回起動時に空ページを自動生成して表示する。
+- Q: 初回起動で自動生成される空ページには，最初から空ブロックを含めますか。→ A: 初回ページはブロック 0 件で開始する。
+- Q: 起動時に保存データそのものが読めない，または形式不正だった場合は，どう扱いますか。→ A: 失敗を通知したうえで，新しい空ページを自動生成して起動する。
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - ページを作って書き始める (Priority: P1)
+### User Story 1 - 初回ページで書き始める (Priority: P1)
 
-ユーザーとして，この increment の作業対象である空のページを 1 つ作成し，そのページ内に複数の
+ユーザーとして，この increment の作業対象である空のページを初回起動時に受け取り，そのページ内に複数の
 テキストブロックを追加したい。
 これにより，後続の高度な機能が無くても，ノートアプリとして最小限の記述を開始できる。
 
 **Why this priority**: すべての後続機能は，ページとブロックが安定して存在することを前提とするため。
 
-**Independent Test**: 新規環境でページを 1 つ作成し，3 個以上のテキストブロックを追加できれば，
+**Independent Test**: 新規環境で初回起動時に空ページが表示され，そのまま 3 個以上のテキストブロックを追加できれば，
 最小編集体験が成立していると判断できる。
 
 **Acceptance Scenarios**:
 
-1. **Given** アプリにページが存在しない，**When** ユーザーが新規ページを作成する，
-   **Then** 一意に識別できる空のページが作成される。
+1. **Given** アプリに保存済みページが存在しない，**When** ユーザーが初回起動する，
+   **Then** 一意に識別できる空のページが自動生成され，ブロック 0 件の状態でそのページが編集対象として表示される。
 2. **Given** 空のページが存在する，**When** ユーザーがテキストブロックを追加する，
    **Then** 追加した順にブロックが表示され，各ブロックは個別に識別できる。
 3. **Given** ページタイトルまたは既存ブロック本文がある，**When** ユーザーが内容を編集して入力を止める，
@@ -80,6 +85,10 @@
    **Then** 破損した中途半端な状態ではなく，最後に整合していた保存状態が復元される。
 3. **Given** 自動保存に失敗した未保存編集が画面上に残っている，**When** ユーザーがそのままアプリを終了して再起動する，
    **Then** 未保存編集は復元されず，最後に整合していた保存状態のみが復元される。
+4. **Given** 自動保存に失敗した未保存編集が画面上に残っている，**When** ユーザーが再度編集を止めるか，並び替えを完了する，
+   **Then** システムは自動保存を再試行し，成功した時点で最新の画面状態を整合済み保存状態として扱う。
+5. **Given** 起動時に保存データが読めない，または形式不正で復元できない，**When** ユーザーがアプリを起動する，
+   **Then** システムは復元失敗を通知し，新しい空ページを自動生成して編集可能な状態で起動する。
 
 ### Edge Cases
 
@@ -89,6 +98,8 @@
 - ローカル保存先へ書き込めない場合，既存データを壊さずに，ユーザーへ再試行可能な失敗を伝えること。
 - ローカル保存先へ書き込めない場合，既存の保存済み状態は壊さず，画面上の未保存編集は保持したまま，
   未保存状態であることを明示すること。
+- 起動時に保存データが読めない，または形式不正な場合は，復元失敗が通知され，新しい空ページで継続できること。
+- 自動保存に失敗した後も，次の編集停止または並び替え完了を契機に自動保存が再試行されること。
 - 自動保存に失敗した未保存編集が画面上に残っている状態でアプリを再起動した場合でも，復元されるのは最後の整合済み保存状態のみであること。
 - ブロック数が増えても，最小スコープとして想定する通常利用量では編集や再表示に目立つ遅延が出ないこと。
 
@@ -96,8 +107,10 @@
 
 ### Functional Requirements
 
-- **FR-001**: System MUST allow the user to create a single page as the primary container for text blocks.
+- **FR-001**: System MUST provide a single page as the primary container for text blocks in this increment.
 - **FR-001a**: System MUST limit this increment to exactly one managed page and MUST NOT require page switching or multi-page recovery.
+- **FR-001b**: System MUST automatically create and display a single empty page when no saved page exists at application startup.
+- **FR-001c**: System MUST initialize an auto-created startup page with zero blocks.
 - **FR-002**: System MUST assign every page a stable unique identifier that remains unchanged across reloads.
 - **FR-002a**: System MUST allow an empty page title and MUST display a fixed fallback title whenever the stored title is empty.
 - **FR-003**: System MUST allow the user to add multiple text blocks to a page.
@@ -110,13 +123,16 @@
 - **FR-007a**: System MUST automatically save the page after page creation, block addition, and block reorder completion.
 - **FR-007b**: System MUST automatically save the page after page title edits and block content edits once input has paused for 500ms.
 - **FR-008**: System MUST restore the last consistent saved state of the page and its blocks after application restart.
+- **FR-008a**: System MUST notify the user when persisted page data cannot be read or is structurally invalid at startup and MUST recover by creating a new empty page.
 - **FR-009**: System MUST treat each user action that changes page or block state as all-or-nothing from the user's perspective.
 - **FR-010**: System MUST present a clear failure message when a save cannot be completed and MUST keep the last consistent saved state intact.
 - **FR-010a**: System MUST preserve the user's unsaved on-screen edits after an auto-save failure and MUST clearly indicate that those edits are not yet persisted.
 - **FR-010b**: System MUST limit post-restart recovery to the last consistent saved state and MUST NOT recover unsaved edits that existed only in-memory after a save failure.
+- **FR-010c**: System MUST retry auto-save after a prior auto-save failure whenever the next qualifying edit pause or block reorder completion occurs.
 - **FR-011**: System MUST operate fully offline and MUST NOT require sign-in, cloud sync, or external network access for this feature.
 - **FR-012**: System MUST limit this feature to plain text blocks inside a single page and MUST NOT include databases, multiple views,
   nested pages, or advanced editing behaviors in this increment.
+- **FR-012a**: System MUST NOT require block deletion in this increment.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -142,12 +158,16 @@
   独立に確認できる受け入れ試験を持たなければならない。
 - **CC-005a Testability**: 保存失敗時の確認では，保存済み状態の保全と未保存画面状態の保持が同時に検証できなければならない。
 - **CC-005b Testability**: 保存失敗後に再起動した確認では，未保存画面状態が復元されないことと，最後の整合済み保存状態が復元されることを同時に検証できなければならない。
+- **CC-005c Testability**: 保存失敗後の確認では，次の編集停止または並び替え完了で自動保存が再試行され，成功時に未保存状態が解消されることを検証できなければならない。
+- **CC-005d Testability**: 起動時の保存データ読み込み失敗では，失敗通知の表示と，新しい空ページへの回復起動が同時に検証できなければならない。
 
 ## Assumptions
 
 - 本機能の利用者は単一ユーザーであり，同時編集や共有は想定しない。
 - 初回スコープでは，1 回の作業対象は単一ページとし，ページ間移動や階層ページは扱わない。
 - 本 increment では，永続化と復元の対象は単一ページのみとし，複数ページの管理は後続段階へ送る。
+- 保存済みページが存在しない場合は，起動時に空ページが 1 つ自動生成される。
+- 起動時に自動生成される空ページは，ブロックを含まない初期状態で表示される。
 - テキストブロックはプレーンテキストのみを対象とし，画像，チェックボックス，データベース行は含めない。
 - ブロック配置は単一ページ内のフラットな順序列のみを扱い，ネスト構造は扱わない。
 
@@ -163,12 +183,15 @@
 - ネストされたページ，複数ページ管理，共有，クラウド同期。
 - 親子ブロック，アウトライン折りたたみ，入れ子編集。
 - リッチテキスト装飾，添付ファイル，検索，フィルタ。
+- ブロック削除と削除取り消し。
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: 新規ユーザーが初回起動後 2 分以内に 1 つのページを作成し，10 個のテキストブロックを追加できる。
+- **SC-001**: 新規ユーザーが初回起動後 2 分以内に，自動生成された 1 つのページ上で 10 個のテキストブロックを追加できる。
+- **SC-001a**: 保存済みページが存在しない初回起動では，空ページが自動生成され，ユーザーは追加操作なしで編集を開始できる。
+- **SC-001b**: 保存済みページが存在しない初回起動では，自動生成されたページがブロック 0 件で表示されることを確認できる。
 - **SC-002**: 20 回連続の保存と再起動の確認で，ページタイトル，ブロック内容，ブロック順序が毎回一致する。
 - **SC-002a**: ページタイトル編集とブロック本文編集をそれぞれ 20 回連続で保存確認しても，最新の編集内容が再起動後に毎回一致する。
 - **SC-002b**: ページタイトル編集とブロック本文編集の各操作で，入力停止から 500ms 後に自動保存が開始されることを 20 回連続で確認できる。
@@ -176,3 +199,5 @@
 - **SC-004**: 保存不能な状況を再現した確認で，既存の保存済み内容が失われず，ユーザーが失敗を認識できる案内が毎回表示される。
 - **SC-005**: 保存不能な状況を再現した確認で，画面上の未保存編集が維持され，再試行前に消失しないことが毎回確認できる。
 - **SC-006**: 保存失敗後に未保存編集を残したまま再起動しても，最後の整合済み保存状態のみが毎回復元され，失敗時の未保存編集は復元されない。
+- **SC-007**: 保存失敗後に再度編集停止または並び替えを行った確認で，自動保存が毎回再試行され，成功時には最新状態が再起動後も一致する。
+- **SC-008**: 保存データの読取不能または形式不正を 20 回再現した確認で，毎回失敗通知が表示され，新しい空ページから編集を継続できる。
