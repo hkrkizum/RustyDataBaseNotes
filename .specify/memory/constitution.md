@@ -1,50 +1,104 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+- Version change: template -> 1.0.0
+- Modified principles:
+  - Template Principle 1 -> I. Local-First Product Integrity
+  - Template Principle 2 -> II. Domain-Faithful Information Model
+  - Template Principle 3 -> III. Typed Boundaries and Bounded Contexts
+  - Template Principle 4 -> IV. Test-First Delivery and Quality Gates
+  - Template Principle 5 -> V. Safe Rust and Maintainability First
+- Added sections:
+  - Technical Standards
+  - Delivery Workflow
+- Removed sections:
+  - None
+- Templates requiring updates:
+  - ✅ .specify/templates/plan-template.md
+  - ✅ .specify/templates/spec-template.md
+  - ✅ .specify/templates/tasks-template.md
+  - ⚠ .specify/templates/commands/ is absent in this repository, so command template sync is pending by structure
+  - ✅ README.md reviewed, no principle reference update required
+- Follow-up TODOs:
+  - None
+-->
+# RustyDataBaseNotes Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Local-First Product Integrity
+本プロジェクトはローカル完結のノートブックアプリを提供するものであり，すべての機能は
+ユーザーデータの完全性，復旧可能性，通信遮断を最優先に設計しなければならない
+（MUST）。永続化はトランザクション境界を明示できる方式で実装し，クラッシュ時の破損を
+防ぐこと。保存・移行・添付ファイル処理では，失敗時にユーザーへ明確なエラーを返し，
+自動バックアップまたは同等の復旧手段を設計へ含めること。理由: 本製品の価値は
+「SaaS に依存せず，データを失わずに使えること」にあるため。
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Domain-Faithful Information Model
+仕様，UI，コードは，ブロック，ページ，データベース，ビュー，プロパティという中核語彙を
+一貫して用いなければならない（MUST）。ドキュメントは巨大な単一テキストではなく，
+識別可能なブロック集合として扱い，ページ階層とデータベースレコードの関係を崩す近道を
+導入してはならない（MUST NOT）。新機能は，リスト，ボード，ガントチャート等の複数
+ビューから再利用できるモデルを前提に設計すること。理由: ドメイン語彙と情報モデルが
+崩れると，将来のビュー追加とデータ整合が同時に壊れるため。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Typed Boundaries and Bounded Contexts
+バックエンドは Rust と Tauri を中核にし，フロントエンドは TypeScript で実装する
+（MUST）。フロントエンドとバックエンドの境界は，型付き IPC 契約，明示的なデータ構造，
+およびマイグレーション可能なストレージ設計で表現しなければならない（MUST）。Cargo
+ワークスペースまたはモジュール境界は境界づけられたコンテキストとして扱い，ドメイン
+オブジェクトにはエンティティ，値オブジェクト，集約ルートの役割を与えること。
+理由: ローカルアプリでも境界が曖昧になると，UI 変更が保存形式と一緒に壊れやすくなるため。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Test-First Delivery and Quality Gates
+すべての実装は Red-Green-Refactor の順で進め，失敗するテストまたは実証可能な仕様が
+存在しない状態で本実装を始めてはならない（MUST NOT）。コミット前には，少なくとも
+整形，lint，関連テスト，必要なドキュメントビルドを通過させること（MUST）。機能仕様，
+計画，タスクは独立に検証できるユーザーストーリー単位で分解し，各ストーリーに品質確認
+手順を持たせること。理由: 本プロジェクトは機能追加と Rust 学習を両立するため，
+仕様と検証が先行しない変更は保守不能になりやすい。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Safe Rust and Maintainability First
+アプリケーションコードで `unsafe`，`unwrap()`，`expect()`，`panic!()`，
+`unreachable!()` を使用してはならない（MUST NOT）。すべての失敗可能操作は
+`Result` 等で伝播し，意図的に無視する例外は理由付きコメントを残すこと。公開 API には
+`///` ドキュメントコメントを付け，公開関数で `Result` を返す場合はエラー条件を説明する
+こと。可読性と保守性はマイクロ最適化より優先され，複雑な抽象化や投機的最適化は，
+測定結果と必要性が示されない限り導入してはならない（MUST NOT）。理由: 個人開発の
+長期保守では，予測可能な失敗処理と読みやすい実装が最も大きい速度要因だからである。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Technical Standards
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- バックエンドの主要実装言語は Rust 2024 とし，デスクトップ実行基盤は Tauri を採用する。
+- フロントエンドは TypeScript を用い，フレームワークは React または Vue のいずれかに統一する。
+- TypeScript 依存管理は `pnpm` を使用する。
+- 永続化層はマイグレーション可能であり，ローカル保存，バックアップ，自動復旧方針を備える
+  こと。
+- 大規模データ表示では仮想化等の手段により応答性を確保し，体感遅延を常態化させてはならない。
+- アプリケーション本体は意図しない外部通信，テレメトリ送信，サーバー依存機能を導入しては
+  ならない。
+- ユーザー向け文書と作業メモは日本語を基本とし，Rust の公開ドキュメントコメントは英語で
+  記述する。
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Delivery Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+- 仕様駆動開発を基本とし，機能仕様は `specs/` に，横断的な統合仕様は `steering/` に保管する。
+- すべての計画書は，ローカル完結性，データ保護，型付き境界，テスト先行，保守性優先の
+  憲章チェックを通過しなければならない。
+- タスク分解では，各ユーザーストーリーに対して，先に失敗するテスト，次に最小実装，
+  最後にリファクタリングとドキュメント更新を置くこと。
+- レビューでは，禁止構文の混入，ドメイン語彙の逸脱，未計画の外部通信，移行やバックアップの
+  欠落を必ず確認する。
+- 品質ゲートの既定は，`cargo fmt --all`，`cargo clippy`，`cargo test`，
+  `cargo doc --no-deps`，および必要なフロントエンド側の lint と test である。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+この憲章はプロジェクト内の他の慣行より優先される。改定は，変更理由，影響範囲，
+テンプレート同期の有無を明記した更新として記録し，関連するテンプレートと運用文書を
+同一変更内で整合させなければならない（MUST）。バージョン番号は Semantic Versioning に
+従い，原則の削除または後方互換性のない再定義は MAJOR，新しい原則や必須節の追加，
+または運用義務の実質的拡張は MINOR，文言整理や曖昧さ解消のみは PATCH とする。
+すべての計画レビュー，実装レビュー，リリース前確認では，本憲章への適合性を確認し，
+違反がある場合は例外理由と解消計画を明示しなければならない（MUST）。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-03-10 | **Last Amended**: 2026-03-10

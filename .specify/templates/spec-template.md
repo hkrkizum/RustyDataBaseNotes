@@ -1,23 +1,18 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[###-feature-name]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[###-feature-name]`
+**Created**: [DATE]
+**Status**: Draft
 **Input**: User description: "$ARGUMENTS"
 
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
+  IMPORTANT:
+  - User stories must be prioritized as independent user journeys.
+  - Use the domain vocabulary from the constitution consistently:
+    block, page, database, view, property.
+  - Every user story must define how it will be verified independently.
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
@@ -26,7 +21,7 @@
 
 **Why this priority**: [Explain the value and why it has this priority level]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: [Describe how this can be tested independently and what value it proves]
 
 **Acceptance Scenarios**:
 
@@ -61,55 +56,44 @@
 
 1. **Given** [initial state], **When** [action], **Then** [expected outcome]
 
----
-
-[Add more user stories as needed, each with an assigned priority]
-
 ### Edge Cases
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
-
-- What happens when [boundary condition]?
-- How does system handle [error scenario]?
+- What happens if the application crashes during save, migration, or attachment handling?
+- How does the feature behave when local files are missing, locked, or the disk is full?
+- How does the feature scale when a page or database contains thousands of blocks or records?
+- What happens when a view, property, or nested page references invalid or stale data?
 
 ## Requirements *(mandatory)*
 
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
--->
-
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-001**: System MUST [core capability]
+- **FR-002**: System MUST preserve local-first behavior and MUST NOT require external services
+  unless explicitly approved in scope
+- **FR-003**: Users MUST be able to recover from common failure cases through clear errors,
+  retries, or backup-aware flows
+- **FR-004**: System MUST define how affected blocks, pages, databases, views, and properties
+  are created, updated, and validated
+- **FR-005**: System MUST define persistence behavior, including schema or migration impact
 
 ### Key Entities *(include if feature involves data)*
 
-- **[Entity 1]**: [What it represents, key attributes without implementation]
-- **[Entity 2]**: [What it represents, relationships to other entities]
+- **[Entity 1]**: [What it represents, key attributes, lifecycle]
+- **[Entity 2]**: [What it represents, relationships and invariants]
+
+## Constraints & Compliance *(mandatory)*
+
+- **CC-001 Data Integrity**: [How writes remain atomic, recoverable, and migration-safe]
+- **CC-002 Privacy**: [Why the feature does not introduce unintended outbound communication]
+- **CC-003 Performance**: [Expected startup, editing, or rendering budget]
+- **CC-004 Boundary Types**: [Rust and TypeScript contracts, validation points, error surfaces]
+- **CC-005 Testability**: [Which failing tests or executable checks prove the feature first]
 
 ## Success Criteria *(mandatory)*
 
-<!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
--->
-
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **SC-001**: [Users complete the primary task within a measurable threshold]
+- **SC-002**: [The feature remains responsive under a stated local data size]
+- **SC-003**: [Failure handling preserves data and communicates recovery steps]
+- **SC-004**: [The feature passes required QA commands and story-level verification]

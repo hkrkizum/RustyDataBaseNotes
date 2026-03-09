@@ -6,156 +6,141 @@ description: "Task list template for feature implementation"
 # Tasks: [FEATURE NAME]
 
 **Input**: Design documents from `/specs/[###-feature-name]/`
-**Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
+**Prerequisites**: plan.md (required), spec.md (required), research.md,
+data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Tests are MANDATORY. Each user story must start with failing tests or an
+equivalent executable verification task before implementation tasks appear.
 
-**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+**Organization**: Tasks are grouped by user story so each story can be implemented,
+tested, and reviewed independently.
 
 ## Format: `[ID] [P?] [Story] Description`
 
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
-- Include exact file paths in descriptions
+- **[P]**: Can run in parallel if they touch different files and have no dependency
+- **[Story]**: Which user story this task belongs to, for example `US1`
+- Include exact file paths in every task description
 
 ## Path Conventions
 
-- **Single project**: `src/`, `tests/` at repository root
-- **Web app**: `backend/src/`, `frontend/src/`
-- **Mobile**: `api/src/`, `ios/src/` or `android/src/`
-- Paths shown below assume single project - adjust based on plan.md structure
+- **Desktop app**: `src/` for frontend, `src-tauri/src/` for Rust backend,
+  `src-tauri/migrations/` for schema changes
+- **Shared tests**: `tests/integration/`, `tests/e2e/`, or framework-native test paths
+- Adjust paths to the concrete structure declared in `plan.md`
 
-<!-- 
-  ============================================================================
-  IMPORTANT: The tasks below are SAMPLE TASKS for illustration purposes only.
-  
-  The /speckit.tasks command MUST replace these with actual tasks based on:
-  - User stories from spec.md (with their priorities P1, P2, P3...)
-  - Feature requirements from plan.md
-  - Entities from data-model.md
-  - Endpoints from contracts/
-  
-  Tasks MUST be organized by user story so each story can be:
-  - Implemented independently
-  - Tested independently
-  - Delivered as an MVP increment
-  
-  DO NOT keep these sample tasks in the generated tasks.md file.
-  ============================================================================
+<!--
+  IMPORTANT:
+  - Replace all sample tasks with concrete tasks derived from spec.md and plan.md.
+  - Preserve the phase structure unless the feature has a justified reason not to.
+  - Every story must include test tasks, implementation tasks, and documentation or
+    QA closeout tasks required by the constitution.
 -->
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Project initialization and basic structure
+**Purpose**: Establish only the minimum scaffolding required for the feature
 
-- [ ] T001 Create project structure per implementation plan
-- [ ] T002 Initialize [language] project with [framework] dependencies
-- [ ] T003 [P] Configure linting and formatting tools
+- [ ] T001 Create or confirm feature directories from `plan.md`
+- [ ] T002 Configure dependencies in `package.json`, `pnpm-lock.yaml`, or Cargo manifests
+- [ ] T003 [P] Add or update lint and format commands used by this feature
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
+**Purpose**: Core infrastructure that MUST exist before any user story lands
 
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+**⚠️ CRITICAL**: No user story work begins until this phase is complete
 
-Examples of foundational tasks (adjust based on your project):
+- [ ] T004 Define or update storage schema and migrations in `src-tauri/migrations/`
+- [ ] T005 [P] Establish typed IPC contracts across `src/` and `src-tauri/src/ipc/`
+- [ ] T006 [P] Add backup, recovery, or failure-handling hooks required by the feature
+- [ ] T007 [P] Add domain errors and validation rules without `unwrap()` or `panic!()`
+- [ ] T008 [P] Guard against unintended outbound network behavior if the feature touches I/O
+- [ ] T009 Document bounded contexts, invariants, and public API doc comment impact
 
-- [ ] T004 Setup database schema and migrations framework
-- [ ] T005 [P] Implement authentication/authorization framework
-- [ ] T006 [P] Setup API routing and middleware structure
-- [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
-
-**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+**Checkpoint**: Foundation is ready and user stories can proceed
 
 ---
 
 ## Phase 3: User Story 1 - [Title] (Priority: P1) 🎯 MVP
 
-**Goal**: [Brief description of what this story delivers]
+**Goal**: [Brief description of the value delivered]
 
-**Independent Test**: [How to verify this story works on its own]
+**Independent Test**: [How to prove this story works on its own]
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 1
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
-
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T010 [P] [US1] Add failing integration or component test in [path]
+- [ ] T011 [P] [US1] Add failing backend or contract test in [path]
 
 ### Implementation for User Story 1
 
-- [ ] T012 [P] [US1] Create [Entity1] model in src/models/[entity1].py
-- [ ] T013 [P] [US1] Create [Entity2] model in src/models/[entity2].py
-- [ ] T014 [US1] Implement [Service] in src/services/[service].py (depends on T012, T013)
-- [ ] T015 [US1] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T016 [US1] Add validation and error handling
-- [ ] T017 [US1] Add logging for user story 1 operations
+- [ ] T012 [P] [US1] Implement frontend changes in [path]
+- [ ] T013 [P] [US1] Implement Rust domain or IPC changes in [path]
+- [ ] T014 [US1] Implement persistence, validation, and error handling in [path]
+- [ ] T015 [US1] Add or update `///` documentation and user-facing copy in [path]
+- [ ] T016 [US1] Run and record story-specific QA commands
 
-**Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
+**Checkpoint**: User Story 1 is fully functional and independently verifiable
 
 ---
 
 ## Phase 4: User Story 2 - [Title] (Priority: P2)
 
-**Goal**: [Brief description of what this story delivers]
+**Goal**: [Brief description of the value delivered]
 
-**Independent Test**: [How to verify this story works on its own]
+**Independent Test**: [How to prove this story works on its own]
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 2
 
-- [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T017 [P] [US2] Add failing integration or component test in [path]
+- [ ] T018 [P] [US2] Add failing backend or contract test in [path]
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] Create [Entity] model in src/models/[entity].py
-- [ ] T021 [US2] Implement [Service] in src/services/[service].py
-- [ ] T022 [US2] Implement [endpoint/feature] in src/[location]/[file].py
-- [ ] T023 [US2] Integrate with User Story 1 components (if needed)
+- [ ] T019 [P] [US2] Implement frontend changes in [path]
+- [ ] T020 [P] [US2] Implement Rust domain or IPC changes in [path]
+- [ ] T021 [US2] Implement persistence, validation, and error handling in [path]
+- [ ] T022 [US2] Add or update `///` documentation and user-facing copy in [path]
+- [ ] T023 [US2] Run and record story-specific QA commands
 
-**Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
+**Checkpoint**: User Stories 1 and 2 both work independently
 
 ---
 
 ## Phase 5: User Story 3 - [Title] (Priority: P3)
 
-**Goal**: [Brief description of what this story delivers]
+**Goal**: [Brief description of the value delivered]
 
-**Independent Test**: [How to verify this story works on its own]
+**Independent Test**: [How to prove this story works on its own]
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 3
 
-- [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T024 [P] [US3] Add failing integration or component test in [path]
+- [ ] T025 [P] [US3] Add failing backend or contract test in [path]
 
 ### Implementation for User Story 3
 
-- [ ] T026 [P] [US3] Create [Entity] model in src/models/[entity].py
-- [ ] T027 [US3] Implement [Service] in src/services/[service].py
-- [ ] T028 [US3] Implement [endpoint/feature] in src/[location]/[file].py
+- [ ] T026 [P] [US3] Implement frontend changes in [path]
+- [ ] T027 [P] [US3] Implement Rust domain or IPC changes in [path]
+- [ ] T028 [US3] Implement persistence, validation, and error handling in [path]
+- [ ] T029 [US3] Add or update `///` documentation and user-facing copy in [path]
+- [ ] T030 [US3] Run and record story-specific QA commands
 
-**Checkpoint**: All user stories should now be independently functional
-
----
-
-[Add more user story phases as needed, following the same pattern]
+**Checkpoint**: All planned user stories are independently functional
 
 ---
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-**Purpose**: Improvements that affect multiple user stories
+**Purpose**: Work that spans multiple user stories
 
-- [ ] TXXX [P] Documentation updates in docs/
-- [ ] TXXX Code cleanup and refactoring
-- [ ] TXXX Performance optimization across all stories
-- [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/
-- [ ] TXXX Security hardening
-- [ ] TXXX Run quickstart.md validation
+- [ ] TXXX [P] Update shared documentation such as `README.md` or `quickstart.md`
+- [ ] TXXX Remove temporary code and simplify abstractions that are no longer needed
+- [ ] TXXX Verify performance targets for large pages, databases, or timeline views
+- [ ] TXXX [P] Add coverage for recovery, migration, and backup scenarios
+- [ ] TXXX Run full QA: formatting, lint, tests, docs, and frontend checks
 
 ---
 
@@ -163,89 +148,46 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Phase Dependencies
 
-- **Setup (Phase 1)**: No dependencies - can start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
-- **User Stories (Phase 3+)**: All depend on Foundational phase completion
-  - User stories can then proceed in parallel (if staffed)
-  - Or sequentially in priority order (P1 → P2 → P3)
-- **Polish (Final Phase)**: Depends on all desired user stories being complete
-
-### User Story Dependencies
-
-- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
-- **User Story 2 (P2)**: Can start after Foundational (Phase 2) - May integrate with US1 but should be independently testable
-- **User Story 3 (P3)**: Can start after Foundational (Phase 2) - May integrate with US1/US2 but should be independently testable
+- **Setup**: Starts immediately
+- **Foundational**: Depends on Setup and blocks all user stories
+- **User Stories**: Start only after Foundational completes
+- **Polish**: Starts after all targeted user stories are complete
 
 ### Within Each User Story
 
-- Tests (if included) MUST be written and FAIL before implementation
-- Models before services
-- Services before endpoints
-- Core implementation before integration
-- Story complete before moving to next priority
+- Tests MUST be written first and MUST fail before implementation
+- Frontend and backend tasks can run in parallel only when contracts are stable
+- Persistence and migration work must complete before story sign-off
+- Documentation and QA tasks are required for story completion
 
 ### Parallel Opportunities
 
-- All Setup tasks marked [P] can run in parallel
-- All Foundational tasks marked [P] can run in parallel (within Phase 2)
-- Once Foundational phase completes, all user stories can start in parallel (if team capacity allows)
-- All tests for a user story marked [P] can run in parallel
-- Models within a story marked [P] can run in parallel
-- Different user stories can be worked on in parallel by different team members
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# Launch all tests for User Story 1 together (if tests requested):
-Task: "Contract test for [endpoint] in tests/contract/test_[name].py"
-Task: "Integration test for [user journey] in tests/integration/test_[name].py"
-
-# Launch all models for User Story 1 together:
-Task: "Create [Entity1] model in src/models/[entity1].py"
-Task: "Create [Entity2] model in src/models/[entity2].py"
-```
+- Tasks marked `[P]` can run in parallel
+- Different user stories can run in parallel only after foundational tasks complete
+- Recovery tests, UI tests, and domain tests may run in parallel when file ownership is separate
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (User Story 1 Only)
+### MVP First
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL - blocks all stories)
-3. Complete Phase 3: User Story 1
-4. **STOP and VALIDATE**: Test User Story 1 independently
-5. Deploy/demo if ready
+1. Complete Setup
+2. Complete Foundational
+3. Complete User Story 1
+4. Validate User Story 1 independently before expanding scope
 
 ### Incremental Delivery
 
-1. Complete Setup + Foundational → Foundation ready
-2. Add User Story 1 → Test independently → Deploy/Demo (MVP!)
-3. Add User Story 2 → Test independently → Deploy/Demo
-4. Add User Story 3 → Test independently → Deploy/Demo
-5. Each story adds value without breaking previous stories
-
-### Parallel Team Strategy
-
-With multiple developers:
-
-1. Team completes Setup + Foundational together
-2. Once Foundational is done:
-   - Developer A: User Story 1
-   - Developer B: User Story 2
-   - Developer C: User Story 3
-3. Stories complete and integrate independently
+1. Ship the smallest useful story first
+2. Re-run constitution-aligned QA after each story
+3. Add the next story only after the previous one remains green
 
 ---
 
 ## Notes
 
-- [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability
-- Each user story should be independently completable and testable
-- Verify tests fail before implementing
-- Commit after each task or logical group
-- Stop at any checkpoint to validate story independently
-- Avoid: vague tasks, same file conflicts, cross-story dependencies that break independence
+- Do not create tasks that hide file paths or expected outputs
+- Do not mark tests as optional
+- Do not bypass data integrity, backup, or migration work for convenience
+- Do not introduce `unsafe`, `unwrap()`, `expect()`, or `panic!()` tasks
