@@ -30,6 +30,7 @@
           default = pkgs.mkShell {
             packages = with pkgs; [
               bashInteractive
+              rustup
             ];
             shellHook = ''
               export CODEX_HOME="$PWD/.codex"
