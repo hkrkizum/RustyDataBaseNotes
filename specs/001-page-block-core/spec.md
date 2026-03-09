@@ -9,9 +9,10 @@
 
 ### Session 2026-03-10
 
+- Q: タイトルが空のページを表示する際の固定仮タイトルは何か。→ A: 空タイトル時の表示名は `無題` に固定する。
 - Q: 保存はどの契機で成立するか。→ A: ページ作成，ブロック追加，並び替えのたびに自動保存する。
 - Q: ブロック構造はどこまで持つか。→ A: ブロックは同一ページ内でフラットに並び，親子関係を持たない。
-- Q: タイトルが空のページをどう扱うか。→ A: タイトルは空でもよく，表示時は固定の仮タイトルを使う。
+- Q: タイトルが空のページをどう扱うか。→ A: タイトルは空でもよく，表示時は固定の仮タイトル `無題` を使う。
 - Q: この increment で保存対象に含めるページ数はいくつか。→ A: 保存対象は常に 1 ページだけとする。
 - Q: 自動保存に失敗した直後の編集状態をどう扱うか。→ A: 画面上の未保存編集は残し，未保存状態を明示する。
 - Q: この increment で編集可能なのはどこまでか。→ A: ブロック本文とページタイトルの両方を編集可能とし，入力停止から 500ms 後に自動保存する。
@@ -92,7 +93,7 @@
 
 ### Edge Cases
 
-- ページタイトルが空のまま作成された場合でも，一意なページとして扱い，表示時は固定の仮タイトルで識別可能であること。
+- ページタイトルが空のまま作成された場合でも，一意なページとして扱い，表示時は固定の仮タイトル `無題` で識別可能であること。
 - 空文字のテキストブロックを追加した場合でも，順序管理が壊れないこと。
 - 保存処理の途中でアプリが終了しても，部分的にだけ反映された順序や内容が表示されないこと。
 - ローカル保存先へ書き込めない場合，既存データを壊さずに，ユーザーへ再試行可能な失敗を伝えること。
@@ -112,7 +113,7 @@
 - **FR-001b**: System MUST automatically create and display a single empty page when no saved page exists at application startup.
 - **FR-001c**: System MUST initialize an auto-created startup page with zero blocks.
 - **FR-002**: System MUST assign every page a stable unique identifier that remains unchanged across reloads.
-- **FR-002a**: System MUST allow an empty page title and MUST display a fixed fallback title whenever the stored title is empty.
+- **FR-002a**: System MUST allow an empty page title and MUST display the fixed fallback title `無題` whenever the stored title is empty.
 - **FR-003**: System MUST allow the user to add multiple text blocks to a page.
 - **FR-003a**: System MUST allow the user to edit the page title and the text content of each block.
 - **FR-004**: System MUST assign every block a stable unique identifier and associate it with exactly one page.
