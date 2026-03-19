@@ -4,3 +4,6 @@
 # Nix
 .direnv/
 .envrc
+
+# Node
+node_modules/
