@@ -3,10 +3,19 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    { nixpkgs, ... }:
+    {
+      nixpkgs,
+      home-manager,
+      ...
+    }:
     let
       systems = [
         "x86_64-linux"
@@ -22,6 +31,10 @@
             pkgs = import nixpkgs { inherit system; };
           }
         );
+
+      # devcontainer 用のデフォルト値（必要に応じてオーバーライド可能）
+      defaultUsername = "vscode";
+      defaultHomeDirectory = "/home/${defaultUsername}";
     in
     {
       devShells = forAllSystems (
@@ -29,8 +42,22 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
-              bashInteractive
               rustup
+              cargo-tauri
+              pkg-config
+              gcc
+              gnumake
+
+              gtk3
+              webkitgtk_4_1
+              libsoup_3
+              glib
+              cairo
+              pango
+              gdk-pixbuf
+              atk
+              harfbuzz
+              zlib
             ];
             shellHook = ''
               export CODEX_HOME="$PWD/.codex"
@@ -38,5 +65,17 @@
           };
         }
       );
+
+      # devcontainer 内で home-manager switch --flake .#devcontainer で適用
+      homeConfigurations.devcontainer = home-manager.lib.homeManagerConfiguration {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        modules = [
+          ./home.nix
+        ];
+        extraSpecialArgs = {
+          username = defaultUsername;
+          homeDirectory = defaultHomeDirectory;
+        };
+      };
     };
 }

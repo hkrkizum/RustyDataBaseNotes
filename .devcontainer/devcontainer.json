@@ -1,0 +1,31 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/alpine
+{
+	"name": "RustyDataBaseNotes",
+	// Determinate Nix を Dockerfile でインストール
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+
+	// systemd を PID 1 として使用 (Podman)
+	"overrideCommand": false,
+	"runArgs": ["--systemd=always"],
+
+	// Persist Nix store across container rebuilds
+	"mounts": [
+		"source=nix-store-${devcontainerId},target=/nix,type=volume"
+	],
+
+	// 初回: Nix インストール + Home Manager 適用
+	"postCreateCommand": "bash .devcontainer/setup.sh",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"settings": {}
+		}
+	}
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}
