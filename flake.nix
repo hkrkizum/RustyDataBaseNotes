@@ -46,6 +46,8 @@
               cargo-tauri
               pkg-config
               gcc
+              clang
+              mold
               gnumake
 
               gtk3

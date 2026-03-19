@@ -26,6 +26,8 @@
     nixd
     nixfmt
     direnv
+    nodejs
+    pnpm
 
     # prompt / shell extras
     zsh-powerlevel10k
@@ -155,9 +157,14 @@
   # ----------------------------
   # Environment variables
   # ----------------------------
+  home.sessionPath = [
+    "$HOME/.local/share/pnpm"
+  ];
+
   home.sessionVariables = {
     EDITOR = "vim";
     VISUAL = "vim";
     PAGER = "bat";
+    PNPM_HOME = "$HOME/.local/share/pnpm";
   };
 }

@@ -49,4 +49,16 @@ if [ -x "$HM_ZSH" ]; then
     echo "==> Login shell set to $HM_ZSH"
 fi
 
+# --- Claude Code ---
+echo "==> Installing Claude Code..."
+curl -fsSL https://claude.ai/install.sh | bash
+
+# --- Load Home Manager session variables (for bash) ---
+HM_SESSION_VARS="$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
+[ -f "$HM_SESSION_VARS" ] && . "$HM_SESSION_VARS"
+
+# --- Codex ---
+echo "==> Installing Codex..."
+pnpm add -g @openai/codex
+
 echo "==> Setup complete!"
