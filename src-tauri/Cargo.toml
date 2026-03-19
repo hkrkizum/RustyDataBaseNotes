@@ -3,7 +3,7 @@ name = "rustydatabasenotes"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,4 +22,11 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[profile.dev]
+# デバッグビルドはインクリメンタルコンパイル有効（デフォルト）
+# codegen-units はデフォルト(256)のまま — メモリ消費を抑える
+
+[profile.release]
+codegen-units = 1
 
