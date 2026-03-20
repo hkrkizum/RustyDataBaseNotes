@@ -40,13 +40,18 @@
 - **Domain-Faithful Information Model**: Confirm the plan uses the canonical terms
   block, page, database, view, and property consistently, and does not collapse them
   into ad hoc data shapes.
-- **Typed Boundaries and Bounded Contexts**: List the Rust and TypeScript boundary
+- **Typed Boundaries and Domain-Driven Design**: List the Rust and TypeScript boundary
   types, IPC contracts, storage schema changes, and bounded contexts affected.
 - **Test-First Delivery and Quality Gates**: Identify the failing tests or executable
   checks that will be written before implementation, plus the required QA commands.
-- **Safe Rust and Maintainability First**: Confirm there is no planned use of `unsafe`,
-  `unwrap()`, `expect()`, `panic!()`, or speculative optimization. Document any public
-  API documentation impact.
+- **Safe Rust, SOLID Principles, and Maintainability First**: Confirm there is no planned
+  use of `unsafe` or speculative optimization. Verify SOLID principles are respected.
+- **Rust Documentation Standards**: Confirm that new public items will have `///` doc
+  comments following the mandated structure (summary, examples, errors section), and
+  `cargo doc --no-deps` remains clean.
+- **Defensive Error Handling**: Confirm there is no planned use of `unwrap()`, `expect()`,
+  `panic!()`, `todo!()`, or `assert!()` in non-test code. Verify that `thiserror` error
+  types carry sufficient context and Clippy workspace lints are configured.
 
 ## Project Structure
 
