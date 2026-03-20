@@ -68,6 +68,8 @@
         }
       );
 
+      formatter = forAllSystems ({ pkgs }: pkgs.nixfmt-tree);
+
       # devcontainer 内で home-manager switch --flake .#devcontainer で適用
       homeConfigurations.devcontainer = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.x86_64-linux;

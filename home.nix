@@ -15,6 +15,7 @@
   # 基本パッケージ
   # ----------------------------
   home.packages = with pkgs; [
+    # basic tools
     vim
     curl
     wget
@@ -22,10 +23,16 @@
     zip
     jq
     tree
+    bubblewrap
+
+    # Nix
     nil
     nixd
     nixfmt
     direnv
+    nix-direnv
+
+    # Node.js
     nodejs
     pnpm
 

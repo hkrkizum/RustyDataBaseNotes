@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(nix fmt:*)",
+      "Bash(nix-installer --help)",
+      "Bash(/nix/nix-installer --help)",
+      "Bash(/usr/local/bin/nix-installer --help)",
+      "Bash(/usr/local/bin/nix-installer install:*)",
+      "Bash(/nix/nix-installer install:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(a[''''action''''][''''action_name'''']\\) for a in d[''''actions'''']]\")",
+      "Bash(jq -r .actions[].action.action_name)",
+      "Bash(jq \".actions[] | select\\(.action.action_name == \"\"configure_determinate_nixd_init_service\"\"\\)\")",
+      "Bash(jq \".actions[] | select\\(.action.action_name == \"\"configure_nix\"\"\\)\")",
+      "Bash(systemctl status:*)",
+      "Bash(jq \".actions[] | select\\(.action.action_name == \"\"create_users_and_group\"\"\\)\")"
+    ]
+  }
+}
