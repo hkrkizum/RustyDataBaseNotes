@@ -25,7 +25,7 @@
 
     settings = {
       user.name = "Hikaru Koizumi";
-      user.email = "you@example.com";
+      user.email = "20899973+hkrkizum@users.noreply.github.com";
 
       init.defaultBranch = "main";
       pull.rebase = false;
@@ -43,6 +43,16 @@
         cm = "commit -m";
         lg = "log --oneline --graph --decorate --all";
       };
+    };
+
+  };
+
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true;
+      side-by-side = true;
     };
   };
 
@@ -123,6 +133,11 @@
     icons = "auto";
   };
 
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
@@ -131,6 +146,8 @@
   programs.bat.enable = true;
   programs.fd.enable = true;
   programs.ripgrep.enable = true;
+  programs.btop.enable = true;
+  programs.tealdeer.enable = true;
 
   programs.direnv = {
     enable = true;

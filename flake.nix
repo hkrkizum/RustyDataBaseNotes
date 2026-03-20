@@ -40,6 +40,8 @@
           zip
           jq
           tree
+          dust
+          procs
 
           nil
           nixd
@@ -58,6 +60,8 @@
           clang
           mold
           gnumake
+          cargo-nextest
+          cargo-make
 
           gtk3
           webkitgtk_4_1

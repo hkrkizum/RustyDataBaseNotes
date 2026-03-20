@@ -37,6 +37,9 @@ sudo systemctl enable --now nix-daemon
 # --- Source Nix profile ---
 . "$NIX_PROFILE"
 
+# --- Ensure USER is set (Podman rootless may not export it) ---
+export USER="${USER:-$(whoami)}"
+
 # --- Home Manager ---
 echo "==> Applying Home Manager configuration..."
 nix run home-manager -- switch --flake .#devcontainer -b backup
