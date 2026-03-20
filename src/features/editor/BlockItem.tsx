@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import styles from "./BlockItem.module.css";
 import type { Block } from "./types";
 
@@ -5,6 +6,7 @@ interface BlockItemProps {
   block: Block;
   isFirst: boolean;
   isLast: boolean;
+  shouldFocus?: boolean;
   onEditContent: (blockId: string, content: string) => void;
   onMoveUp: (blockId: string) => void;
   onMoveDown: (blockId: string) => void;
@@ -15,18 +17,46 @@ export function BlockItem({
   block,
   isFirst,
   isLast,
-  onEditContent: _onEditContent,
+  shouldFocus,
+  onEditContent,
   onMoveUp,
   onMoveDown,
   onRemove,
 }: BlockItemProps) {
+  const [localContent, setLocalContent] = useState(block.content);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (shouldFocus && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [shouldFocus]);
+
+  function handleBlur() {
+    if (localContent !== block.content) {
+      onEditContent(block.id, localContent);
+    }
+  }
+
+  // Sync local state when backend state changes (e.g. after error recovery)
+  if (
+    localContent !== block.content &&
+    document.activeElement !== textareaRef.current
+  ) {
+    setLocalContent(block.content);
+  }
+
   return (
     <div className={styles.item}>
-      <div className={styles.content}>
-        {block.content || (
-          <span className={styles.placeholder}>空のブロック</span>
-        )}
-      </div>
+      <textarea
+        ref={textareaRef}
+        className={styles.textarea}
+        value={localContent}
+        onChange={(e) => setLocalContent(e.target.value)}
+        onBlur={handleBlur}
+        maxLength={10000}
+        placeholder="テキストを入力..."
+      />
       <div className={styles.actions}>
         <button
           type="button"
