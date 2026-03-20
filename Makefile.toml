@@ -10,38 +10,74 @@ default_to_workspace = false
 TEST_BUILD_JOBS = { value = "8", condition = { env_not_set = ["TEST_BUILD_JOBS"] } }
 
 # ─────────────────────────────────────────────
-# Quality Gate (run all checks in order)
+# Quality Gate
 # ─────────────────────────────────────────────
 [tasks.qa]
-description = "Run full quality gate: fmt → clippy → test → doc-test"
-run_task = { name = ["fmt", "clippy", "test", "doc-test"], fork = true }
+description = "Run full quality gate: Rust + TypeScript"
+run_task = { name = ["qa-rs", "qa-ts"], fork = true }
+
+[tasks.qa-rs]
+description = "Rust quality gate: fmt → clippy → test → doc-test"
+run_task = { name = ["fmt-rs", "clippy", "test", "doc-test"], fork = true }
+
+[tasks.qa-ts]
+description = "TypeScript quality gate: fmt → lint → type-check → test"
+run_task = { name = ["fmt-ts", "lint-ts", "ts-check", "test-ts"], fork = true }
 
 # ─────────────────────────────────────────────
-# Individual tasks
+# Formatting
 # ─────────────────────────────────────────────
-[tasks.fmt]
-description = "Format all workspace crates"
+[tasks.fmt-rs]
+description = "Format all Rust workspace crates"
 command = "cargo"
 args = ["fmt", "--all", "${@}"]
 cwd = "src-tauri"
 
-[tasks.fmt-check]
-description = "Check formatting without modifying files"
+[tasks.fmt-rs-check]
+description = "Check Rust formatting without modifying files"
 command = "cargo"
 args = ["fmt", "--all", "--check", "${@}"]
 cwd = "src-tauri"
 
-[tasks.clippy]
-description = "Lint all workspace crates"
-command = "cargo"
-args = ["clippy", "--all", "--all-targets", "${@}"]
-cwd = "src-tauri"
+[tasks.fmt-ts]
+description = "Format TypeScript/frontend code with Biome"
+command = "pnpm"
+args = ["biome", "format", "--write", "."]
 
-[tasks.clippy-cli]
-description = "Lint all workspace crates"
+[tasks.fmt-ts-check]
+description = "Check TypeScript/frontend formatting (no modification)"
+command = "pnpm"
+args = ["biome", "check", "--linter-enabled=false", "."]
+
+# ─────────────────────────────────────────────
+# Linting
+# ─────────────────────────────────────────────
+[tasks.clippy]
+description = "Lint all Rust workspace crates (warnings = errors)"
 command = "cargo"
 args = ["clippy", "--workspace", "--all-targets", "--", "-Dwarnings"]
 cwd = "src-tauri"
+
+[tasks.lint-ts]
+description = "Lint TypeScript/frontend code with Biome"
+command = "pnpm"
+args = ["biome", "lint", "."]
+
+# ─────────────────────────────────────────────
+# Type checking
+# ─────────────────────────────────────────────
+[tasks.ts-check]
+description = "TypeScript type check (no emit)"
+command = "pnpm"
+args = ["tsc", "--noEmit"]
+
+# ─────────────────────────────────────────────
+# Testing
+# ─────────────────────────────────────────────
+[tasks.test-ts]
+description = "Run TypeScript/frontend tests with Vitest"
+command = "pnpm"
+args = ["vitest", "run", "--passWithNoTests"]
 
 [tasks.test]
 description = "Run tests with cargo-nextest (build parallelism limited to avoid OOM)"

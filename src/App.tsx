@@ -1,49 +1,43 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import { Toaster } from "./components/toast/Toaster";
+import { CreatePageForm } from "./features/pages/CreatePageForm";
+import { PageListView } from "./features/pages/PageListView";
+import { DeleteConfirmModal } from "./features/pages/DeleteConfirmModal";
+import { usePages } from "./features/pages/usePages";
+import type { Page } from "./features/pages/types";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const { pages, loading, createPage, updatePageTitle, deletePage } =
+    usePages();
+  const [deleteTarget, setDeleteTarget] = useState<Page | null>(null);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    const success = await deletePage(deleteTarget.id);
+    if (success) {
+      setDeleteTarget(null);
+    }
   }
 
   return (
     <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+      <h1>RustyDataBaseNotes</h1>
+      <CreatePageForm onSubmit={createPage} />
+      <PageListView
+        pages={pages}
+        loading={loading}
+        onUpdateTitle={updatePageTitle}
+        onRequestDelete={setDeleteTarget}
+      />
+      {deleteTarget && (
+        <DeleteConfirmModal
+          page={deleteTarget}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteTarget(null)}
         />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+      )}
+      <Toaster />
     </main>
   );
 }

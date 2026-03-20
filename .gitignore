@@ -33,3 +33,7 @@ dist-ssr
 # Node
 node_modules/
 .pnpm-store/
+
+# Environment
+.env*
+!.env.example

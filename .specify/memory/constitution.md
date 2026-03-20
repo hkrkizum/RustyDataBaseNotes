@@ -96,6 +96,7 @@ Sync Impact Report
   欠落を必ず確認する。
 - 品質ゲートの既定は，`cargo fmt --all`，`cargo clippy`，`cargo nextest run`，
   `cargo doc --no-deps`，および必要なフロントエンド側の lint と test である。
+- **コミットメッセージは後々確認しやすいように，日本語で作成する**
 
 ## Governance
 
