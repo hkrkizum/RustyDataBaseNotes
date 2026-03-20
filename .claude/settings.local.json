@@ -35,7 +35,12 @@
       "Bash(pnpm build:*)",
       "Bash(cargo make:*)",
       "Bash(cargo clippy:*)",
-      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)"
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
+      "Bash(sqlx migrate:*)",
+      "Bash(cargo sqlx:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(pnpm biome:*)"
     ]
   }
 }
