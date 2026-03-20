@@ -110,8 +110,8 @@ tested, and reviewed independently.
 - [x] T032 [US2] Implement `EditorSession::add_block()` in `src-tauri/src/domain/editor/session.rs` — append empty text block at end, generate UUIDv7, set `is_dirty = true`, return `&Block`。Principle VI 準拠の `///` doc comment を付与（`# Examples` セクション含む）
 - [x] T033 [US2] Implement `add_block` IPC command in `src-tauri/src/ipc/editor_commands.rs` — get session, call `add_block()`, return `EditorStateDto`。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [x] T034 [US2] Register `add_block` command in `invoke_handler` in `src-tauri/src/lib.rs`
-- [ ] T035 [US2] Add `addBlock(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
-- [ ] T036 [US2] Add "ブロック追加" button to `BlockEditor.tsx` — call `addBlock`, auto-focus new block (last element), hide empty state when blocks exist
+- [x] T035 [US2] Add `addBlock(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
+- [x] T036 [US2] Add "ブロック追加" button to `BlockEditor.tsx` — call `addBlock`, auto-focus new block (last element), hide empty state when blocks exist
 - [ ] T037 [US2] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 2 is fully functional — blocks can be added to pages.
@@ -134,8 +134,8 @@ tested, and reviewed independently.
 - [x] T040 [US3] Implement `EditorSession::edit_block_content()` in `src-tauri/src/domain/editor/session.rs` — find block by ID, update content via `BlockContent::try_from()`, set `is_dirty = true`。Principle VI 準拠の `///` doc comment を付与（`# Examples`, `# Errors` セクション含む）
 - [x] T041 [US3] Implement `edit_block_content` IPC command in `src-tauri/src/ipc/editor_commands.rs` — get session, call `edit_block_content()`, return `EditorStateDto`。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [x] T042 [US3] Register `edit_block_content` command in `invoke_handler` in `src-tauri/src/lib.rs`
-- [ ] T043 [US3] Add `editBlockContent(pageId, blockId, content)` to `useEditor` hook in `src/features/editor/useEditor.ts`
-- [ ] T044 [US3] Update `BlockItem` component in `src/features/editor/BlockItem.tsx` — replace read-only display with `<textarea>`, local state for input buffer, `onBlur` triggers `editBlockContent` IPC. `maxLength={10000}` は UX ヒントとして使用（バックエンドの `BlockContent` バリデーションが権威的基準。HTML `maxLength` は UTF-16 コードユニット数でカウントするため，BMP 外文字で Rust の `chars().count()` と乖離する可能性がある）。**エラー時リカバリ**: `editBlockContent` が `contentTooLong` エラーを返した場合，返却された `EditorState` のブロック内容で textarea のローカル state を上書きし，エラー toast を表示する（textarea とバックエンド状態の乖離を防止）
+- [x] T043 [US3] Add `editBlockContent(pageId, blockId, content)` to `useEditor` hook in `src/features/editor/useEditor.ts`
+- [x] T044 [US3] Update `BlockItem` component in `src/features/editor/BlockItem.tsx` — replace read-only display with `<textarea>`, local state for input buffer, `onBlur` triggers `editBlockContent` IPC. `maxLength={10000}` は UX ヒントとして使用（バックエンドの `BlockContent` バリデーションが権威的基準。HTML `maxLength` は UTF-16 コードユニット数でカウントするため，BMP 外文字で Rust の `chars().count()` と乖離する可能性がある）。**エラー時リカバリ**: `editBlockContent` が `contentTooLong` エラーを返した場合，返却された `EditorState` のブロック内容で textarea のローカル state を上書きし，エラー toast を表示する（textarea とバックエンド状態の乖離を防止）
 - [ ] T045 [US3] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 3 is fully functional — block content can be edited in-place.
@@ -159,9 +159,9 @@ tested, and reviewed independently.
 
 - [x] T048 [US6] Implement `save_editor` IPC command in `src-tauri/src/ipc/editor_commands.rs` — skip save if not dirty, call `BlockRepository::save_all()`, then `mark_saved()`, return `EditorStateDto` with `isDirty: false`。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [x] T049 [US6] Register `save_editor` command in `invoke_handler` in `src-tauri/src/lib.rs`
-- [ ] T050 [US6] Add `saveEditor(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts` — sync focused block content before save, handle saving state
-- [ ] T051 [US6] Wire save button in `EditorToolbar.tsx` — call `saveEditor`, show success toast (sonner), show error toast on failure (FR-014)
-- [ ] T052 [US6] Add Ctrl+S keyboard shortcut in `useEditor.ts` — `useEffect` with `keydown` listener, sync focused block then save, `e.preventDefault()` to suppress browser save dialog
+- [x] T050 [US6] Add `saveEditor(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts` — sync focused block content before save, handle saving state
+- [x] T051 [US6] Wire save button in `EditorToolbar.tsx` — call `saveEditor`, show success toast (sonner), show error toast on failure (FR-014)
+- [x] T052 [US6] Add Ctrl+S keyboard shortcut in `useEditor.ts` — `useEffect` with `keydown` listener, sync focused block then save, `e.preventDefault()` to suppress browser save dialog
 - [ ] T053 [US6] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 6 is fully functional — blocks persist across editor sessions.
@@ -183,8 +183,8 @@ tested, and reviewed independently.
 - [x] T055 [US4] Implement `EditorSession::move_block_up()` and `move_block_down()` in `src-tauri/src/domain/editor/session.rs` — swap with adjacent block, update positions, return error at boundaries。Principle VI 準拠の `///` doc comment を付与（`# Examples`, `# Errors` セクション含む）
 - [x] T056 [US4] Implement `move_block_up` and `move_block_down` IPC commands in `src-tauri/src/ipc/editor_commands.rs` — Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [x] T057 [US4] Register `move_block_up`, `move_block_down` commands in `invoke_handler` in `src-tauri/src/lib.rs`
-- [ ] T058 [US4] Add `moveBlockUp(pageId, blockId)` and `moveBlockDown(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
-- [ ] T059 [US4] Add up/down move buttons to `BlockItem` component in `src/features/editor/BlockItem.tsx` — disable up button for first block (position === 0), disable down button for last block (position === blocks.length - 1)
+- [x] T058 [US4] Add `moveBlockUp(pageId, blockId)` and `moveBlockDown(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
+- [x] T059 [US4] Add up/down move buttons to `BlockItem` component in `src/features/editor/BlockItem.tsx` — disable up button for first block (position === 0), disable down button for last block (position === blocks.length - 1)
 - [ ] T060 [US4] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 4 is fully functional — blocks can be reordered.
@@ -206,8 +206,8 @@ tested, and reviewed independently.
 - [x] T062 [US5] Implement `EditorSession::remove_block()` in `src-tauri/src/domain/editor/session.rs` — remove block by ID, renumber positions from 0, set `is_dirty = true`。Principle VI 準拠の `///` doc comment を付与（`# Examples`, `# Errors` セクション含む）
 - [x] T063 [US5] Implement `remove_block` IPC command in `src-tauri/src/ipc/editor_commands.rs` — Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [x] T064 [US5] Register `remove_block` command in `invoke_handler` in `src-tauri/src/lib.rs`
-- [ ] T065 [US5] Add `removeBlock(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
-- [ ] T066 [US5] Add delete button to `BlockItem` component in `src/features/editor/BlockItem.tsx` — call `removeBlock`, show empty state in `BlockEditor.tsx` when all blocks removed
+- [x] T065 [US5] Add `removeBlock(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
+- [x] T066 [US5] Add delete button to `BlockItem` component in `src/features/editor/BlockItem.tsx` — call `removeBlock`, show empty state in `BlockEditor.tsx` when all blocks removed
 - [ ] T067 [US5] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 5 is fully functional — blocks can be deleted.
@@ -226,9 +226,9 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 7
 
-- [ ] T069 [US7] Wire dirty indicator in `EditorToolbar.tsx` — show/hide based on `isDirty` from `EditorState`
-- [ ] T070 [US7] Implement `UnsavedConfirmModal` component in `src/features/editor/UnsavedConfirmModal.tsx` and `src/features/editor/UnsavedConfirmModal.module.css` — "未保存の変更があります。破棄しますか？" message, cancel and discard buttons
-- [ ] T071 [US7] Wire unsaved confirm dialog in `BlockEditor.tsx` — when back button clicked and `isDirty`, show `UnsavedConfirmModal`; on discard call `closeEditor` and navigate to list; on cancel stay in editor
+- [x] T069 [US7] Wire dirty indicator in `EditorToolbar.tsx` — show/hide based on `isDirty` from `EditorState`
+- [x] T070 [US7] Implement `UnsavedConfirmModal` component in `src/features/editor/UnsavedConfirmModal.tsx` and `src/features/editor/UnsavedConfirmModal.module.css` — "未保存の変更があります。破棄しますか？" message, cancel and discard buttons
+- [x] T071 [US7] Wire unsaved confirm dialog in `BlockEditor.tsx` — when back button clicked and `isDirty`, show `UnsavedConfirmModal`; on discard call `closeEditor` and navigate to list; on cancel stay in editor
 - [ ] T072 [US7] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 7 is fully functional — unsaved state is visible and protected.
