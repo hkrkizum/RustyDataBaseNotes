@@ -146,6 +146,45 @@ args = ["test", "--workspace", "--jobs", "${TEST_BUILD_JOBS}"]
 cwd = "src-tauri"
 
 # ─────────────────────────────────────────────
+# Coverage
+# ─────────────────────────────────────────────
+[tasks.coverage]
+description = "Run all coverage reports (Rust + TypeScript)"
+run_task = { name = ["coverage-rs", "coverage-ts"], fork = true }
+
+[tasks.coverage-rs]
+description = "Rust code coverage via cargo-llvm-cov (text summary)"
+install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
+  "llvm-cov", "--help",
+] }
+command = "cargo"
+args = ["llvm-cov", "--workspace", "--all-targets"]
+cwd = "src-tauri"
+
+[tasks.coverage-rs-html]
+description = "Rust code coverage with HTML report (opens in browser)"
+install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
+  "llvm-cov", "--help",
+] }
+command = "cargo"
+args = ["llvm-cov", "--workspace", "--all-targets", "--html", "--open"]
+cwd = "src-tauri"
+
+[tasks.coverage-rs-lcov]
+description = "Rust code coverage in LCOV format (for CI integration)"
+install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
+  "llvm-cov", "--help",
+] }
+command = "cargo"
+args = ["llvm-cov", "--workspace", "--all-targets", "--lcov", "--output-path", "target/llvm-cov/lcov.info"]
+cwd = "src-tauri"
+
+[tasks.coverage-ts]
+description = "TypeScript code coverage via Vitest"
+command = "pnpm"
+args = ["vitest", "run", "--coverage", "--passWithNoTests"]
+
+# ─────────────────────────────────────────────
 # Documentation
 # ─────────────────────────────────────────────
 [tasks.doc]

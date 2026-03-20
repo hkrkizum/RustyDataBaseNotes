@@ -46,6 +46,7 @@
           gnumake
           cargo-nextest
           cargo-make
+          cargo-llvm-cov
 
           gtk3
           webkitgtk_4_1
