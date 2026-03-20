@@ -75,6 +75,14 @@
           atk
           harfbuzz
           zlib
+          openssl
+          xdotool
+          libayatana-appindicator
+          librsvg
+          file
+
+          mesa
+          libglvnd
         ];
 
       # devcontainer 用のデフォルト値（必要に応じてオーバーライド可能）
@@ -89,6 +97,7 @@
             packages = (commonPackagesFor pkgs) ++ (projectPackagesFor pkgs);
             shellHook = ''
               export CODEX_HOME="$PWD/.codex"
+              export FONTCONFIG_FILE="${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
             '';
           };
         }
