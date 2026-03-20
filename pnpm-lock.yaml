@@ -20,6 +20,9 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.2.4(react@19.2.4)
+      skills:
+        specifier: ^1.4.5
+        version: 1.4.5
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2
@@ -670,6 +673,11 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
+  skills@1.4.5:
+    resolution: {integrity: sha512-fu73BeQ7dXDXx5/xViL7SOlSLamJAMlSLcyjoVTUGHCoQX5ekWrRVp0Go8OJqgzakUCIKqz8UijkDLBG9c/qOg==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -1247,6 +1255,8 @@ snapshots:
   scheduler@0.27.0: {}
 
   semver@6.3.1: {}
+
+  skills@1.4.5: {}
 
   source-map-js@1.2.1: {}
 
