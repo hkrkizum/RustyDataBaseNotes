@@ -24,6 +24,7 @@ impl PageId {
     }
 
     /// Returns the inner [`Uuid`] value.
+    #[expect(dead_code)]
     pub fn as_uuid(&self) -> &Uuid {
         &self.0
     }
@@ -56,6 +57,7 @@ pub struct PageTitle(String);
 
 impl PageTitle {
     /// Returns the inner string slice.
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         &self.0
     }

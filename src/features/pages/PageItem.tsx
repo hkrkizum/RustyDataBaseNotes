@@ -76,16 +76,18 @@ export function PageItem({
           maxLength={255}
         />
       ) : (
-        <span
+        <button
+          type="button"
           className={styles.title}
           onClick={startEditing}
           title="クリックして編集"
         >
           {page.title}
-        </span>
+        </button>
       )}
       <span className={styles.date}>{createdDate}</span>
       <button
+        type="button"
         className={styles.deleteButton}
         onClick={() => onRequestDelete(page)}
         title="削除"

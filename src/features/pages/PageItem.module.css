@@ -15,6 +15,10 @@
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 3px;
+  background: none;
+  border: none;
+  font: inherit;
+  text-align: left;
 }
 
 .title:hover {
