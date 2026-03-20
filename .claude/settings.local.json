@@ -16,7 +16,10 @@
       "Bash(jq \".actions[] | select\\(.action.action_name == \"\"create_users_and_group\"\"\\)\")",
       "WebSearch",
       "WebFetch(domain:voidzero.dev)",
-      "Bash(.specify/scripts/bash/create-new-feature.sh \"技術選定として，TauriのフロントエンドにはReact + Viteが採用されている。しかし，最近Vite plus \\(https://github.com/voidzero-dev/vite-plus\\)がリリースされた。このツールの学習も兼ねて，こちらを使用したい。Tauriはフロントエンドの自由度が高く，この点は問題ないのではないか。\" --json --short-name \"vite-plus-migration\" \"Migrate frontend build tool from Vite to Vite Plus\")"
+      "Bash(.specify/scripts/bash/create-new-feature.sh \"技術選定として，TauriのフロントエンドにはReact + Viteが採用されている。しかし，最近Vite plus \\(https://github.com/voidzero-dev/vite-plus\\)がリリースされた。このツールの学習も兼ねて，こちらを使用したい。Tauriはフロントエンドの自由度が高く，この点は問題ないのではないか。\" --json --short-name \"vite-plus-migration\" \"Migrate frontend build tool from Vite to Vite Plus\")",
+      "Bash(vite-plus --help)",
+      "Bash(cargo-tauri --version)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }

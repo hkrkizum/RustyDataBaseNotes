@@ -42,7 +42,7 @@
 				"ms-vscode.live-server",
 				"redhat.vscode-yaml",
 				// AI
-				"GitHub.copilot-chat",
+				// "GitHub.copilot-chat",
 				// Podman
 				"dreamcatcher45.podmanager",
 				// Quarto

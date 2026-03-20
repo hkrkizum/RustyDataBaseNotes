@@ -70,4 +70,5 @@ echo "==> Installing Codex..."
 sudo chown -R "$(id -u):$(id -g)" "$HOME/.codex"
 pnpm add -g @openai/codex
 
+# --- Final message ---
 echo "==> Setup complete!"

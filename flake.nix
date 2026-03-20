@@ -8,17 +8,12 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    vp-overlay = {
-      url = "github:ryoppippi/vp-overlay";
-    };
   };
 
   outputs =
     {
       nixpkgs,
       home-manager,
-      vp-overlay,
       ...
     }:
     let
@@ -33,15 +28,11 @@
         nixpkgs.lib.genAttrs systems (
           system:
           f {
-            pkgs = import nixpkgs {
-              inherit system;
-              overlays = [ vp-overlay.overlays.default ];
-            };
+            pkgs = import nixpkgs { inherit system; };
           }
         );
       commonPackagesFor =
         pkgs: with pkgs; [
-          # utils
           vim
           curl
           wget
@@ -52,20 +43,14 @@
           dust
           procs
 
-          # uv
           uv
 
-          # nix
           nil
           nixd
           nixfmt
 
-          # nodejs
           nodejs
           pnpm
-          vite-plus
-
-          # zsh
           zsh-powerlevel10k
         ];
       projectPackagesFor =
@@ -113,22 +98,14 @@
 
       # devcontainer 内で home-manager switch --flake .#devcontainer で適用
       homeConfigurations.devcontainer = home-manager.lib.homeManagerConfiguration {
-        pkgs = import nixpkgs {
-          system = "x86_64-linux";
-          overlays = [ vp-overlay.overlays.default ];
-        };
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
         modules = [
           ./home.nix
         ];
         extraSpecialArgs = {
           username = defaultUsername;
           homeDirectory = defaultHomeDirectory;
-          commonPackages = commonPackagesFor (
-            import nixpkgs {
-              system = "x86_64-linux";
-              overlays = [ vp-overlay.overlays.default ];
-            }
-          );
+          commonPackages = commonPackagesFor nixpkgs.legacyPackages.x86_64-linux;
         };
       };
     };
