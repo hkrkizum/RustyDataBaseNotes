@@ -43,6 +43,8 @@
           dust
           procs
 
+          uv
+
           nil
           nixd
           nixfmt
