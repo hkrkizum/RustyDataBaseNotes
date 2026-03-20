@@ -4,18 +4,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
-    {
-      nixpkgs,
-      home-manager,
-      ...
-    }:
+    { nixpkgs, ... }:
     let
       systems = [
         "x86_64-linux"
@@ -31,28 +23,6 @@
             pkgs = import nixpkgs { inherit system; };
           }
         );
-      commonPackagesFor =
-        pkgs: with pkgs; [
-          vim
-          curl
-          wget
-          unzip
-          zip
-          jq
-          tree
-          dust
-          procs
-
-          uv
-
-          nil
-          nixd
-          nixfmt
-
-          nodejs
-          pnpm
-          zsh-powerlevel10k
-        ];
       fontPackagesFor =
         pkgs: with pkgs; [
           noto-fonts-cjk-sans
@@ -63,6 +33,10 @@
         ];
       projectPackagesFor =
         pkgs: with pkgs; [
+          nodejs
+          pnpm
+          uv
+
           rustup
           cargo-tauri
           pkg-config
@@ -93,16 +67,13 @@
           libglvnd
         ];
 
-      # devcontainer 用のデフォルト値（必要に応じてオーバーライド可能）
-      defaultUsername = "vscode";
-      defaultHomeDirectory = "/home/${defaultUsername}";
     in
     {
       devShells = forAllSystems (
         { pkgs }:
         {
           default = pkgs.mkShell {
-            packages = (commonPackagesFor pkgs) ++ (projectPackagesFor pkgs) ++ (fontPackagesFor pkgs);
+            packages = (projectPackagesFor pkgs) ++ (fontPackagesFor pkgs);
             shellHook = ''
               export CODEX_HOME="$PWD/.codex"
               export FONTCONFIG_FILE="${pkgs.makeFontsConf { fontDirectories = fontPackagesFor pkgs; }}"
@@ -119,18 +90,5 @@
       );
 
       formatter = forAllSystems ({ pkgs }: pkgs.nixfmt-tree);
-
-      # devcontainer 内で home-manager switch --flake .#devcontainer で適用
-      homeConfigurations.devcontainer = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        modules = [
-          ./home.nix
-        ];
-        extraSpecialArgs = {
-          username = defaultUsername;
-          homeDirectory = defaultHomeDirectory;
-          commonPackages = commonPackagesFor nixpkgs.legacyPackages.x86_64-linux;
-        };
-      };
     };
 }
