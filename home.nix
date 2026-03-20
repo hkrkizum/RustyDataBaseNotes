@@ -160,6 +160,7 @@
   # ----------------------------
   home.sessionPath = [
     "$HOME/.local/share/pnpm"
+    "$HOME/.vite-plus/bin"
   ];
 
   home.sessionVariables = {
