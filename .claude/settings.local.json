@@ -34,7 +34,8 @@
       "Bash(cargo nextest:*)",
       "Bash(pnpm build:*)",
       "Bash(cargo make:*)",
-      "Bash(cargo clippy:*)"
+      "Bash(cargo clippy:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)"
     ]
   }
 }
