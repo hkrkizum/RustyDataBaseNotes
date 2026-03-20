@@ -2,6 +2,7 @@
   pkgs,
   username,
   homeDirectory,
+  commonPackages,
   ...
 }:
 {
@@ -14,31 +15,7 @@
   # ----------------------------
   # 基本パッケージ
   # ----------------------------
-  home.packages = with pkgs; [
-    # basic tools
-    vim
-    curl
-    wget
-    unzip
-    zip
-    jq
-    tree
-    bubblewrap
-
-    # Nix
-    nil
-    nixd
-    nixfmt
-    direnv
-    nix-direnv
-
-    # Node.js
-    nodejs
-    pnpm
-
-    # prompt / shell extras
-    zsh-powerlevel10k
-  ];
+  home.packages = commonPackages;
 
   # ----------------------------
   # Git

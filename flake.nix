@@ -31,6 +31,45 @@
             pkgs = import nixpkgs { inherit system; };
           }
         );
+      commonPackagesFor =
+        pkgs: with pkgs; [
+          vim
+          curl
+          wget
+          unzip
+          zip
+          jq
+          tree
+
+          nil
+          nixd
+          nixfmt
+
+          nodejs
+          pnpm
+          zsh-powerlevel10k
+        ];
+      projectPackagesFor =
+        pkgs: with pkgs; [
+          rustup
+          cargo-tauri
+          pkg-config
+          gcc
+          clang
+          mold
+          gnumake
+
+          gtk3
+          webkitgtk_4_1
+          libsoup_3
+          glib
+          cairo
+          pango
+          gdk-pixbuf
+          atk
+          harfbuzz
+          zlib
+        ];
 
       # devcontainer 用のデフォルト値（必要に応じてオーバーライド可能）
       defaultUsername = "vscode";
@@ -41,26 +80,7 @@
         { pkgs }:
         {
           default = pkgs.mkShell {
-            packages = with pkgs; [
-              rustup
-              cargo-tauri
-              pkg-config
-              gcc
-              clang
-              mold
-              gnumake
-
-              gtk3
-              webkitgtk_4_1
-              libsoup_3
-              glib
-              cairo
-              pango
-              gdk-pixbuf
-              atk
-              harfbuzz
-              zlib
-            ];
+            packages = (commonPackagesFor pkgs) ++ (projectPackagesFor pkgs);
             shellHook = ''
               export CODEX_HOME="$PWD/.codex"
             '';
@@ -79,6 +99,7 @@
         extraSpecialArgs = {
           username = defaultUsername;
           homeDirectory = defaultHomeDirectory;
+          commonPackages = commonPackagesFor nixpkgs.legacyPackages.x86_64-linux;
         };
       };
     };

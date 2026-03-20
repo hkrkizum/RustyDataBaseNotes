@@ -9,13 +9,18 @@
 	// systemd を PID 1 として使用 (Podman)
 	"overrideCommand": false,
 	"runArgs": [
-		"--systemd=always"
+		"--systemd=always",
+		"--pids-limit=-1"
 	],
 	// Persist Nix store across container rebuilds
 	"mounts": [
 		"source=nix-store-${devcontainerId},target=/nix,type=volume",
 		"source=claude-data,target=/home/vscode/.claude,type=volume",
-		"source=codex-data,target=/home/vscode/.codex,type=volume"
+		"source=codex-data,target=/home/vscode/.codex,type=volume",
+		// Cargo cache (registry + git deps + build artifacts)
+		"source=cargo-registry,target=/home/vscode/.cargo/registry,type=volume",
+		"source=cargo-git,target=/home/vscode/.cargo/git,type=volume",
+		"source=cargo-target-${devcontainerId},target=${containerWorkspaceFolder}/src-tauri/target,type=volume"
 	],
 	// 初回: Nix インストール + Home Manager 適用
 	"postCreateCommand": "bash .devcontainer/setup.sh",
@@ -75,6 +80,4 @@
 			}
 		}
 	}
-// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-// "remoteUser": "root"
 }
