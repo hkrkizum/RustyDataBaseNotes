@@ -25,7 +25,8 @@
       "WebFetch(domain:crates.io)",
       "Bash(bash .specify/scripts/bash/update-agent-context.sh claude)",
       "WebFetch(domain:tauritutorials.com)",
-      "Bash(bash .specify/scripts/bash/check-prerequisites.sh --json)"
+      "Bash(bash .specify/scripts/bash/check-prerequisites.sh --json)",
+      "Bash(bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks 2>&1)"
     ]
   }
 }
