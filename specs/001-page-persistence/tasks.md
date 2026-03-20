@@ -72,7 +72,7 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Implement `SqlxPageRepository` struct (holds `SqlitePool`) with `::new()`, implement `create` method (INSERT via `sqlx::query!`) and `find_by_id` method (SELECT by id via `sqlx::query_as!`, return `PageError::NotFound` if absent) in `src-tauri/src/infrastructure/persistence/page_repository.rs`
+- [ ] T019 [US1] Implement `SqlxPageRepository` struct (holds `SqlitePool`) with `::new()`, `impl PageRepository for SqlxPageRepository` として `create` method (INSERT via `sqlx::query!`) and `find_by_id` method (SELECT by id via `sqlx::query_as!`, return `PageError::NotFound` if absent) を実装 in `src-tauri/src/infrastructure/persistence/page_repository.rs`
 - [ ] T020 [US1] Implement `create_page` and `get_page` `#[tauri::command]` async handlers (extract `AppState` from `State`, construct domain types, call repository, convert to `PageDto`) in `src-tauri/src/ipc/page_commands.rs`, and register both commands in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T021 [P] [US1] Implement `CreatePageForm` component (controlled title input, submit button, validation feedback, loading state, toast on success/error via sonner) in `src/features/pages/CreatePageForm.tsx` and `src/features/pages/CreatePageForm.module.css`
 - [ ] T022 [US1] Implement initial `usePages` custom hook with `createPage` function (invoke `create_page` IPC, update local state, error handling) in `src/features/pages/usePages.ts`
@@ -156,8 +156,13 @@ tested, and reviewed independently.
 
 - [ ] T044 [P] Run `cargo sqlx prepare` in `src-tauri/` to generate `.sqlx/` offline query metadata directory for CI builds
 - [ ] T045 [P] Verify performance targets: create a test inserting 1,000 pages and confirm `find_all` completes in <1s, `create` in <1s in `src-tauri/src/infrastructure/persistence/page_repository.rs` `#[cfg(test)]`
-- [ ] T046 Verify edge cases: 255-char title boundary (valid), 256-char title (rejected), whitespace-only title (rejected), concurrent create operations, WAL mode integrity after simulated crash
+- [ ] T046 Verify edge cases in `src-tauri/src/infrastructure/persistence/page_repository.rs` `#[cfg(test)]`:
+  - (a) タイトル境界値: 255 文字（有効），256 文字（`TitleTooLong` で拒否），空白のみ（`TitleEmpty` で拒否）
+  - (b) 同時書き込み: 2 つの `tokio::spawn` タスクから同時に `create` を実行し，両方が成功し `find_all` で 2 件取得できることを検証
+  - (c) マイグレーション失敗復旧: 不正な SQL を含むマイグレーションファイルを追加した状態で `init_pool` を呼び出し，エラーが返ること，および不正マイグレーションを除去後に再度 `init_pool` が成功することを検証
+  - (d) WAL モード整合性: ページ作成直後にプール接続を強制ドロップし，新しいプールで再接続して作成済みページが取得できることを検証
 - [ ] T047 Run full QA suite: `cargo make qa` (fmt + clippy + nextest + doc) and `pnpm build`, confirm zero warnings and all tests green
+- [ ] T048 DB ファイル検証・起動時エラー報告: `database::init_pool` に DB ファイルパスの事前検証を追加。DB ファイルが破損（SQLite ヘッダ不正）または親ディレクトリが存在しない場合に，`StorageError` を返しフロントエンドに構造化エラーとして伝達する。`src-tauri/src/infrastructure/persistence/database.rs` に検証ロジックを実装し，対応するテストを `#[cfg(test)]` に追加
 
 ---
 
@@ -166,19 +171,17 @@ tested, and reviewed independently.
 ### Phase Dependencies
 
 ```
-Phase 1: Setup ──► Phase 2: Foundational ──┬──► Phase 3: US1 (P1) ──► Phase 4: US2 (P1) ──┬──► Phase 7: Polish
-                                            │                                                │
-                                            ├──► Phase 5: US3 (P2) ────────────────────────►─┤
-                                            │                                                │
-                                            └──► Phase 6: US4 (P2) ────────────────────────►─┘
+Phase 1: Setup ──► Phase 2: Foundational ──► Phase 3: US1 (P1) ──► Phase 4: US2 (P1) ──┬──► Phase 5: US3 (P2) ──┬──► Phase 7: Polish
+                                                                                         │                        │
+                                                                                         └──► Phase 6: US4 (P2) ──┘
 ```
 
 - **Setup** (Phase 1): Starts immediately
 - **Foundational** (Phase 2): Depends on Setup, blocks ALL user stories
 - **US1** (Phase 3): Depends on Foundational — **must complete before US2** (US2 displays what US1 creates)
-- **US2** (Phase 4): Depends on US1
-- **US3** (Phase 5): Depends on Foundational — can run **in parallel with US1/US2** (touches update path only)
-- **US4** (Phase 6): Depends on Foundational — can run **in parallel with US1/US2** (touches delete path only)
+- **US2** (Phase 4): Depends on US1 — **must complete before US3/US4**（US3 の T035 と US4 の T042 は US2 の T029 で作成される `PageItem.tsx` を編集するため）
+- **US3** (Phase 5): Depends on US2 — update path の実装
+- **US4** (Phase 6): Depends on US2 — delete path の実装。**US3 と並行実行可能**（異なる CRUD 操作・異なる UI コンポーネントを扱う）
 - **Polish** (Phase 7): Starts after ALL user stories are complete
 
 ### Within Each User Story
@@ -198,7 +201,7 @@ Phase 1: Setup ──► Phase 2: Foundational ──┬──► Phase 3: US1 (
 | T017 + T018 | ✅ Yes (T017 only) | Unit tests (T017) independent of integration tests (T018 depends on repository) |
 | T021 + backend work | ✅ Yes | Frontend component can be built with types from Phase 2 |
 | T028 + T029 | ✅ Yes | Different frontend components |
-| US3 + US4 | ✅ Yes (after Phase 2) | Touch different CRUD operations and different UI components |
+| US3 + US4 | ✅ Yes (after US2) | Touch different CRUD operations and different UI components, but both depend on PageItem.tsx (T029) |
 | T041 + backend work | ✅ Yes | Modal component independent of delete implementation |
 
 ---
