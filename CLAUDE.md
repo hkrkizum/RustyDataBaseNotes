@@ -52,6 +52,16 @@
 | `ts-check` | `tsc --noEmit`（型チェック） |
 | `test-ts` | Vitest（`--passWithNoTests`） |
 
+### Coverage
+
+| タスク | 内容 |
+|--------|------|
+| `coverage` | Rust + TypeScript のカバレッジを一括算出 |
+| `coverage-rs` | Rust カバレッジ（cargo-llvm-cov，テキスト表示） |
+| `coverage-rs-html` | Rust カバレッジ HTML レポート（ブラウザで開く） |
+| `coverage-rs-lcov` | Rust カバレッジ LCOV 出力（CI 連携用） |
+| `coverage-ts` | TypeScript カバレッジ（Vitest + v8） |
+
 ### その他
 
 | タスク | 内容 |
