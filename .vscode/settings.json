@@ -4,6 +4,7 @@
   "rust-analyzer.rust.analyzerTargetDir": true,
   "markdownlint.config": {
     "MD060": false,
-    "MD022": false
+    "MD022": false,
+    "MD032": false
   }
 }
