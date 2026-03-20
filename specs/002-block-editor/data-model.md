@@ -47,6 +47,11 @@
 - バリデーションルール:
   - 空文字列を許容（FR-011: ユーザーが意図的に空行を作ることを許容）
   - 最大 10,000 文字（Unicode 文字数 = `chars().count()`）
+  - **文字数カウント方式**: Rust の `chars().count()`（Unicode スカラー値数）を権威的基準とする。
+    フロントエンドの HTML `maxLength` 属性は JavaScript の string length（UTF-16 コードユニット数）
+    でカウントするため，BMP 外の文字（絵文字等）で計測値が乖離する可能性がある。
+    フロントエンドの `maxLength` は UX ヒントとして使用し，バックエンドのバリデーションを
+    最終的な制約とする
 - `TryFrom<String>` で生成 — バリデーション失敗時は `BlockError::ContentTooLong` を返す
 - `Display`, `Serialize`, `Deserialize` を実装
 
