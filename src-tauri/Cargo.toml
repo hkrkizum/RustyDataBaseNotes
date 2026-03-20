@@ -39,7 +39,6 @@ tokio = { version = "1", features = ["macros", "rt", "time"] }
 
 [lints.clippy]
 unwrap_used = "deny"
-# expect_used = "deny"
+expect_used = "deny"
 panic = "deny"
 unreachable = "deny"
-

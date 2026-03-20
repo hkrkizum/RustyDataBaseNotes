@@ -23,7 +23,9 @@ export function PageListView({
     return (
       <div className={styles.empty}>
         <p>ページがありません</p>
-        <p className={styles.hint}>上のフォームから新しいページを作成してください</p>
+        <p className={styles.hint}>
+          上のフォームから新しいページを作成してください
+        </p>
       </div>
     );
   }
