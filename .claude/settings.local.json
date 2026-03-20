@@ -22,7 +22,19 @@
       "WebFetch(domain:api.github.com)",
       "Bash(echo \"FONTCONFIG_FILE=$FONTCONFIG_FILE\")",
       "Bash(echo \"FONTCONFIG_PATH=$FONTCONFIG_PATH\")",
-      "Bash(printenv)"
+      "Bash(printenv)",
+      "Bash(find /workspaces/RustyDataBaseNotes -name *.json -path */node_modules/@tauri-apps*)",
+      "Bash(find /workspaces/RustyDataBaseNotes/node_modules/.pnpm/@tauri-apps* -type f -name \"*.d.ts\")",
+      "Bash(xargs -I {} sh -c 'basename {} .crate')",
+      "Bash(ls /home/vscode/.cargo/registry/src/index.crates.io-*/tauri*)",
+      "Bash(ls /home/vscode/.cargo/registry/src/index.crates.io-*/wry*)",
+      "Bash(find /home/vscode/.cargo/registry/src/index.crates.io-*/tauri-2.10.3 -type f -name \"*.rs\")",
+      "Bash(grep -r \"disable.*hardware\\\\|HardwareAcceleration\" /home/vscode/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/wry*)",
+      "Bash(find /home/vscode/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-2.10.3 -name *.rs)",
+      "Bash(find /home/vscode/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f -name *tauri-runtime* -type d)",
+      "Bash(find /home/vscode/.cargo/registry/src -name *.rs -type f -exec grep -l \"hardware\\\\|acceleration\\\\|HardwareAcceleration\" {})",
+      "Bash(2)",
+      "Bash(echo:*)"
     ]
   }
 }

@@ -1,3 +1,31 @@
 {
-  "recommendations": ["tauri-apps.tauri-vscode", "rust-lang.rust-analyzer"],
+  "recommendations": [
+    // nix
+    "mkhl.direnv",
+    "jnoortheen.nix-ide",
+    // git
+    "mhutchie.git-graph",
+    // Markdown
+    "yzhang.markdown-all-in-one",
+    "shd101wyy.markdown-preview-enhanced",
+    "DavidAnson.vscode-markdownlint",
+    // utilities
+    "janisdd.vscode-edit-csv",
+    "ms-vscode.live-server",
+    "redhat.vscode-yaml",
+    // AI
+    // "GitHub.copilot-chat",
+    // Podman
+    "dreamcatcher45.podmanager",
+    // Quarto
+    "quarto.quarto",
+    // Rust
+    "rust-lang.rust-analyzer",
+    "tamasfe.even-better-toml",
+    "fill-labs.dependi",
+    // Tauri
+    "tauri-apps.tauri-vscode",
+    // TS
+    "esbenp.prettier-vscode"
+  ]
 }
