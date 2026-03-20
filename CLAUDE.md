@@ -8,11 +8,26 @@
 
 タスク定義は `Makefile.toml`。すべて `cargo make <task>` で実行する。
 
+### Build & Check
+
+| タスク | 内容 |
+|--------|------|
+| `build` | Tauri 本番ビルド |
+| `check` | `cargo check --workspace`（高速コンパイルチェック） |
+| `clean` | ビルド成果物の削除（`target/` + `dist/`） |
+
 ### Quality Gate
 
 | タスク | 内容 |
 |--------|------|
 | `qa` | フル QA（`qa-rs` → `qa-ts` を順次実行） |
+| `check-all` | テスト抜き静的チェック（fmt-check → clippy → lint-ts → ts-check） |
+
+#### Formatting
+
+| タスク | 内容 |
+|--------|------|
+| `fmt` | Rust + TypeScript を一括フォーマット |
 
 #### Rust (`qa-rs`): fmt-rs → clippy → test → doc-test
 
@@ -42,9 +57,9 @@
 |--------|------|
 | `serve` | Tauri 開発サーバー（HMR） |
 | `doc` | rustdoc をビルド＆ブラウザで開く |
+| `dev-db-reset` | 開発用 SQLite DB を削除（再起動で再作成） |
 
 ## Recent Changes
-- 002-block-editor: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
 - 002-block-editor: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
 - 001-page-persistence: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
 
