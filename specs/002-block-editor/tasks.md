@@ -47,7 +47,7 @@ tested, and reviewed independently.
 
 ### Implementation for Foundational Types
 
-- [ ] T005 [P] Define `BlockId`, `BlockContent`, `BlockPosition` value objects and `Block` entity in `src-tauri/src/domain/block/entity.rs` — `BlockContent` validates 0–10,000 chars via `TryFrom<String>`, `BlockPosition` validates non-negative via `TryFrom<i64>`, `BlockId` wraps `Uuid` with `Uuid::now_v7()` factory
+- [ ] T005 Define `BlockId`, `BlockContent`, `BlockPosition` value objects and `Block` entity in `src-tauri/src/domain/block/entity.rs` — `BlockContent` validates 0–10,000 chars via `TryFrom<String>`, `BlockPosition` validates non-negative via `TryFrom<i64>`, `BlockId` wraps `Uuid` with `Uuid::now_v7()` factory（**depends on T004**: 同一ファイルのテストが先行する必要がある — Red-Green）
 - [ ] T006 [P] Define `BlockError` enum (`ContentTooLong`, `InvalidPosition`, `NotFound`, `CannotMoveUp`, `CannotMoveDown`) in `src-tauri/src/domain/block/error.rs`
 - [ ] T007 [P] Create `src-tauri/src/domain/block/mod.rs` re-exporting entity and error types
 - [ ] T008 Create `EditorSession` struct skeleton in `src-tauri/src/domain/editor/session.rs` — struct definition with fields (`page_id: PageId`, `blocks: Vec<Block>`, `is_dirty: bool`). Operation methods (`add_block`, `edit_block_content`, `move_block_up`, `move_block_down`, `remove_block`) are NOT implemented here — they will be added per user story following Red-Green
@@ -126,7 +126,7 @@ tested, and reviewed independently.
 ### Tests for User Story 3
 
 - [ ] T038 [P] [US3] Add unit tests for `EditorSession::edit_block_content()` — verify content updated, `is_dirty` true, `ContentTooLong` error at 10,001 chars, `NotFound` error for invalid ID, empty content accepted — in `src-tauri/src/domain/editor/session.rs`
-- [ ] T039 [P] [US3] Add unit tests for `BlockContent::try_from()` boundary conditions — verify exact boundary at 10,000 chars OK vs 10,001 chars error, multi-byte Unicode characters counted correctly — in `src-tauri/src/domain/block/entity.rs`
+- [ ] T039 [P] [US3] Add unit tests for `BlockContent::try_from()` with multi-byte Unicode — verify BMP 外文字（絵文字，サロゲートペア等）が `chars().count()` で正しくカウントされること（基本的な境界テスト 10,000/10,001 chars は T004 で実施済み） — in `src-tauri/src/domain/block/entity.rs`
 
 ### Implementation for User Story 3
 
@@ -134,7 +134,7 @@ tested, and reviewed independently.
 - [ ] T041 [US3] Implement `edit_block_content` IPC command in `src-tauri/src/ipc/editor_commands.rs` — get session, call `edit_block_content()`, return `EditorStateDto`
 - [ ] T042 [US3] Register `edit_block_content` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T043 [US3] Add `editBlockContent(pageId, blockId, content)` to `useEditor` hook in `src/features/editor/useEditor.ts`
-- [ ] T044 [US3] Update `BlockItem` component in `src/features/editor/BlockItem.tsx` — replace read-only display with `<textarea>`, local state for input buffer, `onBlur` triggers `editBlockContent` IPC. `maxLength={10000}` は UX ヒントとして使用（バックエンドの `BlockContent` バリデーションが権威的基準。HTML `maxLength` は UTF-16 コードユニット数でカウントするため，BMP 外文字で Rust の `chars().count()` と乖離する可能性がある）
+- [ ] T044 [US3] Update `BlockItem` component in `src/features/editor/BlockItem.tsx` — replace read-only display with `<textarea>`, local state for input buffer, `onBlur` triggers `editBlockContent` IPC. `maxLength={10000}` は UX ヒントとして使用（バックエンドの `BlockContent` バリデーションが権威的基準。HTML `maxLength` は UTF-16 コードユニット数でカウントするため，BMP 外文字で Rust の `chars().count()` と乖離する可能性がある）。**エラー時リカバリ**: `editBlockContent` が `contentTooLong` エラーを返した場合，返却された `EditorState` のブロック内容で textarea のローカル state を上書きし，エラー toast を表示する（textarea とバックエンド状態の乖離を防止）
 - [ ] T045 [US3] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 3 is fully functional — block content can be edited in-place.
