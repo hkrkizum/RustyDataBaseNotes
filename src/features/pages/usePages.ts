@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { Page, CommandError } from "./types";
+import type { CommandError, Page } from "./types";
 
 function errorMessage(err: unknown): string {
   if (typeof err === "object" && err !== null && "message" in err) {
