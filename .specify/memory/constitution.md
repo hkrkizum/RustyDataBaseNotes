@@ -1,18 +1,18 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 -> 1.1.0
+- Version change: 1.2.0 -> 1.3.0
 - Modified principles: None
 - Added sections: None
 - Removed sections: None
 - Modified subsections:
-  - Technical Standards: added cargo-make (task runner) and nextest (Rust test runner)
-  - Delivery Workflow: quality gates updated from `cargo test` to `cargo nextest run`
+  - Technical Standards: added home.nix description
+    (Home Manager module, CLI tools, git config)
+  - CLAUDE.md simplified to a pointer referencing this constitution
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md (Testing line updated to reference nextest)
-  - ✅ .specify/templates/spec-template.md (no change needed, no tool-specific references)
-  - ✅ .specify/templates/tasks-template.md (QA command references updated to nextest)
+  - ✅ .specify/templates/plan-template.md (no change needed)
+  - ✅ .specify/templates/spec-template.md (no change needed)
+  - ✅ .specify/templates/tasks-template.md (no change needed)
   - ⚠ .specify/templates/commands/ is absent in this repository
-  - ✅ README.md reviewed, no update required
 - Follow-up TODOs:
   - None
 -->
@@ -77,6 +77,13 @@ Sync Impact Report
   ならない。
 - ユーザー向け文書と作業メモは日本語を基本とし，Rust の公開ドキュメントコメントは英語で
   記述する。
+- 日本語文書の読点は「，」（全角カンマ），句点は「。」とする。
+- 開発環境は WSL2 上の Nix devshell で構成する。`flake.nix` の `devShells.default` で
+  Tauri のビルド依存（rustup, cargo-tauri, GTK, WebKitGTK 等）を管理し，`.envrc` と
+  direnv + nix-direnv により devshell を自動で有効にする。
+- `home.nix` はポータブルな Home Manager モジュールであり，zsh, powerlevel10k,
+  CLI ツール（eza, fzf, bat, fd, rg, direnv），git 設定を含む。
+  `flake.nix` の `homeConfigurations` から参照される。
 
 ## Delivery Workflow
 
@@ -100,4 +107,4 @@ Sync Impact Report
 すべての計画レビュー，実装レビュー，リリース前確認では，本憲章への適合性を確認し，
 違反がある場合は例外理由と解消計画を明示しなければならない（MUST）。
 
-**Version**: 1.1.0 | **Ratified**: 2026-03-10 | **Last Amended**: 2026-03-20
+**Version**: 1.3.0 | **Ratified**: 2026-03-10 | **Last Amended**: 2026-03-21
