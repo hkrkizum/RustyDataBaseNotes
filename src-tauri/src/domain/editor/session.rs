@@ -550,4 +550,59 @@ mod tests {
         session.mark_saved();
         assert!(!session.is_dirty());
     }
+
+    // T074: Individual operation performance benchmarks (<100ms each)
+
+    #[test]
+    fn performance_add_block_under_100ms() {
+        let mut session = make_session_with_blocks(1_000);
+        let start = std::time::Instant::now();
+        session.add_block();
+        let elapsed = start.elapsed();
+        assert!(
+            elapsed < std::time::Duration::from_millis(100),
+            "add_block took {elapsed:?}"
+        );
+    }
+
+    #[test]
+    fn performance_edit_block_content_under_100ms() {
+        let mut session = make_session_with_blocks(1_000);
+        let id = session.blocks()[500].id().clone();
+        let start = std::time::Instant::now();
+        session
+            .edit_block_content(&id, "Updated content".to_owned())
+            .unwrap();
+        let elapsed = start.elapsed();
+        assert!(
+            elapsed < std::time::Duration::from_millis(100),
+            "edit_block_content took {elapsed:?}"
+        );
+    }
+
+    #[test]
+    fn performance_move_block_up_under_100ms() {
+        let mut session = make_session_with_blocks(1_000);
+        let id = session.blocks()[500].id().clone();
+        let start = std::time::Instant::now();
+        session.move_block_up(&id).unwrap();
+        let elapsed = start.elapsed();
+        assert!(
+            elapsed < std::time::Duration::from_millis(100),
+            "move_block_up took {elapsed:?}"
+        );
+    }
+
+    #[test]
+    fn performance_remove_block_under_100ms() {
+        let mut session = make_session_with_blocks(1_000);
+        let id = session.blocks()[500].id().clone();
+        let start = std::time::Instant::now();
+        session.remove_block(&id).unwrap();
+        let elapsed = start.elapsed();
+        assert!(
+            elapsed < std::time::Duration::from_millis(100),
+            "remove_block took {elapsed:?}"
+        );
+    }
 }
