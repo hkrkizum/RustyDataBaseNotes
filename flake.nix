@@ -53,6 +53,14 @@
           pnpm
           zsh-powerlevel10k
         ];
+      fontPackagesFor =
+        pkgs: with pkgs; [
+          noto-fonts-cjk-sans
+          noto-fonts-cjk-serif
+          noto-fonts-color-emoji
+          nerd-fonts.meslo-lg
+          plemoljp-nf
+        ];
       projectPackagesFor =
         pkgs: with pkgs; [
           rustup
@@ -94,12 +102,17 @@
         { pkgs }:
         {
           default = pkgs.mkShell {
-            packages = (commonPackagesFor pkgs) ++ (projectPackagesFor pkgs);
+            packages = (commonPackagesFor pkgs) ++ (projectPackagesFor pkgs) ++ (fontPackagesFor pkgs);
             shellHook = ''
               export CODEX_HOME="$PWD/.codex"
-              export FONTCONFIG_FILE="${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
+              export FONTCONFIG_FILE="${pkgs.makeFontsConf { fontDirectories = fontPackagesFor pkgs; }}"
               export __EGL_VENDOR_LIBRARY_DIRS="${pkgs.mesa}/share/glvnd/egl_vendor.d"
-              export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.mesa pkgs.libglvnd ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+              export LD_LIBRARY_PATH="${
+                pkgs.lib.makeLibraryPath [
+                  pkgs.mesa
+                  pkgs.libglvnd
+                ]
+              }''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
             '';
           };
         }
