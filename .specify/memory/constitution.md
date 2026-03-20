@@ -1,23 +1,18 @@
 <!--
 Sync Impact Report
-- Version change: template -> 1.0.0
-- Modified principles:
-  - Template Principle 1 -> I. Local-First Product Integrity
-  - Template Principle 2 -> II. Domain-Faithful Information Model
-  - Template Principle 3 -> III. Typed Boundaries and Bounded Contexts
-  - Template Principle 4 -> IV. Test-First Delivery and Quality Gates
-  - Template Principle 5 -> V. Safe Rust and Maintainability First
-- Added sections:
-  - Technical Standards
-  - Delivery Workflow
-- Removed sections:
-  - None
+- Version change: 1.0.0 -> 1.1.0
+- Modified principles: None
+- Added sections: None
+- Removed sections: None
+- Modified subsections:
+  - Technical Standards: added cargo-make (task runner) and nextest (Rust test runner)
+  - Delivery Workflow: quality gates updated from `cargo test` to `cargo nextest run`
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md
-  - ✅ .specify/templates/spec-template.md
-  - ✅ .specify/templates/tasks-template.md
-  - ⚠ .specify/templates/commands/ is absent in this repository, so command template sync is pending by structure
-  - ✅ README.md reviewed, no principle reference update required
+  - ✅ .specify/templates/plan-template.md (Testing line updated to reference nextest)
+  - ✅ .specify/templates/spec-template.md (no change needed, no tool-specific references)
+  - ✅ .specify/templates/tasks-template.md (QA command references updated to nextest)
+  - ⚠ .specify/templates/commands/ is absent in this repository
+  - ✅ README.md reviewed, no update required
 - Follow-up TODOs:
   - None
 -->
@@ -73,6 +68,10 @@ Sync Impact Report
 - TypeScript 依存管理は `pnpm` を使用する。
 - 永続化層はマイグレーション可能であり，ローカル保存，バックアップ，自動復旧方針を備える
   こと。
+- タスクランナーとして `cargo-make` を採用し，ビルド，テスト，lint 等の定型作業は
+  Makefile.toml に定義して一元管理する。
+- Rust のテスト実行には `cargo-nextest` を使用する。`cargo test` ではなく
+  `cargo nextest run` を標準のテストコマンドとする。
 - 大規模データ表示では仮想化等の手段により応答性を確保し，体感遅延を常態化させてはならない。
 - アプリケーション本体は意図しない外部通信，テレメトリ送信，サーバー依存機能を導入しては
   ならない。
@@ -88,7 +87,7 @@ Sync Impact Report
   最後にリファクタリングとドキュメント更新を置くこと。
 - レビューでは，禁止構文の混入，ドメイン語彙の逸脱，未計画の外部通信，移行やバックアップの
   欠落を必ず確認する。
-- 品質ゲートの既定は，`cargo fmt --all`，`cargo clippy`，`cargo test`，
+- 品質ゲートの既定は，`cargo fmt --all`，`cargo clippy`，`cargo nextest run`，
   `cargo doc --no-deps`，および必要なフロントエンド側の lint と test である。
 
 ## Governance
@@ -101,4 +100,4 @@ Sync Impact Report
 すべての計画レビュー，実装レビュー，リリース前確認では，本憲章への適合性を確認し，
 違反がある場合は例外理由と解消計画を明示しなければならない（MUST）。
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-10 | **Last Amended**: 2026-03-10
+**Version**: 1.1.0 | **Ratified**: 2026-03-10 | **Last Amended**: 2026-03-20

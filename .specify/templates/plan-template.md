@@ -24,7 +24,7 @@
 **Language/Version**: [Rust 2024, TypeScript 5.x or NEEDS CLARIFICATION]
 **Primary Dependencies**: [Tauri, chosen frontend framework, domain crates or NEEDS CLARIFICATION]
 **Storage**: [SQLite or equivalent local store, backup path, migration plan]
-**Testing**: [cargo test, cargo clippy, cargo doc --no-deps, pnpm test or NEEDS CLARIFICATION]
+**Testing**: [cargo nextest run, cargo clippy, cargo doc --no-deps, pnpm test or NEEDS CLARIFICATION]
 **Target Platform**: [Desktop: Windows first, other OS support if in scope]
 **Project Type**: [desktop-app]
 **Performance Goals**: [startup target, interaction latency, list or timeline rendering target]
