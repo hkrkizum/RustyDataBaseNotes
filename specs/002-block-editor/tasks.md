@@ -47,21 +47,22 @@ tested, and reviewed independently.
 
 ### Implementation for Foundational Types
 
-- [ ] T005 Define `BlockId`, `BlockContent`, `BlockPosition` value objects and `Block` entity in `src-tauri/src/domain/block/entity.rs` — `BlockContent` validates 0–10,000 chars via `TryFrom<String>`, `BlockPosition` validates non-negative via `TryFrom<i64>`, `BlockId` wraps `Uuid` with `Uuid::now_v7()` factory（**depends on T004**: 同一ファイルのテストが先行する必要がある — Red-Green）
-- [ ] T006 [P] Define `BlockError` enum (`ContentTooLong`, `InvalidPosition`, `NotFound`, `CannotMoveUp`, `CannotMoveDown`) in `src-tauri/src/domain/block/error.rs`
+- [ ] T005 Define `BlockId`, `BlockContent`, `BlockPosition` value objects and `Block` entity in `src-tauri/src/domain/block/entity.rs` — `BlockContent` validates 0–10,000 chars via `TryFrom<String>`, `BlockPosition` validates non-negative via `TryFrom<i64>`, `BlockId` wraps `Uuid` with `Uuid::now_v7()` factory。Principle VI 準拠の `///` doc comment を付与（`# Examples`, `# Errors` セクション含む。自明なアクセサは `# Examples` 免除）（**depends on T004**: 同一ファイルのテストが先行する必要がある — Red-Green）
+- [ ] T006 [P] Define `BlockError` enum (`ContentTooLong`, `InvalidPosition`, `NotFound`, `CannotMoveUp`, `CannotMoveDown`) in `src-tauri/src/domain/block/error.rs` — Principle VI 準拠の `///` doc comment を付与
 - [ ] T007 [P] Create `src-tauri/src/domain/block/mod.rs` re-exporting entity and error types
-- [ ] T008 Create `EditorSession` struct skeleton in `src-tauri/src/domain/editor/session.rs` — struct definition with fields (`page_id: PageId`, `blocks: Vec<Block>`, `is_dirty: bool`). Operation methods (`add_block`, `edit_block_content`, `move_block_up`, `move_block_down`, `remove_block`) are NOT implemented here — they will be added per user story following Red-Green
+- [ ] T008 Create `EditorSession` struct skeleton in `src-tauri/src/domain/editor/session.rs` — struct definition with fields (`page_id: PageId`, `blocks: Vec<Block>`, `is_dirty: bool`). Principle VI 準拠の `///` doc comment を付与。Operation methods (`add_block`, `edit_block_content`, `move_block_up`, `move_block_down`, `remove_block`) are NOT implemented here — they will be added per user story following Red-Green
 - [ ] T009 [P] Create `src-tauri/src/domain/editor/mod.rs` re-exporting `EditorSession`
 - [ ] T010 Register new modules in `src-tauri/src/domain/mod.rs` — add `pub mod block; pub mod editor;`
-- [ ] T011 [P] Define `BlockRepository` trait and `SqlxBlockRepository` implementation in `src-tauri/src/infrastructure/persistence/block_repository.rs` — `load_blocks(page_id)` returns `Vec<Block>` sorted by position, `save_all(page_id, blocks)` does delete-and-reinsert in transaction
+- [ ] T011 [P] Define `BlockRepository` trait and `SqlxBlockRepository` implementation in `src-tauri/src/infrastructure/persistence/block_repository.rs` — `load_blocks(page_id)` returns `Vec<Block>` sorted by position, `save_all(page_id, blocks)` does delete-and-reinsert in transaction。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [ ] T012 [P] Add `PRAGMA foreign_keys = ON` to database initialization in `src-tauri/src/infrastructure/persistence/database.rs`
 - [ ] T013 Register `block_repository` module in `src-tauri/src/infrastructure/persistence/mod.rs`
-- [ ] T014 [P] Add `Block(BlockError)` variant to `CommandError` in `src-tauri/src/ipc/error.rs` with `From<BlockError>` impl, and extend Serialize impl with kind/message mappings per contracts/ipc-commands.md
-- [ ] T015 [P] Add `EditorStateDto` and `BlockDto` structs with `serde(rename_all = "camelCase")` in `src-tauri/src/ipc/dto.rs`, with conversion from domain types
+- [ ] T014 [P] Add `Block(BlockError)` variant to `CommandError` in `src-tauri/src/ipc/error.rs` with `From<BlockError>` impl, and extend Serialize impl with kind/message mappings per contracts/ipc-commands.md — Principle VI 準拠の `///` doc comment を付与
+- [ ] T015 [P] Add `EditorStateDto` and `BlockDto` structs with `serde(rename_all = "camelCase")` in `src-tauri/src/ipc/dto.rs`, with conversion from domain types — Principle VI 準拠の `///` doc comment を付与
 - [ ] T016 [P] Define TypeScript types `EditorState`, `Block`, and extend `CommandError` kinds in `src/features/editor/types.ts` per contracts/ipc-commands.md
 - [ ] T017 Update `AppState` in `src-tauri/src/lib.rs` — add `sessions: tokio::sync::Mutex<HashMap<PageId, EditorSession>>` field and initialize it
+- [ ] T017.5 [P] Verify `#![warn(missing_docs)]` is set in `src-tauri/src/lib.rs`. If missing, add it. This ensures undocumented public items are caught at compile time per Principle VI
 
-**Checkpoint**: Foundation is ready — domain types, repository, errors, DTOs, and AppState all in place. User stories can proceed.
+**Checkpoint**: Foundation is ready — domain types, repository, errors, DTOs, AppState, and doc lint all in place. User stories can proceed.
 
 ---
 
@@ -78,9 +79,9 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Implement `EditorSession::new()`, `blocks()`, `is_dirty()`, `mark_saved()`, `page_id()` in `src-tauri/src/domain/editor/session.rs` — constructor loads blocks, accessors return session state
-- [ ] T021 [US1] Implement `open_editor` IPC command in `src-tauri/src/ipc/editor_commands.rs` — load blocks via `BlockRepository`, create `EditorSession`, store in `AppState.sessions`, return `EditorStateDto`
-- [ ] T022 [US1] Implement `close_editor` IPC command in `src-tauri/src/ipc/editor_commands.rs` — remove session from `AppState.sessions`, idempotent (no error if missing)
+- [ ] T020 [US1] Implement `EditorSession::new()`, `blocks()`, `is_dirty()`, `mark_saved()`, `page_id()` in `src-tauri/src/domain/editor/session.rs` — constructor loads blocks, accessors return session state。Principle VI 準拠の `///` doc comment を付与（`# Examples` は `new()` と `mark_saved()` に付与，自明なアクセサ `blocks()`, `is_dirty()`, `page_id()` は免除）
+- [ ] T021 [US1] Implement `open_editor` IPC command in `src-tauri/src/ipc/editor_commands.rs` — load blocks via `BlockRepository`, create `EditorSession`, store in `AppState.sessions`, return `EditorStateDto`。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
+- [ ] T022 [US1] Implement `close_editor` IPC command in `src-tauri/src/ipc/editor_commands.rs` — remove session from `AppState.sessions`, idempotent (no error if missing)。Principle VI 準拠の `///` doc comment を付与
 - [ ] T023 [US1] Register `editor_commands` module in `src-tauri/src/ipc/mod.rs` and register `open_editor`, `close_editor` commands in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T024 [P] [US1] Implement `useEditor` hook in `src/features/editor/useEditor.ts` — `openEditor(pageId)`, `closeEditor(pageId)` IPC wrappers, manage `EditorState` and loading state
 - [ ] T025 [P] [US1] Implement `EditorToolbar` component in `src/features/editor/EditorToolbar.tsx` and `src/features/editor/EditorToolbar.module.css` — back button, page title display, save button placeholder, dirty indicator placeholder
@@ -106,8 +107,8 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Implement `EditorSession::add_block()` in `src-tauri/src/domain/editor/session.rs` — append empty text block at end, generate UUIDv7, set `is_dirty = true`, return `&Block`
-- [ ] T033 [US2] Implement `add_block` IPC command in `src-tauri/src/ipc/editor_commands.rs` — get session, call `add_block()`, return `EditorStateDto`
+- [ ] T032 [US2] Implement `EditorSession::add_block()` in `src-tauri/src/domain/editor/session.rs` — append empty text block at end, generate UUIDv7, set `is_dirty = true`, return `&Block`。Principle VI 準拠の `///` doc comment を付与（`# Examples` セクション含む）
+- [ ] T033 [US2] Implement `add_block` IPC command in `src-tauri/src/ipc/editor_commands.rs` — get session, call `add_block()`, return `EditorStateDto`。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [ ] T034 [US2] Register `add_block` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T035 [US2] Add `addBlock(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [ ] T036 [US2] Add "ブロック追加" button to `BlockEditor.tsx` — call `addBlock`, auto-focus new block (last element), hide empty state when blocks exist
@@ -130,8 +131,8 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 3
 
-- [ ] T040 [US3] Implement `EditorSession::edit_block_content()` in `src-tauri/src/domain/editor/session.rs` — find block by ID, update content via `BlockContent::try_from()`, set `is_dirty = true`
-- [ ] T041 [US3] Implement `edit_block_content` IPC command in `src-tauri/src/ipc/editor_commands.rs` — get session, call `edit_block_content()`, return `EditorStateDto`
+- [ ] T040 [US3] Implement `EditorSession::edit_block_content()` in `src-tauri/src/domain/editor/session.rs` — find block by ID, update content via `BlockContent::try_from()`, set `is_dirty = true`。Principle VI 準拠の `///` doc comment を付与（`# Examples`, `# Errors` セクション含む）
+- [ ] T041 [US3] Implement `edit_block_content` IPC command in `src-tauri/src/ipc/editor_commands.rs` — get session, call `edit_block_content()`, return `EditorStateDto`。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [ ] T042 [US3] Register `edit_block_content` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T043 [US3] Add `editBlockContent(pageId, blockId, content)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [ ] T044 [US3] Update `BlockItem` component in `src/features/editor/BlockItem.tsx` — replace read-only display with `<textarea>`, local state for input buffer, `onBlur` triggers `editBlockContent` IPC. `maxLength={10000}` は UX ヒントとして使用（バックエンドの `BlockContent` バリデーションが権威的基準。HTML `maxLength` は UTF-16 コードユニット数でカウントするため，BMP 外文字で Rust の `chars().count()` と乖離する可能性がある）。**エラー時リカバリ**: `editBlockContent` が `contentTooLong` エラーを返した場合，返却された `EditorState` のブロック内容で textarea のローカル state を上書きし，エラー toast を表示する（textarea とバックエンド状態の乖離を防止）
@@ -151,12 +152,12 @@ tested, and reviewed independently.
 
 ### Tests for User Story 6
 
-- [ ] T046 [P] [US6] Add unit tests for `EditorSession::mark_saved()` — verify `is_dirty` becomes false — in `src-tauri/src/domain/editor/session.rs`
+- [ ] ~~T046~~ [P] [US6] ~~Add unit tests for `EditorSession::mark_saved()` — verify `is_dirty` becomes false~~ — **T068 に統合**（T068 が `mark_saved()` 後の `is_dirty` 状態遷移を包括的にテストする）
 - [ ] T047 [P] [US6] Add integration tests for `BlockRepository::save_all()` — in-memory SQLite, verify delete-and-reinsert in transaction, `created_at` preserved, `updated_at` refreshed, position normalized — in `src-tauri/src/infrastructure/persistence/block_repository.rs`
 
 ### Implementation for User Story 6
 
-- [ ] T048 [US6] Implement `save_editor` IPC command in `src-tauri/src/ipc/editor_commands.rs` — skip save if not dirty, call `BlockRepository::save_all()`, then `mark_saved()`, return `EditorStateDto` with `isDirty: false`
+- [ ] T048 [US6] Implement `save_editor` IPC command in `src-tauri/src/ipc/editor_commands.rs` — skip save if not dirty, call `BlockRepository::save_all()`, then `mark_saved()`, return `EditorStateDto` with `isDirty: false`。Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [ ] T049 [US6] Register `save_editor` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T050 [US6] Add `saveEditor(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts` — sync focused block content before save, handle saving state
 - [ ] T051 [US6] Wire save button in `EditorToolbar.tsx` — call `saveEditor`, show success toast (sonner), show error toast on failure (FR-014)
@@ -179,8 +180,8 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 4
 
-- [ ] T055 [US4] Implement `EditorSession::move_block_up()` and `move_block_down()` in `src-tauri/src/domain/editor/session.rs` — swap with adjacent block, update positions, return error at boundaries
-- [ ] T056 [US4] Implement `move_block_up` and `move_block_down` IPC commands in `src-tauri/src/ipc/editor_commands.rs`
+- [ ] T055 [US4] Implement `EditorSession::move_block_up()` and `move_block_down()` in `src-tauri/src/domain/editor/session.rs` — swap with adjacent block, update positions, return error at boundaries。Principle VI 準拠の `///` doc comment を付与（`# Examples`, `# Errors` セクション含む）
+- [ ] T056 [US4] Implement `move_block_up` and `move_block_down` IPC commands in `src-tauri/src/ipc/editor_commands.rs` — Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [ ] T057 [US4] Register `move_block_up`, `move_block_down` commands in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T058 [US4] Add `moveBlockUp(pageId, blockId)` and `moveBlockDown(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [ ] T059 [US4] Add up/down move buttons to `BlockItem` component in `src/features/editor/BlockItem.tsx` — disable up button for first block (position === 0), disable down button for last block (position === blocks.length - 1)
@@ -202,8 +203,8 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 5
 
-- [ ] T062 [US5] Implement `EditorSession::remove_block()` in `src-tauri/src/domain/editor/session.rs` — remove block by ID, renumber positions from 0, set `is_dirty = true`
-- [ ] T063 [US5] Implement `remove_block` IPC command in `src-tauri/src/ipc/editor_commands.rs`
+- [ ] T062 [US5] Implement `EditorSession::remove_block()` in `src-tauri/src/domain/editor/session.rs` — remove block by ID, renumber positions from 0, set `is_dirty = true`。Principle VI 準拠の `///` doc comment を付与（`# Examples`, `# Errors` セクション含む）
+- [ ] T063 [US5] Implement `remove_block` IPC command in `src-tauri/src/ipc/editor_commands.rs` — Principle VI 準拠の `///` doc comment を付与（`# Errors` セクション含む）
 - [ ] T064 [US5] Register `remove_block` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [ ] T065 [US5] Add `removeBlock(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [ ] T066 [US5] Add delete button to `BlockItem` component in `src/features/editor/BlockItem.tsx` — call `removeBlock`, show empty state in `BlockEditor.tsx` when all blocks removed
@@ -221,7 +222,7 @@ tested, and reviewed independently.
 
 ### Tests for User Story 7
 
-- [ ] T068 [P] [US7] Add unit tests for `EditorSession::is_dirty()` state transitions — starts false, becomes true after any mutation, returns to false after `mark_saved()` — in `src-tauri/src/domain/editor/session.rs` (may already be covered; ensure comprehensive coverage)
+- [ ] T068 [P] [US7] Add unit tests for `EditorSession::is_dirty()` state transitions — starts false, becomes true after any mutation (add/edit/move/remove), returns to false after `mark_saved()` — in `src-tauri/src/domain/editor/session.rs`（T046 のスコープを統合: `mark_saved()` → `is_dirty` false の検証を含む）
 
 ### Implementation for User Story 7
 
@@ -239,8 +240,9 @@ tested, and reviewed independently.
 **Purpose**: Work that spans multiple user stories
 
 - [ ] T073 Verify `PRAGMA foreign_keys = ON` works — add integration test in `src-tauri/src/infrastructure/persistence/block_repository.rs` that deletes a page and confirms its blocks are cascade-deleted
-- [ ] T074 [P] Verify performance: create 1,000 blocks in-memory, save, reload — confirm both operations complete in <1s — add as benchmark or integration test in `src-tauri/src/infrastructure/persistence/block_repository.rs`
-- [ ] T075 Run full QA: `cargo make qa` — formatting, lint, tests, doc-tests, TypeScript checks all pass
+- [ ] T074 [P] Verify performance: create 1,000 blocks in-memory, save, reload — confirm both operations complete in <1s。**追加**: 個別ブロック操作（add_block, edit_block_content, move_block_up, remove_block）が <100ms で完了することも検証する（CC-003 準拠） — add as benchmark or integration test in `src-tauri/src/infrastructure/persistence/block_repository.rs`
+- [ ] T074.5 [P] Verify all public Rust items have `///` doc comments — run `cargo doc --no-deps 2>&1` and confirm zero warnings（Principle VI 準拠検証）。`cargo make doc-check` が通ることを確認する
+- [ ] T075 Run full QA: `cargo make qa` — formatting, lint, tests, doc-tests, doc-check, TypeScript checks all pass
 - [ ] T076 Verify all 7 user story acceptance scenarios can be manually exercised via `cargo make serve`. Includes: (a) 外部通信の不在確認 — ネットワークモニタリングまたは `grep -r "fetch\|XMLHttpRequest\|navigator\.sendBeacon" src/` で外部通信コードがないことを検証する（FR-010）, (b) 全操作フロー（ページを開く → ブロック追加 → 編集 → 保存 → 再度開く）が 30 秒以内に完了することを計測する（SC-001）
 
 ---
@@ -264,7 +266,7 @@ Phase 10: Polish ─────────────────────
 
 ### Parallel Opportunities
 
-- **Phase 2**: T004, T005, T006, T007, T009 in parallel (different files). T011, T012, T014, T015, T016 in parallel (different files).
+- **Phase 2**: T004, T005, T006, T007, T009 in parallel (different files). T011, T012, T014, T015, T016, T017.5 in parallel (different files).
 - **Phase 3**: T024, T025, T026 frontend tasks in parallel after IPC commands registered.
 - **Phase 5 + Phase 6**: US3 と US6 は同時実施を推奨する。Phase 6（保存）は Phase 5（edit_block_content）に依存するため，US3 の IPC コマンド登録後に US6 の実装を開始する。
 - **Phases 4, 7, 8**: US2, US4, US5 can run in parallel after US1 completes (independent user stories touching same files — serialize if conflict).

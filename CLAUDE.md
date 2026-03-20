@@ -29,7 +29,7 @@
 |--------|------|
 | `fmt` | Rust + TypeScript を一括フォーマット |
 
-#### Rust (`qa-rs`): fmt-rs → clippy → test → doc-test
+#### Rust (`qa-rs`): fmt-rs → clippy → test → doc-test → doc-check
 
 | タスク | 内容 |
 |--------|------|
@@ -40,6 +40,7 @@
 | `test-filter` | `TEST_FILTER=<pattern> cargo make test-filter` で絞り込み |
 | `test-std` | 標準 cargo test（nextest 不使用） |
 | `doc-test` | ドキュメンテーションテスト |
+| `doc-check` | `cargo doc --no-deps`（警告 = エラー，Principle VI 準拠） |
 
 #### TypeScript (`qa-ts`): fmt-ts → lint-ts → ts-check → test-ts
 

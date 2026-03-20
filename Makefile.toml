@@ -42,8 +42,8 @@ description = "Static checks only (no tests): fmt-check → clippy → lint-ts �
 run_task = { name = ["fmt-rs-check", "fmt-ts-check", "clippy", "lint-ts", "ts-check"], fork = true }
 
 [tasks.qa-rs]
-description = "Rust quality gate: fmt → clippy → test → doc-test"
-run_task = { name = ["fmt-rs", "clippy", "test", "doc-test"], fork = true }
+description = "Rust quality gate: fmt → clippy → test → doc-test → doc-check"
+run_task = { name = ["fmt-rs", "clippy", "test", "doc-test", "doc-check"], fork = true }
 
 [tasks.qa-ts]
 description = "TypeScript quality gate: fmt → lint → type-check → test"
@@ -159,6 +159,14 @@ description = "Run documentation tests"
 command = "cargo"
 args = ["test", "--doc", "--workspace"]
 cwd = "src-tauri"
+
+[tasks.doc-check]
+description = "Verify rustdoc builds without warnings (Principle VI compliance)"
+command = "cargo"
+args = ["doc", "--no-deps", "--workspace"]
+cwd = "src-tauri"
+[tasks.doc-check.env]
+RUSTDOCFLAGS = "-D warnings"
 
 # ─────────────────────────────────────────────
 # Desktop app
