@@ -52,6 +52,10 @@ if [ -x "$HM_ZSH" ]; then
     echo "==> Login shell set to $HM_ZSH"
 fi
 
+# --- Fix volume ownership (Podman rootless creates volumes as root) ---
+echo "==> Fixing volume ownership..."
+sudo chown -R "$(id -u):$(id -g)" "$HOME/.cargo"
+
 # --- Claude Code ---
 echo "==> Installing Claude Code..."
 sudo chown -R "$(id -u):$(id -g)" "$HOME/.claude"
