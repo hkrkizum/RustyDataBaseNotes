@@ -89,7 +89,7 @@ tested, and reviewed independently.
 - [x] T027 [US1] Implement `BlockEditor` container in `src/features/editor/BlockEditor.tsx` and `src/features/editor/BlockEditor.module.css` — use `useEditor` hook, render `EditorToolbar` + block list via `BlockItem`, show empty state message when no blocks
 - [x] T028 [US1] Add view routing in `src/App.tsx` — `currentView` state (`{ type: 'list' } | { type: 'editor', pageId: string }`), render `PageListView` or `BlockEditor` based on state
 - [x] T029 [US1] Add `onPageClick` callback prop to `src/features/pages/PageListView.tsx` and wire title click in `src/features/pages/PageItem.tsx` to trigger editor navigation
-- [ ] T030 [US1] Run `cargo make qa` and verify all tests pass
+- [x] T030 [US1] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 1 is fully functional — pages can be opened in editor view and navigated back to list view.
 
@@ -112,7 +112,7 @@ tested, and reviewed independently.
 - [x] T034 [US2] Register `add_block` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [x] T035 [US2] Add `addBlock(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [x] T036 [US2] Add "ブロック追加" button to `BlockEditor.tsx` — call `addBlock`, auto-focus new block (last element), hide empty state when blocks exist
-- [ ] T037 [US2] Run `cargo make qa` and verify all tests pass
+- [x] T037 [US2] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 2 is fully functional — blocks can be added to pages.
 
@@ -136,7 +136,7 @@ tested, and reviewed independently.
 - [x] T042 [US3] Register `edit_block_content` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [x] T043 [US3] Add `editBlockContent(pageId, blockId, content)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [x] T044 [US3] Update `BlockItem` component in `src/features/editor/BlockItem.tsx` — replace read-only display with `<textarea>`, local state for input buffer, `onBlur` triggers `editBlockContent` IPC. `maxLength={10000}` は UX ヒントとして使用（バックエンドの `BlockContent` バリデーションが権威的基準。HTML `maxLength` は UTF-16 コードユニット数でカウントするため，BMP 外文字で Rust の `chars().count()` と乖離する可能性がある）。**エラー時リカバリ**: `editBlockContent` が `contentTooLong` エラーを返した場合，返却された `EditorState` のブロック内容で textarea のローカル state を上書きし，エラー toast を表示する（textarea とバックエンド状態の乖離を防止）
-- [ ] T045 [US3] Run `cargo make qa` and verify all tests pass
+- [x] T045 [US3] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 3 is fully functional — block content can be edited in-place.
 
@@ -162,7 +162,7 @@ tested, and reviewed independently.
 - [x] T050 [US6] Add `saveEditor(pageId)` to `useEditor` hook in `src/features/editor/useEditor.ts` — sync focused block content before save, handle saving state
 - [x] T051 [US6] Wire save button in `EditorToolbar.tsx` — call `saveEditor`, show success toast (sonner), show error toast on failure (FR-014)
 - [x] T052 [US6] Add Ctrl+S keyboard shortcut in `useEditor.ts` — `useEffect` with `keydown` listener, sync focused block then save, `e.preventDefault()` to suppress browser save dialog
-- [ ] T053 [US6] Run `cargo make qa` and verify all tests pass
+- [x] T053 [US6] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 6 is fully functional — blocks persist across editor sessions.
 
@@ -185,7 +185,7 @@ tested, and reviewed independently.
 - [x] T057 [US4] Register `move_block_up`, `move_block_down` commands in `invoke_handler` in `src-tauri/src/lib.rs`
 - [x] T058 [US4] Add `moveBlockUp(pageId, blockId)` and `moveBlockDown(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [x] T059 [US4] Add up/down move buttons to `BlockItem` component in `src/features/editor/BlockItem.tsx` — disable up button for first block (position === 0), disable down button for last block (position === blocks.length - 1)
-- [ ] T060 [US4] Run `cargo make qa` and verify all tests pass
+- [x] T060 [US4] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 4 is fully functional — blocks can be reordered.
 
@@ -208,7 +208,7 @@ tested, and reviewed independently.
 - [x] T064 [US5] Register `remove_block` command in `invoke_handler` in `src-tauri/src/lib.rs`
 - [x] T065 [US5] Add `removeBlock(pageId, blockId)` to `useEditor` hook in `src/features/editor/useEditor.ts`
 - [x] T066 [US5] Add delete button to `BlockItem` component in `src/features/editor/BlockItem.tsx` — call `removeBlock`, show empty state in `BlockEditor.tsx` when all blocks removed
-- [ ] T067 [US5] Run `cargo make qa` and verify all tests pass
+- [x] T067 [US5] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 5 is fully functional — blocks can be deleted.
 
@@ -229,7 +229,7 @@ tested, and reviewed independently.
 - [x] T069 [US7] Wire dirty indicator in `EditorToolbar.tsx` — show/hide based on `isDirty` from `EditorState`
 - [x] T070 [US7] Implement `UnsavedConfirmModal` component in `src/features/editor/UnsavedConfirmModal.tsx` and `src/features/editor/UnsavedConfirmModal.module.css` — "未保存の変更があります。破棄しますか？" message, cancel and discard buttons
 - [x] T071 [US7] Wire unsaved confirm dialog in `BlockEditor.tsx` — when back button clicked and `isDirty`, show `UnsavedConfirmModal`; on discard call `closeEditor` and navigate to list; on cancel stay in editor
-- [ ] T072 [US7] Run `cargo make qa` and verify all tests pass
+- [x] T072 [US7] Run `cargo make qa` and verify all tests pass
 
 **Checkpoint**: User Story 7 is fully functional — unsaved state is visible and protected.
 
@@ -241,9 +241,9 @@ tested, and reviewed independently.
 
 - [x] T073 Verify `PRAGMA foreign_keys = ON` works — add integration test in `src-tauri/src/infrastructure/persistence/block_repository.rs` that deletes a page and confirms its blocks are cascade-deleted
 - [x] T074 [P] Verify performance: create 1,000 blocks in-memory, save, reload — confirm both operations complete in <1s。**追加**: 個別ブロック操作（add_block, edit_block_content, move_block_up, remove_block）が <100ms で完了することも検証する（CC-003 準拠） — add as benchmark or integration test in `src-tauri/src/infrastructure/persistence/block_repository.rs`
-- [ ] T074.5 [P] Verify all public Rust items have `///` doc comments — run `cargo doc --no-deps 2>&1` and confirm zero warnings（Principle VI 準拠検証）。`cargo make doc-check` が通ることを確認する
-- [ ] T075 Run full QA: `cargo make qa` — formatting, lint, tests, doc-tests, doc-check, TypeScript checks all pass
-- [ ] T076 Verify all 7 user story acceptance scenarios can be manually exercised via `cargo make serve`. Includes: (a) 外部通信の不在確認 — ネットワークモニタリングまたは `grep -r "fetch\|XMLHttpRequest\|navigator\.sendBeacon" src/` で外部通信コードがないことを検証する（FR-010）, (b) 全操作フロー（ページを開く → ブロック追加 → 編集 → 保存 → 再度開く）が 30 秒以内に完了することを計測する（SC-001）
+- [x] T074.5 [P] Verify all public Rust items have `///` doc comments — run `cargo doc --no-deps 2>&1` and confirm zero warnings（Principle VI 準拠検証）。`cargo make doc-check` が通ることを確認する
+- [x] T075 Run full QA: `cargo make qa` — formatting, lint, tests, doc-tests, doc-check, TypeScript checks all pass
+- [ ] T076 Verify all 7 user story acceptance scenarios can be manually exercised via `cargo make serve`. Includes: (a) 外部通信の不在確認 — ネットワークモニタリングまたは `grep -r "fetch\|XMLHttpRequest\|navigator\.sendBeacon" src/` で外部通信コードがないことを検証する（FR-010: PASS — grep 検証済み）, (b) 全操作フロー（ページを開く → ブロック追加 → 編集 → 保存 → 再度開く）が 30 秒以内に完了することを計測する（SC-001: 手動テスト待ち）
 
 ---
 
