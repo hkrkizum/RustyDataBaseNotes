@@ -34,7 +34,9 @@
       "Bash(find /home/vscode/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f -name *tauri-runtime* -type d)",
       "Bash(find /home/vscode/.cargo/registry/src -name *.rs -type f -exec grep -l \"hardware\\\\|acceleration\\\\|HardwareAcceleration\" {})",
       "Bash(2)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(bash .specify/scripts/bash/check-prerequisites.sh --json --paths-only 2>&1)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --paths-only 2>&1)"
     ]
   }
 }
