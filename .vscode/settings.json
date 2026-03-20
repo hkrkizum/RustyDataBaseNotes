@@ -1,5 +1,9 @@
 {
-    "rust-analyzer.cargo.buildScripts.enable": false,
-    "rust-analyzer.procMacro.enable": false,
-    "rust-analyzer.rust.analyzerTargetDir": true
+  "rust-analyzer.cargo.buildScripts.enable": false,
+  "rust-analyzer.procMacro.enable": false,
+  "rust-analyzer.rust.analyzerTargetDir": true,
+  "markdownlint.config": {
+    "MD060": false,
+    "MD022": false
+  }
 }

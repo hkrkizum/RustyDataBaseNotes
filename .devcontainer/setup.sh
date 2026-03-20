@@ -37,6 +37,9 @@ sudo systemctl enable --now nix-daemon
 # --- Source Nix profile ---
 . "$NIX_PROFILE"
 
+# --- Ensure USER is set (Podman rootless may not export it) ---
+export USER="${USER:-$(whoami)}"
+
 # --- Home Manager ---
 echo "==> Applying Home Manager configuration..."
 nix run home-manager -- switch --flake .#devcontainer -b backup
@@ -51,6 +54,7 @@ fi
 
 # --- Claude Code ---
 echo "==> Installing Claude Code..."
+sudo chown -R "$(id -u):$(id -g)" "$HOME/.claude"
 curl -fsSL https://claude.ai/install.sh | bash
 
 # --- Load Home Manager session variables (for bash) ---
@@ -59,6 +63,7 @@ HM_SESSION_VARS="$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
 
 # --- Codex ---
 echo "==> Installing Codex..."
+sudo chown -R "$(id -u):$(id -g)" "$HOME/.codex"
 pnpm add -g @openai/codex
 
 echo "==> Setup complete!"

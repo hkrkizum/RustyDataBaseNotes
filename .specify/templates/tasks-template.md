@@ -140,7 +140,7 @@ tested, and reviewed independently.
 - [ ] TXXX Remove temporary code and simplify abstractions that are no longer needed
 - [ ] TXXX Verify performance targets for large pages, databases, or timeline views
 - [ ] TXXX [P] Add coverage for recovery, migration, and backup scenarios
-- [ ] TXXX Run full QA: formatting, lint, tests, docs, and frontend checks
+- [ ] TXXX Run full QA: formatting, lint, `cargo nextest run`, docs, and frontend checks
 
 ---
 
