@@ -13,6 +13,7 @@ function errorMessage(err: unknown): string {
 export function useEditor() {
   const [editorState, setEditorState] = useState<EditorState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
 
   const openEditor = useCallback(async (pageId: string) => {
     setLoading(true);
@@ -55,11 +56,6 @@ export function useEditor() {
         setEditorState(state);
         return state;
       } catch (err) {
-        const error = err as CommandError;
-        if (error.kind === "contentTooLong") {
-          toast.error(error.message);
-          // Return the state from the error response if available
-        }
         toast.error(errorMessage(err));
         return null;
       }
@@ -116,6 +112,8 @@ export function useEditor() {
   return {
     editorState,
     loading,
+    showUnsavedConfirm,
+    setShowUnsavedConfirm,
     openEditor,
     closeEditor,
     addBlock,

@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import styles from "./BlockEditor.module.css";
 import { BlockItem } from "./BlockItem";
 import { EditorToolbar } from "./EditorToolbar";
+import { UnsavedConfirmModal } from "./UnsavedConfirmModal";
 import { useEditor } from "./useEditor";
 
 interface BlockEditorProps {
@@ -26,19 +27,69 @@ export function BlockEditor({
     moveBlockDown,
     removeBlock,
     saveEditor,
+    showUnsavedConfirm,
+    setShowUnsavedConfirm,
   } = useEditor();
+
+  const prevBlockCount = useRef(0);
 
   useEffect(() => {
     openEditor(pageId);
   }, [pageId, openEditor]);
 
-  function handleBack() {
+  // Track block count for auto-focus on new block
+  useEffect(() => {
+    if (editorState) {
+      prevBlockCount.current = editorState.blocks.length;
+    }
+  }, [editorState]);
+
+  // Ctrl+S keyboard shortcut
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        // Blur active element to sync any pending textarea content
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        // Use setTimeout to allow blur handler to fire first
+        setTimeout(() => {
+          saveEditor(pageId);
+        }, 0);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [pageId, saveEditor]);
+
+  const handleBack = useCallback(() => {
+    if (editorState?.isDirty) {
+      setShowUnsavedConfirm(true);
+      return;
+    }
+    closeEditor(pageId);
+    onNavigateBack();
+  }, [editorState, pageId, closeEditor, onNavigateBack, setShowUnsavedConfirm]);
+
+  function handleDiscard() {
+    setShowUnsavedConfirm(false);
     closeEditor(pageId);
     onNavigateBack();
   }
 
+  function handleCancelConfirm() {
+    setShowUnsavedConfirm(false);
+  }
+
   function handleSave() {
-    saveEditor(pageId);
+    // Blur active element to sync any pending textarea content
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setTimeout(() => {
+      saveEditor(pageId);
+    }, 0);
   }
 
   function handleAddBlock() {
@@ -50,6 +101,7 @@ export function BlockEditor({
   }
 
   const blocks = editorState.blocks;
+  const justAdded = blocks.length > prevBlockCount.current;
 
   return (
     <div className={styles.editor}>
@@ -74,6 +126,7 @@ export function BlockEditor({
               block={block}
               isFirst={index === 0}
               isLast={index === blocks.length - 1}
+              shouldFocus={justAdded && index === blocks.length - 1}
               onEditContent={(blockId, content) =>
                 editBlockContent(pageId, blockId, content)
               }
@@ -91,6 +144,12 @@ export function BlockEditor({
       >
         + ブロック追加
       </button>
+      {showUnsavedConfirm && (
+        <UnsavedConfirmModal
+          onDiscard={handleDiscard}
+          onCancel={handleCancelConfirm}
+        />
+      )}
     </div>
   );
 }
