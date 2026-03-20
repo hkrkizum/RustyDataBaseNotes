@@ -46,6 +46,12 @@ pub async fn init_pool(db_path: &Path) -> Result<SqlitePool, StorageError> {
 
     sqlx::migrate!().run(&pool).await?;
 
+    // Enable foreign key constraint enforcement (SQLite default: OFF).
+    sqlx::query("PRAGMA foreign_keys = ON")
+        .execute(&pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
     Ok(pool)
 }
 
