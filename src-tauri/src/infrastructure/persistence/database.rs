@@ -79,6 +79,7 @@ fn validate_sqlite_header(path: &Path) -> Result<(), StorageError> {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 

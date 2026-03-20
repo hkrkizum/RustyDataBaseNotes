@@ -22,6 +22,7 @@ pub struct AppState {
 ///
 /// Returns an error if the Tauri builder fails to initialize.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[allow(clippy::expect_used)] // Tauri entry point – no recovery possible
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())

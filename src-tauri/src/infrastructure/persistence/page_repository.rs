@@ -176,6 +176,7 @@ impl PageRepository for SqlxPageRepository {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
