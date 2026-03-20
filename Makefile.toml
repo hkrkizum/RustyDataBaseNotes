@@ -1,0 +1,104 @@
+[config]
+default_to_workspace = false
+
+[env]
+# TEST_BUILD_JOBS: limits COMPILATION parallelism (OOM prevention).
+# Applies to: test, test-std, coverage — NOT doc-test (lightweight, no OOM risk).
+# Default: 2. Override: `TEST_BUILD_JOBS=8 cargo make test` or set in OS/shell profile.
+# NOTE: env_files (.env.local) values are NOT available for ${} expansion in args —
+#       only [env] section vars and OS env vars work with cargo-make interpolation.
+TEST_BUILD_JOBS = { value = "8", condition = { env_not_set = ["TEST_BUILD_JOBS"] } }
+
+# ─────────────────────────────────────────────
+# Quality Gate (run all checks in order)
+# ─────────────────────────────────────────────
+[tasks.qa]
+description = "Run full quality gate: fmt → clippy → test → doc-test"
+run_task = { name = ["fmt", "clippy", "test", "doc-test"], fork = true }
+
+# ─────────────────────────────────────────────
+# Individual tasks
+# ─────────────────────────────────────────────
+[tasks.fmt]
+description = "Format all workspace crates"
+command = "cargo"
+args = ["fmt", "--all", "${@}"]
+cwd = "src-tauri"
+
+[tasks.fmt-check]
+description = "Check formatting without modifying files"
+command = "cargo"
+args = ["fmt", "--all", "--check", "${@}"]
+cwd = "src-tauri"
+
+[tasks.clippy]
+description = "Lint all workspace crates"
+command = "cargo"
+args = ["clippy", "--all", "--all-targets", "${@}"]
+cwd = "src-tauri"
+
+[tasks.clippy-cli]
+description = "Lint all workspace crates"
+command = "cargo"
+args = ["clippy", "--workspace", "--all-targets", "--", "-Dwarnings"]
+cwd = "src-tauri"
+
+[tasks.test]
+description = "Run tests with cargo-nextest (build parallelism limited to avoid OOM)"
+install_crate = { crate_name = "cargo-nextest", binary = "cargo", test_arg = [
+  "nextest", "--help",
+] }
+command = "cargo"
+args = [
+  "nextest", "run", "--workspace",
+  "--build-jobs", "${TEST_BUILD_JOBS}",
+  "--status-level", "fail",
+  "--final-status-level", "skip",
+  "--no-tests=pass",
+]
+cwd = "src-tauri"
+
+[tasks.test-filter]
+description = "Run specific tests by name pattern: TEST_FILTER=pattern cargo make test-filter"
+install_crate = { crate_name = "cargo-nextest", binary = "cargo", test_arg = [
+  "nextest", "--help",
+] }
+command = "cargo"
+args = [
+  "nextest", "run", "--workspace",
+  "--build-jobs", "${TEST_BUILD_JOBS}",
+  "--status-level", "fail",
+  "--final-status-level", "skip",
+  "--no-tests=pass",
+  "-E", "test(/${TEST_FILTER}/)",
+]
+cwd = "src-tauri"
+
+[tasks.test-std]
+description = "Run tests with standard cargo test (no nextest)"
+command = "cargo"
+args = ["test", "--workspace", "--jobs", "${TEST_BUILD_JOBS}"]
+cwd = "src-tauri"
+
+# ─────────────────────────────────────────────
+# Documentation
+# ─────────────────────────────────────────────
+[tasks.doc]
+description = "Build and open rustdoc for workspace crates (no deps)"
+command = "cargo"
+args = ["doc", "--no-deps", "--open"]
+cwd = "src-tauri"
+
+[tasks.doc-test]
+description = "Run documentation tests"
+command = "cargo"
+args = ["test", "--doc", "--workspace"]
+cwd = "src-tauri"
+
+# ─────────────────────────────────────────────
+# Desktop app
+# ─────────────────────────────────────────────
+[tasks.serve]
+description = "Tauri development server (with file watcher and auto-reload)"
+command = "cargo"
+args = ["tauri", "dev"]
