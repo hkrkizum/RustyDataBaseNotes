@@ -27,6 +27,45 @@
   font-size: 1.5rem;
 }
 
+.titleBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.titleBtn:hover {
+  background-color: #f5f5f5;
+}
+
+.titleInput {
+  font-size: 1.5rem;
+  font-weight: bold;
+  border: 1px solid #4a9eff;
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  outline: none;
+}
+
+.deleteDatabaseBtn {
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.deleteDatabaseBtn:hover {
+  color: #d32f2f;
+  border-color: #d32f2f;
+}
+
 .actions {
   display: flex;
   align-items: center;
@@ -118,4 +157,61 @@
   text-align: center;
   color: #999;
   font-size: 0.9rem;
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.confirmDialog {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 360px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.confirmMessage {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.cancelBtn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.cancelBtn:hover {
+  background-color: #f5f5f5;
+}
+
+.confirmDeleteBtn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: #d32f2f;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.confirmDeleteBtn:hover {
+  background: #b71c1c;
 }

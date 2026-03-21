@@ -22,6 +22,7 @@ function App() {
     databases,
     loading: dbLoading,
     createDatabase,
+    deleteDatabase,
     refreshDatabases,
   } = useDatabase();
   const [deleteTarget, setDeleteTarget] = useState<Page | null>(null);
@@ -73,6 +74,8 @@ function App() {
         <TableView
           database={currentView.database}
           onNavigateBack={handleNavigateBack}
+          onPageClick={handlePageClick}
+          onDatabaseDeleted={handleNavigateBack}
         />
         <Toaster />
       </main>
@@ -103,6 +106,9 @@ function App() {
         onPageClick={handlePageClick}
         onDatabaseClick={handleDatabaseClick}
         onRequestDeletePage={setDeleteTarget}
+        onRequestDeleteDatabase={async (db) => {
+          await deleteDatabase(db.id);
+        }}
       />
       {deleteTarget && (
         <DeleteConfirmModal

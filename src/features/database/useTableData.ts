@@ -153,6 +153,137 @@ export function useTableData(databaseId: string) {
     [],
   );
 
+  const updatePropertyName = useCallback(
+    async (id: string, name: string): Promise<PropertyDto | null> => {
+      try {
+        const result = await invoke<PropertyDto>("update_property_name", {
+          id,
+          name,
+        });
+        setProperties((prev) => prev.map((p) => (p.id === id ? result : p)));
+        setTableData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            properties: prev.properties.map((p) => (p.id === id ? result : p)),
+          };
+        });
+        toast.success("プロパティ名を更新しました");
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [],
+  );
+
+  const updatePropertyConfig = useCallback(
+    async (
+      id: string,
+      config: PropertyConfigDto,
+    ): Promise<PropertyDto | null> => {
+      try {
+        const result = await invoke<PropertyDto>("update_property_config", {
+          id,
+          config,
+        });
+        setProperties((prev) => prev.map((p) => (p.id === id ? result : p)));
+        setTableData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            properties: prev.properties.map((p) => (p.id === id ? result : p)),
+          };
+        });
+        toast.success("プロパティ設定を更新しました");
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [],
+  );
+
+  const reorderProperties = useCallback(
+    async (propertyIds: string[]): Promise<PropertyDto[] | null> => {
+      try {
+        const result = await invoke<PropertyDto[]>("reorder_properties", {
+          databaseId,
+          propertyIds,
+        });
+        setProperties(result);
+        setTableData((prev) => {
+          if (!prev) return prev;
+          return { ...prev, properties: result };
+        });
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [databaseId],
+  );
+
+  const deleteProperty = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await invoke("delete_property", { id });
+      setProperties((prev) => prev.filter((p) => p.id !== id));
+      setTableData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          properties: prev.properties.filter((p) => p.id !== id),
+          rows: prev.rows.map((row) => {
+            const { [id]: _, ...rest } = row.values;
+            return { ...row, values: rest };
+          }),
+        };
+      });
+      toast.success("プロパティを削除しました");
+      return true;
+    } catch (err) {
+      toast.error(errorMessage(err));
+      return false;
+    }
+  }, []);
+
+  const resetSelectOption = useCallback(
+    async (propertyId: string, optionId: string): Promise<boolean> => {
+      try {
+        await invoke("reset_select_option", { propertyId, optionId });
+        return true;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return false;
+      }
+    },
+    [],
+  );
+
+  const removePageFromDatabase = useCallback(
+    async (pageId: string): Promise<boolean> => {
+      try {
+        await invoke("remove_page_from_database", { pageId });
+        setTableData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            rows: prev.rows.filter((row) => row.page.id !== pageId),
+          };
+        });
+        toast.success("ページをデータベースから除外しました");
+        return true;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return false;
+      }
+    },
+    [],
+  );
+
   const clearPropertyValue = useCallback(
     async (pageId: string, propertyId: string): Promise<boolean> => {
       try {
@@ -184,11 +315,17 @@ export function useTableData(databaseId: string) {
     loading,
     listProperties,
     addProperty,
+    updatePropertyName,
+    updatePropertyConfig,
+    reorderProperties,
+    deleteProperty,
+    resetSelectOption,
     addPageToDatabase,
     addExistingPageToDatabase,
     listStandalonePages,
     loadTableData,
     setPropertyValue,
     clearPropertyValue,
+    removePageFromDatabase,
   };
 }

@@ -56,11 +56,43 @@ export function useDatabase() {
     [],
   );
 
+  const updateDatabaseTitle = useCallback(
+    async (id: string, title: string): Promise<DatabaseDto | null> => {
+      try {
+        const db = await invoke<DatabaseDto>("update_database_title", {
+          id,
+          title,
+        });
+        setDatabases((prev) => prev.map((d) => (d.id === id ? db : d)));
+        toast.success("データベース名を更新しました");
+        return db;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [],
+  );
+
+  const deleteDatabase = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await invoke("delete_database", { id });
+      setDatabases((prev) => prev.filter((d) => d.id !== id));
+      toast.success("データベースを削除しました");
+      return true;
+    } catch (err) {
+      toast.error(errorMessage(err));
+      return false;
+    }
+  }, []);
+
   return {
     databases,
     loading,
     createDatabase,
     getDatabase,
+    updateDatabaseTitle,
+    deleteDatabase,
     refreshDatabases,
   };
 }
