@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# set -euo pipefail
+#
+# RED='\033[0;31m'
+# YELLOW='\033[0;33m'
+# RESET='\033[0m'
+#
+# PROTECTED_BRANCHES="main|master"
+#
+# if [ "${SKIP_HOOKS:-}" = "1" ]; then
+#   echo -e "${YELLOW}⚠ [pre-push] SKIP_HOOKS=1 — skipping push protection${RESET}" >&2
+#   exit 0
+# fi
+#
+# # Prevent direct pushes to protected branches — all changes must go through PRs.
+# #
+# # The pre-push hook receives lines on stdin:
+# #   <local_ref> <local_sha> <remote_ref> <remote_sha>
+# #
+# # Checking stdin catches all push variants:
+# #   git push origin main
+# #   git push origin feature:main
+# #   git push origin HEAD:main
+# #
+# # Falls back to branch name check when stdin is empty (e.g. --delete).
+# blocked=0
+# blocked_ref=""
+#
+# while IFS=' ' read -r _local_ref _local_sha remote_ref _remote_sha; do
+#   ref_name="${remote_ref#refs/heads/}"
+#   if [[ "$ref_name" =~ ^($PROTECTED_BRANCHES)$ ]]; then
+#     blocked=1
+#     blocked_ref="$ref_name"
+#     break
+#   fi
+# done
+#
+# if [ "$blocked" = "0" ]; then
+#   branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "HEAD")"
+#   if [[ "$branch" =~ ^($PROTECTED_BRANCHES)$ ]]; then
+#     blocked=1
+#     blocked_ref="$branch"
+#   fi
+# fi
+#
+# if [ "$blocked" = "1" ]; then
+#   echo -e "${RED}ERROR: [pre-push] Direct push to '$blocked_ref' is not allowed.${RESET}" >&2
+#   echo -e "${RED}       Use a feature branch and create a PR.${RESET}" >&2
+#   exit 1
+# fi

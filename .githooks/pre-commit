@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+RESET='\033[0m'
+
+PROTECTED_BRANCHES="main|master"
+
+if [ "${SKIP_HOOKS:-}" = "1" ]; then
+  echo -e "${YELLOW}⚠ [pre-commit] SKIP_HOOKS=1 — skipping checks${RESET}" >&2
+  exit 0
+fi
+
+# Also skip in detached HEAD state (e.g. rebase, CI)
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "HEAD")"
+if [ "$branch" = "HEAD" ]; then
+  exit 0
+fi
+
+# Block direct commits on protected branches — merge commits are allowed
+# (pre-merge-commit handles QA).
+if [[ "$branch" =~ ^($PROTECTED_BRANCHES)$ ]]; then
+  if ! git rev-parse MERGE_HEAD &>/dev/null; then
+    echo -e "${RED}ERROR: [pre-commit] Direct commit on '$branch' is not allowed.${RESET}" >&2
+    echo -e "${RED}       Create a feature branch first: git switch -c <branch-name>${RESET}" >&2
+    exit 1
+  fi
+  # Merge commit — skip check-all (pre-merge-commit runs full QA instead)
+  exit 0
+fi
+
+if ! command -v cargo-make &>/dev/null && ! cargo make --version &>/dev/null 2>&1; then
+  echo -e "${RED}ERROR: [pre-commit] cargo-make is not installed${RESET}" >&2
+  exit 1
+fi
+
+echo -e "${CYAN}==> [pre-commit] Running check-all (fmt-check + clippy + lint-ts + ts-check)...${RESET}"
+cargo make check-all

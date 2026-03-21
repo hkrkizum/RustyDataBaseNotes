@@ -224,6 +224,13 @@ command = "cargo"
 args = ["tauri", "dev"]
 
 # ─────────────────────────────────────────────
+# Git Hooks
+# ─────────────────────────────────────────────
+[tasks.setup-hooks]
+description = "Enable project git hooks (.githooks/)"
+script = ["git config core.hooksPath .githooks"]
+
+# ─────────────────────────────────────────────
 # Database
 # ─────────────────────────────────────────────
 [tasks.dev-db-reset]
