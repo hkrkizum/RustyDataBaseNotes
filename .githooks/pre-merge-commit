@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+RESET='\033[0m'
+
+PROTECTED_BRANCHES="main|master"
+
+if [ "${SKIP_HOOKS:-}" = "1" ]; then
+  echo -e "${YELLOW}⚠ [pre-merge-commit] SKIP_HOOKS=1 — skipping QA${RESET}" >&2
+  exit 0
+fi
+
+# Run full QA before merge commits (triggered by `git merge` into current branch).
+# Protects protected branches from broken merges.
+# In detached HEAD state, skip (cannot determine target branch).
+target_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "HEAD")"
+if ! [[ "$target_branch" =~ ^($PROTECTED_BRANCHES)$ ]]; then
+  exit 0
+fi
+
+if ! command -v cargo-make &>/dev/null && ! cargo make --version &>/dev/null 2>&1; then
+  echo -e "${RED}ERROR: [pre-merge-commit] cargo-make is not installed${RESET}" >&2
+  exit 1
+fi
+
+echo -e "${CYAN}==> [pre-merge-commit] Running full QA before merge into $target_branch...${RESET}"
+cargo make qa
