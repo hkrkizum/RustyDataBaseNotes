@@ -10,3 +10,5 @@ pub mod error;
 pub mod page_repository;
 /// Property persistence implementation.
 pub mod property_repository;
+/// Property value persistence implementation.
+pub mod property_value_repository;

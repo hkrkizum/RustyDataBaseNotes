@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE property_values SET text_value = NULL, updated_at = ?\n               WHERE property_id = ? AND text_value = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "fe0327e44c6ac975103007c32dfe2dd22bfe347b49bf99be278e92879eaf07c4"
+}

@@ -34,4 +34,9 @@ pub trait PageRepository {
 
     /// Returns all pages not belonging to any database (`database_id IS NULL`).
     async fn find_standalone_pages(&self) -> Result<Vec<Page>, Self::Error>;
+
+    /// Returns all pages belonging to the given database, ordered by
+    /// `created_at` descending.
+    async fn find_by_database_id(&self, database_id: &DatabaseId)
+    -> Result<Vec<Page>, Self::Error>;
 }

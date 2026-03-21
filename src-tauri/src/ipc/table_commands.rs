@@ -1,6 +1,8 @@
 // The `#[tauri::command]` macro generates `unreachable!()` in its expansion.
 #![allow(clippy::unreachable)]
 
+use std::collections::HashMap;
+
 use tauri::State;
 
 use crate::AppState;
@@ -9,9 +11,14 @@ use crate::domain::database::repository::DatabaseRepository;
 use crate::domain::page::entity::{Page, PageId, PageTitle};
 use crate::domain::page::error::PageError;
 use crate::domain::page::repository::PageRepository;
+use crate::domain::property::repository::{PropertyRepository, PropertyValueRepository};
 use crate::infrastructure::persistence::database_repository::SqlxDatabaseRepository;
 use crate::infrastructure::persistence::page_repository::SqlxPageRepository;
-use crate::ipc::dto::PageDto;
+use crate::infrastructure::persistence::property_repository::SqlxPropertyRepository;
+use crate::infrastructure::persistence::property_value_repository::SqlxPropertyValueRepository;
+use crate::ipc::dto::{
+    DatabaseDto, PageDto, PropertyDto, PropertyValueDto, TableDataDto, TableRowDto,
+};
 use crate::ipc::error::CommandError;
 
 /// Creates a new page and adds it to a database.
@@ -95,4 +102,63 @@ pub async fn list_standalone_pages(
     let repo = SqlxPageRepository::new(state.db.clone());
     let pages = repo.find_standalone_pages().await?;
     Ok(pages.into_iter().map(PageDto::from).collect())
+}
+
+/// Returns the full table view data for a database (pages, properties, values).
+#[tauri::command]
+pub async fn get_table_data(
+    state: State<'_, AppState>,
+    database_id: String,
+) -> Result<TableDataDto, CommandError> {
+    // 1. Parse database_id, find database
+    let db_id: DatabaseId = database_id.parse().map_err(|_| {
+        crate::domain::database::error::DatabaseError::NotFound {
+            id: DatabaseId::new(),
+        }
+    })?;
+
+    let db_repo = SqlxDatabaseRepository::new(state.db.clone());
+    let database = db_repo.find_by_id(&db_id).await?;
+
+    // 2. Get properties for database
+    let prop_repo = SqlxPropertyRepository::new(state.db.clone());
+    let properties = prop_repo.find_by_database_id(&db_id).await?;
+
+    // 3. Get pages with this database_id
+    let page_repo = SqlxPageRepository::new(state.db.clone());
+    let pages = page_repo.find_by_database_id(&db_id).await?;
+
+    // 4. Get all property values for database
+    let pv_repo = SqlxPropertyValueRepository::new(state.db.clone());
+    let all_values = pv_repo.find_all_for_database(&db_id).await?;
+
+    // 5. Build a lookup: (page_id_str, property_id_str) -> PropertyValueDto
+    let mut values_map: HashMap<String, HashMap<String, PropertyValueDto>> = HashMap::new();
+    for pv in all_values {
+        let page_key = pv.page_id().to_string();
+        let prop_key = pv.property_id().to_string();
+        values_map
+            .entry(page_key)
+            .or_default()
+            .insert(prop_key, PropertyValueDto::from(pv));
+    }
+
+    // 6. Assemble rows
+    let rows: Vec<TableRowDto> = pages
+        .into_iter()
+        .map(|page| {
+            let page_id_str = page.id().to_string();
+            let page_values = values_map.remove(&page_id_str).unwrap_or_default();
+            TableRowDto {
+                page: PageDto::from(page),
+                values: page_values,
+            }
+        })
+        .collect();
+
+    Ok(TableDataDto {
+        database: DatabaseDto::from(database),
+        properties: properties.into_iter().map(PropertyDto::from).collect(),
+        rows,
+    })
 }
