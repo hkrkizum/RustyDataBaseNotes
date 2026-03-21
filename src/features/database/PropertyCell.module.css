@@ -1,0 +1,40 @@
+.cell {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  color: #666;
+}
+
+.textInput,
+.numberInput,
+.dateInput,
+.selectInput {
+  width: 100%;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  background: transparent;
+  outline: none;
+}
+
+.textInput:focus,
+.numberInput:focus,
+.dateInput:focus,
+.selectInput:focus {
+  border-color: #bbb;
+  background-color: #fff;
+}
+
+.textInput:hover,
+.numberInput:hover,
+.dateInput:hover,
+.selectInput:hover {
+  background-color: #fafafa;
+}
+
+.checkboxInput {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}

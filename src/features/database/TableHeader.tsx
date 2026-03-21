@@ -33,24 +33,22 @@ export function TableHeader({ properties, onAddProperty }: TableHeaderProps) {
 
   return (
     <>
-      <div className={styles.headerRow}>
-        {properties.map((prop) => (
-          <div key={prop.id} className={styles.headerCell}>
-            {prop.name}
-            <span className={styles.typeHint}>
-              {TYPE_LABELS[prop.propertyType] ?? prop.propertyType}
-            </span>
-          </div>
-        ))}
-        <button
-          type="button"
-          className={styles.addColumnBtn}
-          onClick={handleOpenModal}
-          title="プロパティを追加"
-        >
-          +
-        </button>
-      </div>
+      {properties.map((prop) => (
+        <div key={prop.id} className={styles.headerCell}>
+          {prop.name}
+          <span className={styles.typeHint}>
+            {TYPE_LABELS[prop.propertyType] ?? prop.propertyType}
+          </span>
+        </div>
+      ))}
+      <button
+        type="button"
+        className={styles.addColumnBtn}
+        onClick={handleOpenModal}
+        title="プロパティを追加"
+      >
+        +
+      </button>
       {showModal && (
         <AddPropertyModal onSubmit={onAddProperty} onClose={handleCloseModal} />
       )}

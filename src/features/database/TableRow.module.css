@@ -1,0 +1,49 @@
+.row {
+  display: flex;
+  border-bottom: 1px solid #f0f0f0;
+  align-items: stretch;
+}
+
+.row:hover {
+  background-color: #fafafa;
+}
+
+.titleCell {
+  min-width: 200px;
+  flex: 0 0 200px;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #f0f0f0;
+}
+
+.titleLink {
+  cursor: pointer;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  text-align: left;
+}
+
+.titleLink:hover {
+  text-decoration: underline;
+  color: #0066cc;
+}
+
+.valueCell {
+  min-width: 150px;
+  flex: 1;
+  padding: 0.2rem 0.4rem;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #f0f0f0;
+}
+
+.valueCell:last-child {
+  border-right: none;
+}

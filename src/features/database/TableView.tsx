@@ -1,22 +1,42 @@
-import { type FormEvent, useCallback, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import type { Page } from "../pages/types";
 import { AddPageModal } from "./AddPageModal";
+import { TableHeader } from "./TableHeader";
+import { TableRow } from "./TableRow";
 import styles from "./TableView.module.css";
-import type { DatabaseDto } from "./types";
+import type { DatabaseDto, PropertyValueInputDto } from "./types";
 import { useTableData } from "./useTableData";
 
 interface TableViewProps {
   database: DatabaseDto;
   onNavigateBack: () => void;
+  onPageClick?: (page: Page) => void;
 }
 
-export function TableView({ database, onNavigateBack }: TableViewProps) {
+export function TableView({
+  database,
+  onNavigateBack,
+  onPageClick,
+}: TableViewProps) {
   const [newTitle, setNewTitle] = useState("");
-  const [pages, setPages] = useState<Page[]>([]);
   const [showModal, setShowModal] = useState(false);
 
-  const { addPageToDatabase, addExistingPageToDatabase, listStandalonePages } =
-    useTableData(database.id);
+  const {
+    properties,
+    tableData,
+    loading,
+    addProperty,
+    addPageToDatabase,
+    addExistingPageToDatabase,
+    listStandalonePages,
+    loadTableData,
+    setPropertyValue,
+    clearPropertyValue,
+  } = useTableData(database.id);
+
+  useEffect(() => {
+    void loadTableData();
+  }, [loadTableData]);
 
   const handleCreatePage = useCallback(
     async (e: FormEvent) => {
@@ -25,23 +45,67 @@ export function TableView({ database, onNavigateBack }: TableViewProps) {
       if (!trimmed) return;
       const page = await addPageToDatabase(trimmed);
       if (page) {
-        setPages((prev) => [page, ...prev]);
         setNewTitle("");
+        void loadTableData();
       }
     },
-    [newTitle, addPageToDatabase],
+    [newTitle, addPageToDatabase, loadTableData],
   );
 
   const handleAddExisting = useCallback(
     async (pageId: string): Promise<Page | null> => {
       const page = await addExistingPageToDatabase(pageId);
       if (page) {
-        setPages((prev) => [page, ...prev]);
+        void loadTableData();
       }
       return page;
     },
-    [addExistingPageToDatabase],
+    [addExistingPageToDatabase, loadTableData],
   );
+
+  const handleAddProperty = useCallback(
+    async (
+      name: string,
+      propertyType: Parameters<typeof addProperty>[1],
+      config?: Parameters<typeof addProperty>[2],
+    ) => {
+      const result = await addProperty(name, propertyType, config);
+      if (result) {
+        void loadTableData();
+      }
+      return result;
+    },
+    [addProperty, loadTableData],
+  );
+
+  const handleSaveValue = useCallback(
+    async (
+      pageId: string,
+      propertyId: string,
+      value: PropertyValueInputDto,
+    ) => {
+      return setPropertyValue(pageId, propertyId, value);
+    },
+    [setPropertyValue],
+  );
+
+  const handleClearValue = useCallback(
+    async (pageId: string, propertyId: string) => {
+      return clearPropertyValue(pageId, propertyId);
+    },
+    [clearPropertyValue],
+  );
+
+  const handlePageClick = useCallback(
+    (page: Page) => {
+      if (onPageClick) {
+        onPageClick(page);
+      }
+    },
+    [onPageClick],
+  );
+
+  const rows = tableData?.rows ?? [];
 
   return (
     <div className={styles.container}>
@@ -51,7 +115,7 @@ export function TableView({ database, onNavigateBack }: TableViewProps) {
           className={styles.backBtn}
           onClick={onNavigateBack}
         >
-          ← 戻る
+          &larr; 戻る
         </button>
         <h2 className={styles.title}>{database.title}</h2>
       </div>
@@ -76,7 +140,12 @@ export function TableView({ database, onNavigateBack }: TableViewProps) {
           既存ページを追加
         </button>
       </div>
-      {pages.length === 0 ? (
+
+      {loading ? (
+        <div className={styles.emptyState}>
+          <p>読み込み中...</p>
+        </div>
+      ) : rows.length === 0 && properties.length === 0 ? (
         <div className={styles.emptyState}>
           <p>ページがありません</p>
           <p className={styles.hint}>
@@ -84,14 +153,36 @@ export function TableView({ database, onNavigateBack }: TableViewProps) {
           </p>
         </div>
       ) : (
-        <ul className={styles.pageList}>
-          {pages.map((page) => (
-            <li key={page.id} className={styles.pageItem}>
-              {page.title}
-            </li>
-          ))}
-        </ul>
+        <div className={styles.tableWrapper}>
+          <div className={styles.table}>
+            <div className={styles.tableHeaderRow}>
+              <div className={styles.titleHeader}>タイトル</div>
+              <TableHeader
+                properties={properties}
+                onAddProperty={handleAddProperty}
+              />
+            </div>
+            {rows.length === 0 ? (
+              <div className={styles.emptyRow}>
+                <p>ページがありません</p>
+              </div>
+            ) : (
+              rows.map((row) => (
+                <TableRow
+                  key={row.page.id}
+                  page={row.page}
+                  properties={properties}
+                  values={row.values}
+                  onPageClick={handlePageClick}
+                  onSaveValue={handleSaveValue}
+                  onClearValue={handleClearValue}
+                />
+              ))
+            )}
+          </div>
+        </div>
       )}
+
       {showModal && (
         <AddPageModal
           onAddPage={handleAddExisting}

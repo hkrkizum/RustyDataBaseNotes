@@ -7,6 +7,9 @@ import type {
   PropertyConfigDto,
   PropertyDto,
   PropertyTypeDto,
+  PropertyValueDto,
+  PropertyValueInputDto,
+  TableDataDto,
 } from "./types";
 
 function errorMessage(err: unknown): string {
@@ -18,6 +21,8 @@ function errorMessage(err: unknown): string {
 
 export function useTableData(databaseId: string) {
   const [properties, setProperties] = useState<PropertyDto[]>([]);
+  const [tableData, setTableData] = useState<TableDataDto | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const listProperties = useCallback(async () => {
     try {
@@ -97,12 +102,93 @@ export function useTableData(databaseId: string) {
     }
   }, []);
 
+  const loadTableData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await invoke<TableDataDto>("get_table_data", {
+        databaseId,
+      });
+      setTableData(data);
+      setProperties(data.properties);
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [databaseId]);
+
+  const setPropertyValue = useCallback(
+    async (
+      pageId: string,
+      propertyId: string,
+      value: PropertyValueInputDto,
+    ): Promise<PropertyValueDto | null> => {
+      try {
+        const result = await invoke<PropertyValueDto>("set_property_value", {
+          pageId,
+          propertyId,
+          value,
+        });
+        // Update local state
+        setTableData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            rows: prev.rows.map((row) =>
+              row.page.id === pageId
+                ? {
+                    ...row,
+                    values: { ...row.values, [propertyId]: result },
+                  }
+                : row,
+            ),
+          };
+        });
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [],
+  );
+
+  const clearPropertyValue = useCallback(
+    async (pageId: string, propertyId: string): Promise<boolean> => {
+      try {
+        await invoke("clear_property_value", { pageId, propertyId });
+        // Update local state
+        setTableData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            rows: prev.rows.map((row) => {
+              if (row.page.id !== pageId) return row;
+              const { [propertyId]: _, ...rest } = row.values;
+              return { ...row, values: rest };
+            }),
+          };
+        });
+        return true;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return false;
+      }
+    },
+    [],
+  );
+
   return {
     properties,
+    tableData,
+    loading,
     listProperties,
     addProperty,
     addPageToDatabase,
     addExistingPageToDatabase,
     listStandalonePages,
+    loadTableData,
+    setPropertyValue,
+    clearPropertyValue,
   };
 }
