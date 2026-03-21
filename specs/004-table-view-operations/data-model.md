@@ -134,6 +134,17 @@ enum FilterValue {
 
 - 同時に 1 つのプロパティのみグルーピング可能
 
+### 型別グルーピングキーの粒度 <!-- added by checklist-apply: P-04 -->
+
+| プロパティ型 | グループキー判定 | 備考 |
+|---|---|---|
+| テキスト | case-insensitive 完全一致 | フィルタの Equals と同じ扱い |
+| 数値 | f64 の内部表現で同一判定 | 1.0 と 1.00 は同一グループ |
+| 日付 (date) | 日単位で同一判定 | 年月日が一致すれば同一グループ |
+| 日付 (datetime) | 分単位で同一判定 | 年月日時分が一致すれば同一グループ |
+| セレクト | option value の完全一致 | 選択肢定義順でグループ表示 |
+| チェックボックス | true / false の 2 グループ | null は存在しない |
+
 ---
 
 ## Enum: ViewType
@@ -174,7 +185,7 @@ CREATE TABLE IF NOT EXISTS views (
     updated_at      TEXT    NOT NULL
 );
 
-CREATE INDEX idx_views_database_id ON views(database_id);
+CREATE UNIQUE INDEX idx_views_database_id ON views(database_id); -- 1:1 不変条件を DB レベルで強制 <!-- refined by checklist-apply: P-02 -->
 ```
 
 ### Migration: 0006_create_views.sql

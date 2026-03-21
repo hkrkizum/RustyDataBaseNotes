@@ -21,6 +21,7 @@
 **Project Type**: desktop-app (Tauri)
 **Performance Goals**: 100 ページ × 10 プロパティで 500ms 以内，1,000 ページで 2 秒以内（ソート・フィルタ・グルーピング各操作）
 **Constraints**: ローカル完結（外部通信なし），パニック禁止，型安全な IPC 境界
+**Concurrency**: SQLite WAL モード + Tauri 単一プロセスモデルにより，非同期 IPC の競合リスクは実質的に無視可能。楽観的ロック等の明示的な競合解決は不要と判断 <!-- added by checklist-apply: P-01 -->
 **Scale/Scope**: データベースあたり最大 1,000 ページ，10 プロパティ，ソート条件 5 件，フィルタ条件 20 件
 
 ## Constitution Check
