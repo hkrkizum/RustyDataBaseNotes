@@ -1,62 +1,55 @@
 # Checklist Review Report: プロパティシステムとデータベース概念の導入
 
-**レビュー日時**: 2026-03-21（再レビュー — checklist-apply 適用後）
-**対象チェックリスト**: data-integrity.md
-**前回レビュー結果**: ✅ 13 / ⚠️ 12 / ❌ 8 / 🔀 0 — カバレッジ率 39.4%
-**今回レビュー結果サマリー**:
-- ✅ Covered: 33 項目
-- ⚠️ Partial: 0 項目
-- ❌ Gap: 0 項目
+**レビュー日時**: 2026-03-21
+**対象チェックリスト**: api.md
+**レビュー結果サマリー**:
+- ✅ Covered: 12 項目
+- ⚠️ Partial: 12 項目
+- ❌ Gap: 11 項目
 - 🔀 Misplaced: 0 項目
-- **カバレッジ率**: 100%（33/33）
-
----
-
-## レビュー結果
-
-### 前回 Gap → 今回 Covered（8項目）
-
-| ID | チェック項目 | 解決方法 |
-|----|------------|---------|
-| G-01 | CHK004 — `updated_at` タイムスタンプの更新規則 | spec.md §Key Entities に更新タイミングを追記，data-model.md に「updated_at 更新トリガー一覧」セクションを追加 |
-| G-03 | CHK011 — 文字数制限の単位 | spec.md §Assumptions に「Unicode スカラー値（Rust の char::count）をカウント単位」を追記 |
-| G-06 | CHK022 — 同一データへの並行操作 | spec.md §Assumptions に「single-writer 前提，last-write-wins」を追記 |
-| P-01 | CHK005 — position 再配置戦略 | data-model.md §Property に「ギャップ許容，reorder_properties で再配置」を追記 |
-| P-04 | CHK014 — PageDto 拡張定義 | contracts/ipc-commands.md §DTO に PageDto（`databaseId: string \| null`）を追加 |
-| P-05 | CHK021 — reorder_properties サブセット動作 | contracts に「全 ID の完全リストを要求，サブセットはエラー」を追記 |
-| P-10 | CHK028 — マイグレーションロールバック | data-model.md に「forward-only，バックアップからリストア」を追記 |
-| P-11 | CHK030 — PRAGMA foreign_keys 前提条件 | data-model.md に「起動時に PRAGMA foreign_keys = ON 実行済み」を追記 |
-
-### 前回 Partial → 今回 Covered（12項目）
-
-| ID | チェック項目 | 解決方法 |
-|----|------------|---------|
-| G-02 | CHK009 — 数値型の有限値の境界定義 | spec.md §Assumptions に「IEEE 754 finite f64，min/max 制約なし」を追記 |
-| G-04 | CHK017 — SC-001 の前提条件 | spec.md §SC-001 に前提条件（初回ユーザー，空の状態，開発用マシン）を追記 |
-| G-05 | CHK018 — パフォーマンス目標の測定条件 | spec.md §CC-003 に測定条件（ウォームキャッシュ，標準テキスト長，開発用マシン）を追記 |
-| G-07 | CHK027 — 最後のプロパティ削除時の表示 | spec.md §FR-005 に「0 個の場合はタイトル列のみ」を追記 |
-| G-08 | CHK032 — 型変換のマイグレーションパス | spec.md §Assumptions に将来のマイグレーション設計必要性を追記 |
-| P-02 | CHK008 — PropertyConfig JSON フォーマット | data-model.md に internally tagged 方式と JSON 出力例を追加 |
-| P-03 | CHK010 — SelectOption ID 格納の根拠 | data-model.md に「参照整合性保持のため ID を格納」を追記 |
-| P-06 | CHK023 — clear_property_value の不在値動作 | contracts に「no-op（エラーなし）で正常終了」を追記 |
-| P-07 | CHK024 — 数値型エッジ値 | data-model.md に「-0.0 → 0.0 正規化，subnormal/MAX/MIN 受入」を追記 |
-| P-08 | CHK025 — 日付型の境界値 | data-model.md に「DateTime<Utc> 範囲を受入，UTC 強制」を追記 |
-| P-09 | CHK026 — SelectOption JSON 特殊文字 | data-model.md に「serde 自動エスケープ，追加サニタイズ不要」を注記 |
-| P-12 | CHK033 — クロスリポジトリトランザクション境界 | data-model.md にトランザクション要件テーブルを追加 |
-
-### 前回から変更なし — Covered 維持（13項目）
-
-CHK001, CHK002, CHK003, CHK006, CHK007, CHK012, CHK013, CHK015, CHK016, CHK019, CHK020, CHK029, CHK031
+- **カバレッジ率**: 34%（12/35）
 
 ---
 
 ## 仕様側の問題（spec.md で対応すべき項目）
 
-**なし。** 全項目が解決済み。
+機能要件・ユーザー体験・ビジネスロジックに関するギャップ。
+spec.md の修正で解決すべき項目を列挙する。
 
-## 設計側の問題（data-model.md / contracts で対応すべき項目）
+| ID | チェック項目 | 判定 | 推奨アクション |
+|----|------------|------|--------------|
+| G-01 | CHK001: US8「完全に削除」の IPC コマンドが未定義 | Gap | spec.md FR-006 に「完全削除は既存の `delete_page` コマンドを再利用する」旨を明記。または contracts に注記を追加 |
+| G-02 | CHK005: バッチ操作のスコープ除外が未明記 | Gap | spec.md §Assumptions に「バッチ／バルク操作は本スコープ対象外」を追記 |
+| G-03 | CHK024: テキスト型の空文字列の意味が未定義 | Gap | spec.md §Assumptions または data-model.md §PropertyValue の Text バリデーションに「空文字列は有効な値として保存する。値のクリアには `clear_property_value` を使用する」等の方針を追記 |
+| G-04 | CHK029: フロントエンド事前バリデーションの可否 | Partial | spec.md CC-004 に「フロントエンドは UX 向上のため楽観的な事前バリデーションを行ってよい（SHOULD）。ただしバックエンドが最終的な権威とする」等の方針を追記 |
 
-**なし。** 全項目が解決済み。
+## 計画側の問題（plan.md / contracts / data-model.md で対応すべき項目）
+
+技術的な設計・アーキテクチャ・非機能要件に関するギャップ。
+plan.md または関連する技術文書の修正で解決すべき項目を列挙する。
+
+| ID | チェック項目 | 判定 | 推奨アクション |
+|----|------------|------|--------------|
+| P-01 | CHK004: `CommandError` の TS interface 未定義 | Gap | contracts §DTO Definitions に `interface CommandError { kind: string; message: string }` を追加 |
+| P-02 | CHK008: `PropertyConfigDto` の型ごとの制約未記載 | Partial | contracts §DTO Definitions の `PropertyConfigDto` を discriminated union に変更するか，data-model.md の JSON ワイヤーフォーマットとの対応表を追加 |
+| P-03 | CHK010: TS DTO と Rust serde 形式の不整合 | Partial | contracts に「Tauri IPC は serde の internally tagged 形式で JSON を送受信する。TS 側は以下の型でマッピングする」旨の説明とマッピング表を追加 |
+| P-04 | CHK012: ISO 8601 / RFC 3339 用語の不整合 | Partial | contracts と data-model.md で用語を統一（推奨: "RFC 3339 / UTC"）。タイムスタンプ精度（秒 or ミリ秒）を明記 |
+| P-05 | CHK014: config 省略時のレスポンス仕様 | Gap | contracts §add_property に「config 省略時，PropertyDto.config は null を返す」または「型に応じたデフォルト config を返す」を明記 |
+| P-06 | CHK016: 未設定プロパティ値の DTO 表現 | Gap | contracts §DTO Definitions の `TableRowDto.values` に「未入力のプロパティはキーが欠落する（Record に含まれない）」または「全フィールド null の PropertyValueDto が含まれる」を明記 |
+| P-07 | CHK019: クロスデータベース値設定の検証 | Gap | contracts §set_property_value のエラーリストに `pageNotInDatabase`（ページが対象プロパティのデータベースに属していない）を追加。または data-model.md にクロスデータベース検証の方針を追記 |
+| P-08 | CHK021: スタンドアロンページへの `remove_page_from_database` | Gap | contracts §remove_page_from_database に「database_id が NULL のページに対しては冪等に成功する（no-op）」または専用エラー kind を追加 |
+| P-09 | CHK023: `list_standalone_pages` のソート順 | Gap | contracts §list_standalone_pages に「作成日時降順」等のソート順を明記 |
+| P-10 | CHK026: 不正日付文字列のエラー kind | Gap | contracts §set_property_value のエラーリストに `invalidDate`（日付文字列のパース失敗）を追加 |
+| P-11 | CHK033: serde ↔ TS マッピング前提の文書化 | Gap | contracts プリアンブルまたは plan.md に「Tauri IPC は Rust の serde シリアライズ結果をそのまま JSON として送受信する。TS 型はこの JSON 構造に対応する discriminated union として定義する」を追記 |
+| P-12 | CHK035: 同期的 IPC 前提の文書化 | Gap | contracts プリアンブルに「すべての IPC コマンドは同期的な Request→Response パターンで動作する（ストリーミングやイベント通知は使用しない）」を追記 |
+| P-13 | CHK003: エラーメッセージ形式 | Partial | contracts §Error Kind Extensions に「message フィールドはデバッグ目的の英語文字列とし，ユーザー向け表示文はフロントエンドが kind に基づいて生成する」等の方針を追記 |
+| P-14 | CHK006: 型と config の不整合時の挙動 | Partial | contracts §update_property_config に「propertyType と異なる型の config を送信した場合は `invalidConfig` エラーを返す」を追記 |
+| P-15 | CHK013: snake_case → camelCase 変換ルール | Partial | contracts プリアンブルに「Rust の snake_case フィールド名は TS DTO では camelCase に変換する（serde の `#[serde(rename_all = "camelCase")]`）」を追記 |
+| P-16 | CHK017: エラー kind 命名規則 | Partial | contracts §Error Kind Extensions に「エラー kind は camelCase で命名する」を追記 |
+| P-17 | CHK022: `delete_property` の CASCADE 件数非通知 | Partial | contracts §delete_property に「関連する PropertyValue は CASCADE で自動削除される。削除件数はレスポンスに含まない（void）」を追記 |
+| P-18 | CHK031: propertyType と config の型不整合 | Partial | contracts §add_property に「propertyType と config の型が不整合の場合は `invalidConfig` エラーを返す」を追記 |
+| P-19 | CHK032: PropertyName のトリミング規則 | Partial | data-model.md §Property の PropertyName バリデーションに「トリム後」の記載を追加（DatabaseTitle と同様） |
+| P-20 | CHK034: 既存 PageDto との差分明示 | Partial | contracts §DTO Definitions の PageDto コメントに「既存フィールド: id, title, createdAt, updatedAt / 新規追加: databaseId」を明記 |
 
 ## 配置ミス（Misplaced 項目）
 
@@ -64,7 +57,23 @@ CHK001, CHK002, CHK003, CHK006, CHK007, CHK012, CHK013, CHK015, CHK016, CHK019, 
 
 ## 意図的な除外の確認
 
-全 Gap/Partial 項目が解決されたため，除外確認は不要。
+以下の Gap 項目について，意図的に対象外としている場合は理由を記録してください。
+（人間が判断して記入するセクション）
+
+| ID | チェック項目 | 除外理由（人間が記入） |
+|----|------------|---------------------|
+| G-01 | CHK001: US8 完全削除の IPC コマンド | |
+| G-02 | CHK005: バッチ操作のスコープ除外 | |
+| G-03 | CHK024: テキスト型空文字列の意味 | |
+| P-01 | CHK004: CommandError の TS interface | |
+| P-05 | CHK014: config 省略時のレスポンス | |
+| P-06 | CHK016: 未設定値の DTO 表現 | |
+| P-07 | CHK019: クロスデータベース値設定 | |
+| P-08 | CHK021: standalone ページの除外操作 | |
+| P-09 | CHK023: list_standalone_pages ソート順 | |
+| P-10 | CHK026: 不正日付エラー kind | |
+| P-11 | CHK033: serde ↔ TS マッピング前提 | |
+| P-12 | CHK035: 同期的 IPC 前提 | |
 
 ---
 
@@ -74,36 +83,21 @@ CHK001, CHK002, CHK003, CHK006, CHK007, CHK012, CHK013, CHK015, CHK016, CHK019, 
 
 | Constitution 原則 | 対応するチェック項目 |
 |------------------|-------------------|
-| I. Local-First Product Integrity | CHK001, CHK007, CHK012, CHK015, CHK022, CHK028, CHK029, CHK030 |
-| II. Domain-Faithful Information Model | CHK002, CHK004, CHK010, CHK014 |
-| III. Typed Boundaries and DDD | CHK008, CHK013, CHK033 |
-| IV. Test-First Delivery and Quality Gates | CHK016, CHK017, CHK018 |
-| V. Safe Rust, SOLID, Maintainability First | CHK005, CHK027（簡素性の観点） |
-| VII. Defensive Error Handling | CHK023, CHK024, CHK025, CHK026 |
+| Article I: Local-First Product Integrity | CHK005（バッチ操作不要 = ローカル完結で十分な性能），CHK009（全プロパティ完全リスト = データ整合性） |
+| Article II: Domain-Faithful Information Model | CHK011（セレクト値の ID 格納 = 参照整合性），CHK016（未設定値の表現 = ドメイン概念の忠実な表現） |
+| Article III: Typed Boundaries and DDD | CHK004（CommandError 型定義），CHK007（TypeMismatch エラー），CHK008（PropertyConfigDto），CHK010（シリアライズ形式），CHK013（命名規則），CHK030（バリデーション規則の型別列挙），CHK033（serde マッピング） |
+| Article V: Safe Rust, SOLID, Maintainability | CHK005（バッチ操作未導入 = YAGNI 準拠），CHK022（void レスポンス = 簡素な設計） |
+| Article VII: Defensive Error Handling | CHK003（エラーメッセージ形式），CHK006（型不整合エラー），CHK015（エラー kind の論理的整合），CHK019（クロスDB 検証），CHK021（standalone ページ），CHK026（不正日付エラー），CHK028（選択肢削除フロー） |
 
 ### カバーされていない原則
 
 以下の constitution 原則に対応するチェック項目が不足しています:
 
-- **VI（Rust ドキュメント標準）**: データモデルのドキュメント品質に関するチェック項目がない。ただし，data-integrity チェックリストのスコープ外であり，別ドメインのチェックリスト（例: code-quality.md）で対応すべき事項。**対応不要。**
-- **IV（Test-First）の具体性**: テストの実行可能性に関する項目は CHK016〜018 で存在するが，「先に失敗するテストを作成する」というプロセス面のチェックがない。これもデータモデルの整合性チェックのスコープ外であり，タスク定義（tasks.md）で担保すべき。**対応不要。**
+- **Article IV（Test-First Delivery）**: API チェックリストにテスト戦略に関する検証項目がない。IPC コマンドの統合テスト網羅性，エラーパスのテストカバレッジ等の項目を検討すべき。ただし，テスト専用チェックリストの管轄であり API チェックリストのスコープ外とも言える。**対応不要。**
+- **Article VI（Rust Documentation Standards）**: API 契約のドキュメント品質（DTO の doc コメント，コマンドハンドラの doc コメント）に関する検証項目がない。同様にスコープ外の可能性が高い。**対応不要。**
 
 ### 矛盾・過剰設計の指摘
 
 | チェック項目 | 関連する原則 | 指摘内容 |
 |------------|------------|---------|
-| （該当なし） | — | チェックリストの要求水準は constitution の原則と整合しており，過剰設計・矛盾は検出されなかった |
-
----
-
-## 改善サマリー
-
-| 指標 | 前回（初回レビュー） | 今回（再レビュー） | 改善 |
-|------|-------------------|-------------------|------|
-| ✅ Covered | 13 | 33 | +20 |
-| ⚠️ Partial | 12 | 0 | -12 |
-| ❌ Gap | 8 | 0 | -8 |
-| カバレッジ率 | 39.4% | **100%** | +60.6pt |
-
-データインテグリティチェックリストの全項目がカバーされた。
-次のステップとして api.md チェックリストのレビューを推奨する。
+| （該当なし） | Article V（Simplicity / YAGNI） | API チェックリストに過剰設計を示す項目は検出されなかった。CHK005（バッチ操作）が正しくスコープ外とされている点は YAGNI に適合。CHK035（同期 IPC 前提）も Tauri の標準パターンを踏襲しており簡素性を維持している |
