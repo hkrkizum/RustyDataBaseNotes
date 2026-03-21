@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./PageItem.module.css";
 import type { Page } from "./types";
 
@@ -6,12 +6,14 @@ interface PageItemProps {
   page: Page;
   onUpdateTitle: (id: string, title: string) => Promise<unknown>;
   onRequestDelete: (page: Page) => void;
+  onPageClick: (page: Page) => void;
 }
 
 export function PageItem({
   page,
   onUpdateTitle,
   onRequestDelete,
+  onPageClick,
 }: PageItemProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(page.title);
@@ -79,8 +81,9 @@ export function PageItem({
         <button
           type="button"
           className={styles.title}
-          onClick={startEditing}
-          title="クリックして編集"
+          onClick={() => onPageClick(page)}
+          onDoubleClick={startEditing}
+          title="クリックで開く / ダブルクリックで編集"
         >
           {page.title}
         </button>

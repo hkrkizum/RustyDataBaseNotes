@@ -1,5 +1,6 @@
 use serde::Serialize;
 
+use crate::domain::block::error::BlockError;
 use crate::domain::page::error::PageError;
 use crate::infrastructure::persistence::error::StorageError;
 
@@ -12,6 +13,10 @@ pub enum CommandError {
     /// A domain-level page error.
     #[error(transparent)]
     Page(#[from] PageError),
+
+    /// A domain-level block error.
+    #[error(transparent)]
+    Block(#[from] BlockError),
 
     /// A storage-level error.
     #[error(transparent)]
@@ -31,6 +36,19 @@ impl Serialize for CommandError {
                 ("titleTooLong", self.to_string())
             }
             CommandError::Page(PageError::NotFound { .. }) => ("notFound", self.to_string()),
+            CommandError::Block(BlockError::ContentTooLong { .. }) => {
+                ("contentTooLong", self.to_string())
+            }
+            CommandError::Block(BlockError::InvalidPosition { .. }) => {
+                ("invalidPosition", self.to_string())
+            }
+            CommandError::Block(BlockError::NotFound { .. }) => ("blockNotFound", self.to_string()),
+            CommandError::Block(BlockError::CannotMoveUp { .. }) => {
+                ("cannotMoveUp", self.to_string())
+            }
+            CommandError::Block(BlockError::CannotMoveDown { .. }) => {
+                ("cannotMoveDown", self.to_string())
+            }
             CommandError::Storage(_) => ("storage", self.to_string()),
         };
 

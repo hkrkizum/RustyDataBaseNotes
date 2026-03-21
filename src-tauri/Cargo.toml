@@ -33,6 +33,7 @@ sqlx = { version = "0.8", features = [
 uuid = { version = "1", features = ["v7", "serde"] }
 thiserror = "2"
 chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1", features = ["sync"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt", "time"] }

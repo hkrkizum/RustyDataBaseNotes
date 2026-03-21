@@ -7,6 +7,7 @@ interface PageListViewProps {
   loading: boolean;
   onUpdateTitle: (id: string, title: string) => Promise<unknown>;
   onRequestDelete: (page: Page) => void;
+  onPageClick: (page: Page) => void;
 }
 
 export function PageListView({
@@ -14,6 +15,7 @@ export function PageListView({
   loading,
   onUpdateTitle,
   onRequestDelete,
+  onPageClick,
 }: PageListViewProps) {
   if (loading) {
     return <div className={styles.empty}>読み込み中...</div>;
@@ -38,6 +40,7 @@ export function PageListView({
           page={page}
           onUpdateTitle={onUpdateTitle}
           onRequestDelete={onRequestDelete}
+          onPageClick={onPageClick}
         />
       ))}
     </div>

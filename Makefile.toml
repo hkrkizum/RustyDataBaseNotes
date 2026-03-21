@@ -10,15 +10,40 @@ default_to_workspace = false
 TEST_BUILD_JOBS = { value = "8", condition = { env_not_set = ["TEST_BUILD_JOBS"] } }
 
 # ─────────────────────────────────────────────
+# Build
+# ─────────────────────────────────────────────
+[tasks.build]
+description = "Production build of the Tauri desktop app"
+command = "cargo"
+args = ["tauri", "build"]
+
+[tasks.check]
+description = "Fast workspace compilation check (no codegen)"
+command = "cargo"
+args = ["check", "--workspace", "--all-targets"]
+cwd = "src-tauri"
+
+[tasks.clean]
+description = "Remove build artifacts (Rust target + frontend dist)"
+script = [
+  "cargo clean --manifest-path src-tauri/Cargo.toml",
+  "rm -rf dist",
+]
+
+# ─────────────────────────────────────────────
 # Quality Gate
 # ─────────────────────────────────────────────
 [tasks.qa]
 description = "Run full quality gate: Rust + TypeScript"
 run_task = { name = ["qa-rs", "qa-ts"], fork = true }
 
+[tasks.check-all]
+description = "Static checks only (no tests): fmt-check → clippy → lint-ts → ts-check"
+run_task = { name = ["fmt-rs-check", "fmt-ts-check", "clippy", "lint-ts", "ts-check"], fork = true }
+
 [tasks.qa-rs]
-description = "Rust quality gate: fmt → clippy → test → doc-test"
-run_task = { name = ["fmt-rs", "clippy", "test", "doc-test"], fork = true }
+description = "Rust quality gate: fmt → clippy → test → doc-test → doc-check"
+run_task = { name = ["fmt-rs", "clippy", "test", "doc-test", "doc-check"], fork = true }
 
 [tasks.qa-ts]
 description = "TypeScript quality gate: fmt → lint → type-check → test"
@@ -27,6 +52,10 @@ run_task = { name = ["fmt-ts", "lint-ts", "ts-check", "test-ts"], fork = true }
 # ─────────────────────────────────────────────
 # Formatting
 # ─────────────────────────────────────────────
+[tasks.fmt]
+description = "Format all code (Rust + TypeScript)"
+run_task = { name = ["fmt-rs", "fmt-ts"], fork = true }
+
 [tasks.fmt-rs]
 description = "Format all Rust workspace crates"
 command = "cargo"
@@ -117,6 +146,45 @@ args = ["test", "--workspace", "--jobs", "${TEST_BUILD_JOBS}"]
 cwd = "src-tauri"
 
 # ─────────────────────────────────────────────
+# Coverage
+# ─────────────────────────────────────────────
+[tasks.coverage]
+description = "Run all coverage reports (Rust + TypeScript)"
+run_task = { name = ["coverage-rs", "coverage-ts"], fork = true }
+
+[tasks.coverage-rs]
+description = "Rust code coverage via cargo-llvm-cov (text summary)"
+install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
+  "llvm-cov", "--help",
+] }
+command = "cargo"
+args = ["llvm-cov", "--workspace", "--all-targets"]
+cwd = "src-tauri"
+
+[tasks.coverage-rs-html]
+description = "Rust code coverage with HTML report (opens in browser)"
+install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
+  "llvm-cov", "--help",
+] }
+command = "cargo"
+args = ["llvm-cov", "--workspace", "--all-targets", "--html", "--open"]
+cwd = "src-tauri"
+
+[tasks.coverage-rs-lcov]
+description = "Rust code coverage in LCOV format (for CI integration)"
+install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
+  "llvm-cov", "--help",
+] }
+command = "cargo"
+args = ["llvm-cov", "--workspace", "--all-targets", "--lcov", "--output-path", "target/llvm-cov/lcov.info"]
+cwd = "src-tauri"
+
+[tasks.coverage-ts]
+description = "TypeScript code coverage via Vitest"
+command = "pnpm"
+args = ["vitest", "run", "--coverage", "--passWithNoTests"]
+
+# ─────────────────────────────────────────────
 # Documentation
 # ─────────────────────────────────────────────
 [tasks.doc]
@@ -131,6 +199,14 @@ command = "cargo"
 args = ["test", "--doc", "--workspace"]
 cwd = "src-tauri"
 
+[tasks.doc-check]
+description = "Verify rustdoc builds without warnings (Principle VI compliance)"
+command = "cargo"
+args = ["doc", "--no-deps", "--workspace"]
+cwd = "src-tauri"
+[tasks.doc-check.env]
+RUSTDOCFLAGS = "-D warnings"
+
 # ─────────────────────────────────────────────
 # Desktop app
 # ─────────────────────────────────────────────
@@ -138,3 +214,14 @@ cwd = "src-tauri"
 description = "Tauri development server (with file watcher and auto-reload)"
 command = "cargo"
 args = ["tauri", "dev"]
+
+# ─────────────────────────────────────────────
+# Database
+# ─────────────────────────────────────────────
+[tasks.dev-db-reset]
+description = "Delete development SQLite database and restart fresh"
+script = [
+  "rm -f src-tauri/dev.db src-tauri/dev.db-wal src-tauri/dev.db-shm",
+  "rm -rf \"${XDG_DATA_HOME:-$HOME/.local/share}/com.vscode.rustydatabasenotes\"",
+  "echo 'Development database reset. Restart the app to re-initialize.'",
+]

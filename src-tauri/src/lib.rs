@@ -1,11 +1,23 @@
-mod domain;
+#![warn(missing_docs)]
+//! RustyDataBaseNotes — a local-first notebook application built with Tauri.
+
+/// Domain layer: entities, value objects, and domain services.
+pub mod domain;
 mod infrastructure;
 mod ipc;
+
+use std::collections::HashMap;
 
 use sqlx::SqlitePool;
 use tauri::Manager;
 
+use crate::domain::editor::session::EditorSession;
+use crate::domain::page::entity::PageId;
 use crate::infrastructure::persistence::database;
+use crate::ipc::editor_commands::{
+    add_block, close_editor, edit_block_content, move_block_down, move_block_up, open_editor,
+    remove_block, save_editor,
+};
 use crate::ipc::page_commands::{
     create_page, delete_page, get_page, list_pages, update_page_title,
 };
@@ -14,6 +26,8 @@ use crate::ipc::page_commands::{
 pub struct AppState {
     /// SQLite connection pool.
     pub db: SqlitePool,
+    /// Active editor sessions, keyed by page ID.
+    pub sessions: tokio::sync::Mutex<HashMap<PageId, EditorSession>>,
 }
 
 /// Runs the Tauri application.
@@ -32,6 +46,14 @@ pub fn run() {
             get_page,
             update_page_title,
             delete_page,
+            open_editor,
+            close_editor,
+            add_block,
+            edit_block_content,
+            move_block_up,
+            move_block_down,
+            remove_block,
+            save_editor,
         ])
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
@@ -39,7 +61,10 @@ pub fn run() {
 
             let pool = tauri::async_runtime::block_on(database::init_pool(&db_path))?;
 
-            app.manage(AppState { db: pool });
+            app.manage(AppState {
+                db: pool,
+                sessions: tokio::sync::Mutex::new(HashMap::new()),
+            });
 
             Ok(())
         })

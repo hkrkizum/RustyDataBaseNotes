@@ -34,6 +34,9 @@ dist-ssr
 node_modules/
 .pnpm-store/
 
+# Coverage
+coverage/
+
 # Environment
 .env*
 !.env.example

@@ -8,13 +8,28 @@
 
 タスク定義は `Makefile.toml`。すべて `cargo make <task>` で実行する。
 
+### Build & Check
+
+| タスク | 内容 |
+|--------|------|
+| `build` | Tauri 本番ビルド |
+| `check` | `cargo check --workspace`（高速コンパイルチェック） |
+| `clean` | ビルド成果物の削除（`target/` + `dist/`） |
+
 ### Quality Gate
 
 | タスク | 内容 |
 |--------|------|
 | `qa` | フル QA（`qa-rs` → `qa-ts` を順次実行） |
+| `check-all` | テスト抜き静的チェック（fmt-check → clippy → lint-ts → ts-check） |
 
-#### Rust (`qa-rs`): fmt-rs → clippy → test → doc-test
+#### Formatting
+
+| タスク | 内容 |
+|--------|------|
+| `fmt` | Rust + TypeScript を一括フォーマット |
+
+#### Rust (`qa-rs`): fmt-rs → clippy → test → doc-test → doc-check
 
 | タスク | 内容 |
 |--------|------|
@@ -25,6 +40,7 @@
 | `test-filter` | `TEST_FILTER=<pattern> cargo make test-filter` で絞り込み |
 | `test-std` | 標準 cargo test（nextest 不使用） |
 | `doc-test` | ドキュメンテーションテスト |
+| `doc-check` | `cargo doc --no-deps`（警告 = エラー，Principle VI 準拠） |
 
 #### TypeScript (`qa-ts`): fmt-ts → lint-ts → ts-check → test-ts
 
@@ -36,17 +52,26 @@
 | `ts-check` | `tsc --noEmit`（型チェック） |
 | `test-ts` | Vitest（`--passWithNoTests`） |
 
+### Coverage
+
+| タスク | 内容 |
+|--------|------|
+| `coverage` | Rust + TypeScript のカバレッジを一括算出 |
+| `coverage-rs` | Rust カバレッジ（cargo-llvm-cov，テキスト表示） |
+| `coverage-rs-html` | Rust カバレッジ HTML レポート（ブラウザで開く） |
+| `coverage-rs-lcov` | Rust カバレッジ LCOV 出力（CI 連携用） |
+| `coverage-ts` | TypeScript カバレッジ（Vitest + v8） |
+
 ### その他
 
 | タスク | 内容 |
 |--------|------|
 | `serve` | Tauri 開発サーバー（HMR） |
 | `doc` | rustdoc をビルド＆ブラウザで開く |
+| `dev-db-reset` | 開発用 SQLite DB を削除（再起動で再作成） |
 
 ## Recent Changes
+- 002-block-editor: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
 - 001-page-persistence: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
-- 001-page-persistence: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
-- 001-page-persistence: Added [SQLite or equivalent local store, backup path, migration plan]
 
 ## Active Technologies
-- SQLite (WAL mode), `app_data_dir()/rustydatabasenotes.db`, sqlx::migrate!() による組み込みマイグレーション（_sqlx_migrations テーブルで追跡） (001-page-persistence)
