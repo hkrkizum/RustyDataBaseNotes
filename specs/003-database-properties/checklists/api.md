@@ -8,70 +8,70 @@
 
 ## Requirement Completeness
 
-- [ ] CHK001 - Are IPC command contracts defined for *all* operations implied by the spec — is `delete_page` (complete deletion from table view, US8) covered, or is it assumed to use the existing page deletion command? [Completeness, Spec §FR-006 / contracts] [Gap]
-  - **Finding**: US8 の「完全に削除」に対応する IPC コマンドが contracts に未定義。既存の `delete_page` コマンドを使用する前提と思われるが明記されていない <!-- spec/contracts ともに既存コマンド再利用の明記なし -->
-- [x] CHK002 - Is the `PageDto` extension (adding `databaseId: string | null` field) explicitly documented in the contracts, or only implied by `add_page_to_database` returning `PageDto`? [Completeness, Gap, contracts §DTO Definitions]
+- [x] CHK001 - Are IPC command contracts defined for *all* operations implied by the spec — is `delete_page` (complete deletion from table view, US8) covered, or is it assumed to use the existing page deletion command? [Completeness, Spec §FR-006 / contracts]
+  - **OK**: spec FR-006 に「完全削除は既存の `delete_page` コマンドを再利用し，新規 IPC コマンドは追加しない」と明記済み（checklist-apply: G-01） <!-- spec FR-006 で既存コマンド再利用を明記 -->
+- [x] CHK002 - Is the `PageDto` extension (adding `databaseId: string | null` field) explicitly documented in the contracts, or only implied by `add_page_to_database` returning `PageDto`? [Completeness, contracts §DTO Definitions]
   - **OK**: contracts DTO Definitions に `PageDto { databaseId: string | null }` が明示的に追加済み（checklist-apply: P-04） <!-- contracts §DTO Definitions で定義済み -->
-- [ ] CHK003 - Are error response *message* format requirements specified — do error kinds like `titleEmpty` have prescribed human-readable messages, or is message content left to implementation? [Completeness, contracts §Error Kind Extensions] [Partial]
-  - **Finding**: エラー kind と説明文は Error Kind Extensions 表に記載あるが，Frontend に返す human-readable message の形式は実装に委ねられている <!-- Error Kind Extensions 表に kind と説明あり。message 形式は未規定 -->
-- [ ] CHK004 - Is the `CommandError` wrapper type (`{kind, message}`) formally defined in the DTO section, or only referenced informally in the preamble? [Completeness, contracts §preamble] [Gap]
-  - **Finding**: プリアンブルに `{kind, message}` の記述があるが，DTO Definitions セクションに TypeScript interface としての正式定義がない <!-- contracts プリアンブルのみ。DTO セクションに interface 未定義 -->
-- [ ] CHK005 - Are requirements for batch/bulk operations specified — e.g., setting multiple property values in a single IPC call for `get_table_data` response optimization? [Completeness, Gap] [Gap]
-  - **Finding**: バッチ操作は定義されていない。各 `set_property_value` は単一ページ×単一プロパティ単位。スコープ外として意図的に省略されている可能性が高いが明記なし <!-- spec/contracts ともにバッチ操作のスコープ外明記なし -->
-- [ ] CHK006 - Is the contract for `update_property_config` specified for non-applicable config updates — e.g., sending `mode: "date"` config for a Text-type property? [Completeness, contracts §update_property_config] [Partial]
-  - **Finding**: `invalidConfig` エラーが定義されており，data-model.md の PropertyConfig enum が型ごとのバリアントを持つため暗黙的にカバー。ただし contracts 上に「型と config の不整合時は invalidConfig」の明記なし <!-- invalidConfig エラー + PropertyConfig enum で暗黙カバー。contracts に明記なし -->
+- [x] CHK003 - Are error response *message* format requirements specified — do error kinds like `titleEmpty` have prescribed human-readable messages, or is message content left to implementation? [Completeness, contracts §Error Kind Extensions]
+  - **OK**: CommandError interface に「デバッグ用メッセージ（英語）。ユーザー向け表示文は Frontend が kind に基づいて生成する」と明記。Error Kind Extensions にも同方針を記載済み（checklist-apply: P-01, P-13） <!-- CommandError interface + Error Kind Extensions で message 形式を定義 -->
+- [x] CHK004 - Is the `CommandError` wrapper type (`{kind, message}`) formally defined in the DTO section, or only referenced informally in the preamble? [Completeness, contracts §DTO Definitions]
+  - **OK**: DTO Definitions に `interface CommandError { kind: string; message: string }` が正式定義済み（checklist-apply: P-01） <!-- contracts §DTO Definitions に interface 定義済み -->
+- [x] CHK005 - Are requirements for batch/bulk operations specified — e.g., setting multiple property values in a single IPC call for `get_table_data` response optimization? [Completeness]
+  - **OK**: spec §Assumptions に「プロパティ値の一括設定（バッチ操作）は本スコープでは対象外とする。各プロパティ値は `set_property_value` コマンドで1ページ×1プロパティ単位で設定する」と明記済み（checklist-apply: G-02） <!-- spec §Assumptions でスコープ外を明記 -->
+- [x] CHK006 - Is the contract for `update_property_config` specified for non-applicable config updates — e.g., sending `mode: "date"` config for a Text-type property? [Completeness, contracts §update_property_config]
+  - **OK**: contracts §update_property_config に「propertyType と異なる型の config を送信した場合は invalidConfig エラーを返す」と明記。§add_property にも同方針。Error Kind 表でも invalidConfig の説明に「型と config の不整合を含む」と追記済み（checklist-apply: P-14, P-18） <!-- contracts §update_property_config + §add_property + Error Kind 表で明記 -->
 
 ## Requirement Clarity
 
 - [x] CHK007 - Is the `PropertyValueInputDto` discriminated union tag (`type` field) explicitly required to match the target property's `propertyType`, or is the `typeMismatch` error the only indicator of this constraint? [Clarity, contracts §set_property_value]
   - **OK**: `typeMismatch` エラー（contracts）+ `PropertyValueError::TypeMismatch { expected: PropertyType }` の定義（data-model.md）により，type フィールドと propertyType の一致要件が明確 <!-- contracts typeMismatch + data-model TypeMismatch で明確 -->
-- [ ] CHK008 - Is the `PropertyConfigDto` structure sufficiently specified — `mode` is optional and `options` is optional, but are there constraints on which fields are required/forbidden per property type? [Clarity, contracts §DTO Definitions] [Partial]
-  - **Finding**: TS の `PropertyConfigDto` は optional フィールドのフラット構造だが，Rust 側は `PropertyConfig` enum で型ごとにバリアントが分かれている。data-model.md に JSON ワイヤーフォーマット例（internally tagged）が追加済み（P-02）だが，TS DTO 定義との対応関係が未整理 <!-- TS DTO: flat optional / Rust: internally tagged enum。JSON 例は P-02 で追加済みだが TS DTO との対応未整理 -->
+- [x] CHK008 - Is the `PropertyConfigDto` structure sufficiently specified — `mode` is optional and `options` is optional, but are there constraints on which fields are required/forbidden per property type? [Clarity, contracts §DTO Definitions]
+  - **OK**: PropertyConfigDto にコメントで serde internally tagged enum との対応を説明し，JSON ワイヤーフォーマット例を記載。型ごとの必須フィールド（「Date 型では必須」「Select 型では必須」）を注記済み（checklist-apply: P-02, P-03） <!-- PropertyConfigDto: 型ごとの必須注記 + JSON ワイヤーフォーマット例で明確 -->
 - [x] CHK009 - Is the `reorder_properties` contract clear on whether `propertyIds` must be a *complete* list of all properties in the database, or whether a partial list is acceptable? [Clarity, contracts §reorder_properties]
-  - **OK**: contracts に「propertyIds にはデータベース内の全プロパティ ID を含む完全なリストを渡す必要がある。サブセット（一部のみ）の場合はエラーとする」と明記済み（P-05） <!-- contracts §reorder_properties で完全リスト必須と明記（P-05） -->
-- [ ] CHK010 - Is the serialization format for `PropertyConfigDto` across the IPC boundary specified — does Tauri serialize the Rust `PropertyConfig` enum's serde tags transparently, or is a separate mapping needed? [Clarity, Gap] [Partial]
-  - **Finding**: data-model.md に internally tagged JSON ワイヤーフォーマット例が追加済み（P-02）だが，TS 側の `PropertyConfigDto`（flat optional 構造）との対応関係が不整合。Tauri IPC での実際のシリアライズ形式が contracts 上で未確定 <!-- data-model に JSON 例あり（P-02）。TS DTO とのマッピング未整理 -->
+  - **OK**: contracts に「propertyIds にはデータベース内の全プロパティ ID を含む完全なリストを渡す必要がある。サブセット（一部のみ）の場合はエラーとする」と明記済み <!-- contracts §reorder_properties で完全リスト必須と明記 -->
+- [x] CHK010 - Is the serialization format for `PropertyConfigDto` across the IPC boundary specified — does Tauri serialize the Rust `PropertyConfig` enum's serde tags transparently, or is a separate mapping needed? [Clarity, contracts]
+  - **OK**: contracts プリアンブルに「Tauri IPC は Rust の serde シリアライズ結果をそのまま JSON として送受信する」と明記。PropertyConfigDto に JSON ワイヤーフォーマット例（internally tagged）を記載済み（checklist-apply: P-02, P-03, P-11） <!-- プリアンブル serde 規則 + PropertyConfigDto JSON 例で明確 -->
 - [x] CHK011 - Is the `value` field semantics in `PropertyValueInputDto` for `select` type documented — does `optionId` refer to `SelectOptionDto.id` (UUID), and is this distinction clear vs. storing the display `value`? [Clarity, contracts §DTO Definitions]
   - **OK**: TS DTO で `{ type: "select"; optionId: string }` と `SelectOptionDto { id: string; value: string }` が明確に対応。data-model.md でも「text_value に選択肢 ID（UUID 文字列）を格納」と記載 <!-- contracts DTO + data-model で明確に対応 -->
-- [ ] CHK012 - Is "ISO 8601" in DTO timestamp fields specified precisely — RFC 3339 subset, with or without timezone offset, millisecond precision? [Clarity, contracts §DTO Definitions] [Partial]
-  - **Finding**: contracts の TS DTO コメントは "ISO 8601" だが，data-model.md は "RFC 3339" と明記。date_value は UTC 強制が追加済み（P-08）。ただし全タイムスタンプフィールドの精度（ミリ秒・秒）と ISO 8601 / RFC 3339 の用語不整合は残存 <!-- contracts: "ISO 8601" / data-model: "RFC 3339"。UTC 強制は P-08 で追加。精度・用語不整合残存 -->
+- [x] CHK012 - Is "ISO 8601" in DTO timestamp fields specified precisely — RFC 3339 subset, with or without timezone offset, millisecond precision? [Clarity, contracts §DTO Definitions]
+  - **OK**: contracts の全タイムスタンプフィールドが "RFC 3339 / UTC" に統一済み。data-model.md も "RFC 3339" で一貫。用語の不整合は解消（checklist-apply: P-04） <!-- 全タイムスタンプ "RFC 3339 / UTC" に統一済み -->
 
 ## Requirement Consistency
 
-- [ ] CHK013 - Are Rust domain field names and TypeScript DTO field names consistently mapped — e.g., `property_type` (Rust snake_case) → `propertyType` (TS camelCase) — and is the naming convention rule documented? [Consistency, contracts §DTO Definitions / data-model.md] [Partial]
-  - **Finding**: snake_case → camelCase の変換は全 DTO で一貫しているが，変換ルール自体が明示的に文書化されていない <!-- 全 DTO で一貫。変換ルールの文書化なし -->
-- [ ] CHK014 - Is `config: PropertyConfigDto | null` in `PropertyDto` consistent with the `add_property` contract where `config` is optional in args — does omitting config yield `null` or a default config object? [Consistency, contracts §add_property / §DTO Definitions] [Gap]
-  - **Finding**: `add_property` の args で `config?` は optional，レスポンスの `PropertyDto.config` は `PropertyConfigDto | null`。config 省略時に null が返るのかデフォルト値（例: Date 型なら `{ mode: "date" }`）が返るのか未記載 <!-- config 省略時の戻り値（null vs デフォルト）が未定義 -->
+- [x] CHK013 - Are Rust domain field names and TypeScript DTO field names consistently mapped — e.g., `property_type` (Rust snake_case) → `propertyType` (TS camelCase) — and is the naming convention rule documented? [Consistency, contracts §DTO Definitions / data-model.md]
+  - **OK**: contracts プリアンブルに「Rust の snake_case フィールド名は TS DTO では camelCase に変換する（`#[serde(rename_all = "camelCase")]`）」と明記済み（checklist-apply: P-15） <!-- プリアンブルに camelCase 変換ルール明記 -->
+- [x] CHK014 - Is `config: PropertyConfigDto | null` in `PropertyDto` consistent with the `add_property` contract where `config` is optional in args — does omitting config yield `null` or a default config object? [Consistency, contracts §add_property / §DTO Definitions]
+  - **OK**: contracts §add_property に「config を省略した場合，PropertyDto.config は null を返す（型固有のデフォルト config は自動生成しない）」と明記済み（checklist-apply: P-05） <!-- contracts §add_property で config 省略→null を明記 -->
 - [x] CHK015 - Are the error kinds between `add_property` and `update_property_name` consistent — both can produce `duplicatePropertyName`, but `add_property` additionally produces `tooManyProperties`; is this difference intentional and documented? [Consistency, contracts §Property Commands]
-  - **OK**: 各コマンドのエラーリストがコマンド単位で明示されており，差異は論理的に整合（`add_property` は新規追加なので `tooManyProperties`/`invalidConfig`/`databaseNotFound` が必要，`update_property_name` は既存変更なので `propertyNotFound` が必要） <!-- コマンド単位のエラーリストが論理的に整合 -->
-- [ ] CHK016 - Is the `TableRowDto.values` type (`Record<string, PropertyValueDto>`) consistent with the scenario where a property value has never been set — is the key absent, or present with all-null value fields? [Consistency, contracts §DTO Definitions] [Gap]
-  - **Finding**: data-model.md に「未作成 (レコードなし — 未入力状態)」の記載あるが，DTO でキーが欠落するのか全フィールド null の PropertyValueDto が返るのか未定義 <!-- data-model: レコードなし / DTO: キー欠落 vs null PropertyValueDto が未定義 -->
-- [ ] CHK017 - Are error kind strings consistent in casing convention — all listed as camelCase (`titleEmpty`, `databaseNotFound`), but is this convention explicitly stated as a rule? [Consistency, contracts §Error Kind Extensions] [Partial]
-  - **Finding**: 全14エラー kind が camelCase で一貫しているが，命名規則としての明示的なルール記載がない <!-- 全14種 camelCase 一貫。命名規則の明記なし -->
+  - **OK**: 各コマンドのエラーリストがコマンド単位で明示されており，差異は論理的に整合 <!-- コマンド単位のエラーリストが論理的に整合 -->
+- [x] CHK016 - Is the `TableRowDto.values` type (`Record<string, PropertyValueDto>`) consistent with the scenario where a property value has never been set — is the key absent, or present with all-null value fields? [Consistency, contracts §DTO Definitions]
+  - **OK**: TableRowDto のコメントに「未入力（値未設定）のプロパティはキーが欠落する（Record に含まれない）。Frontend は properties 配列のキーで存在チェックし，欠落時は未入力として表示する」と明記済み（checklist-apply: P-06） <!-- TableRowDto コメントで未設定値=キー欠落を明記 -->
+- [x] CHK017 - Are error kind strings consistent in casing convention — all listed as camelCase (`titleEmpty`, `databaseNotFound`), but is this convention explicitly stated as a rule? [Consistency, contracts §Error Kind Extensions]
+  - **OK**: Error Kind Extensions に「エラー kind は camelCase で命名する」と明記済み（checklist-apply: P-16） <!-- Error Kind Extensions に camelCase 命名規則明記 -->
 
 ## Scenario Coverage
 
 - [x] CHK018 - Are requirements specified for what `get_table_data` returns when the database has properties defined but zero pages? [Coverage, contracts §get_table_data]
   - **OK**: `TableDataDto` の構造（`rows: TableRowDto[]`）から空配列が返ることが自明。spec US5 シナリオ4 で「空のテーブルとページ追加の案内が表示される」と UI 要件も記載 <!-- TableDataDto.rows: [] + spec US5 シナリオ4 で明確 -->
-- [ ] CHK019 - Are requirements specified for `set_property_value` when the page does not belong to the property's database — is this validated, and what error kind is returned? [Coverage, Gap] [Gap]
-  - **Finding**: `set_property_value` のエラーリストに「ページがプロパティのデータベースに属していない」ケースのエラー kind が未定義。クロスデータベースの値設定が黙認されるリスク <!-- set_property_value エラーリストにクロスデータベース検証なし -->
+- [x] CHK019 - Are requirements specified for `set_property_value` when the page does not belong to the property's database — is this validated, and what error kind is returned? [Coverage, contracts §set_property_value]
+  - **OK**: contracts §set_property_value に「ページは対象プロパティのデータベースに属している必要がある。属していない場合は pageNotInDatabase エラーを返す」と明記。Error Kind 表にも `pageNotInDatabase` を追加済み（checklist-apply: P-07） <!-- contracts §set_property_value + Error Kind 表で pageNotInDatabase を定義 -->
 - [x] CHK020 - Is the error behavior specified when `add_existing_page_to_database` is called with a page that belongs to a *different* database (not just "already in a database")? [Coverage, contracts §add_existing_page_to_database]
-  - **OK**: `pageAlreadyInDatabase` エラー（「ページが既にデータベースに所属」）がどのデータベースに所属しているかに関わらず適用される。data-model.md の「1ページ = 最大1データベース」制約と整合 <!-- pageAlreadyInDatabase + 1ページ=最大1DB 制約で整合 -->
-- [ ] CHK021 - Are requirements specified for `remove_page_from_database` when called on a standalone page (database_id = NULL)? [Coverage, contracts §remove_page_from_database] [Gap]
-  - **Finding**: エラーリストに `pageNotFound` と `storage` のみ。スタンドアロンページに対する呼び出し時の挙動（エラーにするか冪等に成功するか）が未定義 <!-- pageNotFound / storage のみ。standalone ページへの呼び出し挙動が未定義 -->
-- [ ] CHK022 - Is the contract defined for `delete_property` when the property has active values across many pages — does the response indicate how many values were cascade-deleted? [Coverage, contracts §delete_property] [Partial]
-  - **Finding**: レスポンスは `void`。CASCADE 削除の件数を返さない設計。spec FR-010 で原子的削除を要求しているが，削除件数の通知は要件外と思われる <!-- void レスポンス。CASCADE 件数非通知は意図的設計と思われるが明記なし -->
-- [ ] CHK023 - Are requirements specified for `list_standalone_pages` ordering — by title, by creation date, or unspecified? [Coverage, Gap, contracts §list_standalone_pages] [Gap]
-  - **Finding**: `list_databases` は「作成日時降順」と明記されているが，`list_standalone_pages` のソート順が未指定 <!-- list_databases: 作成日時降順を明記 / list_standalone_pages: ソート順未指定 -->
+  - **OK**: `pageAlreadyInDatabase` エラーがどのデータベースに所属しているかに関わらず適用される。data-model.md の「1ページ = 最大1データベース」制約と整合 <!-- pageAlreadyInDatabase + 1ページ=最大1DB 制約で整合 -->
+- [x] CHK021 - Are requirements specified for `remove_page_from_database` when called on a standalone page (database_id = NULL)? [Coverage, contracts §remove_page_from_database]
+  - **OK**: contracts §remove_page_from_database に「スタンドアロンページ（database_id が NULL）に対して呼び出した場合は冪等に成功する（no-op，エラーなし）」と明記済み（checklist-apply: P-08） <!-- contracts §remove_page_from_database で no-op を明記 -->
+- [x] CHK022 - Is the contract defined for `delete_property` when the property has active values across many pages — does the response indicate how many values were cascade-deleted? [Coverage, contracts §delete_property]
+  - **OK**: contracts §delete_property に「関連するすべてのプロパティ値も CASCADE で自動削除される。削除件数はレスポンスに含まない（void）」と明記済み（checklist-apply: P-17） <!-- contracts §delete_property で CASCADE 件数非通知を明記 -->
+- [x] CHK023 - Are requirements specified for `list_standalone_pages` ordering — by title, by creation date, or unspecified? [Coverage, contracts §list_standalone_pages]
+  - **OK**: contracts §list_standalone_pages に「作成日時降順で返す」と明記済み（checklist-apply: P-09） <!-- contracts §list_standalone_pages で作成日時降順を明記 -->
 
 ## Edge Case Coverage
 
-- [ ] CHK024 - Is the behavior specified for `set_property_value` with `{ type: "text", value: "" }` — is an empty string a valid text value, or should it be treated as clearing the value? [Edge Case, contracts §set_property_value] [Gap]
-  - **Finding**: data-model.md の Text バリデーションは「文字数制限なし（将来検討）」のみ。空文字列が有効な値か `clear_property_value` と同義かが未定義 <!-- Text バリデーション: 文字数制限なし。空文字列の意味が未定義 -->
+- [x] CHK024 - Is the behavior specified for `set_property_value` with `{ type: "text", value: "" }` — is an empty string a valid text value, or should it be treated as clearing the value? [Edge Case, contracts §set_property_value]
+  - **OK**: spec §Assumptions に「テキスト型プロパティの空文字列（""）は有効な値として保存する。値の未設定状態に戻すには clear_property_value コマンドを使用する」と明記。data-model.md §PropertyValue の Text バリデーションにも同方針を記載済み（checklist-apply: G-03） <!-- spec §Assumptions + data-model §Text で空文字列=有効値を明記 -->
 - [x] CHK025 - Is the behavior specified for `set_property_value` with `{ type: "number", value: 0 }` — is zero distinguishable from "no value set" in the `PropertyValueDto` response? [Edge Case, contracts §DTO Definitions]
   - **OK**: `PropertyValueDto.numberValue: number | null` で `0`（ゼロ）と `null`（未設定）は型レベルで明確に区別可能 <!-- numberValue: number | null で 0 と null を区別可能 -->
-- [ ] CHK026 - Are requirements defined for `PropertyValueInputDto` with `{ type: "date", value: "invalid-date" }` — is date string validation specified as a backend responsibility or left ambiguous? [Edge Case, Spec §CC-004] [Gap]
-  - **Finding**: CC-004 で「バリデーションはバックエンドで実施」と記載あるが，不正な日付文字列に対する専用エラー kind（例: `invalidDate`）が `set_property_value` のエラーリストに未定義 <!-- CC-004 でバックエンド責任は明確。invalidDate エラー kind が未定義 -->
+- [x] CHK026 - Are requirements defined for `PropertyValueInputDto` with `{ type: "date", value: "invalid-date" }` — is date string validation specified as a backend responsibility or left ambiguous? [Edge Case, Spec §CC-004]
+  - **OK**: contracts §set_property_value に「不正な日付文字列（RFC 3339 パース失敗）の場合は invalidDate エラーを返す」と明記。Error Kind 表にも `invalidDate` を追加済み（checklist-apply: P-10） <!-- contracts §set_property_value + Error Kind 表で invalidDate を定義 -->
 - [x] CHK027 - Is the maximum payload size for `reorder_properties` with 50 property IDs addressed, or is the 50-property limit the implicit safeguard? [Edge Case, Spec §Assumptions]
   - **OK**: spec §Assumptions で「プロパティ数の上限はデータベースあたり50」と明記。50 UUID 文字列は十分小さいペイロードであり，上限が暗黙の防護として機能する <!-- spec §Assumptions: プロパティ上限50。ペイロードサイズは十分小さい -->
 - [x] CHK028 - Is the behavior specified for `update_property_config` when removing a select option that is currently used by property values — does the contract reference the reset-to-null flow? [Edge Case, contracts §update_property_config / data-model.md §セレクト選択肢の削除フロー]
@@ -79,23 +79,23 @@
 
 ## Validation Boundary Requirements
 
-- [ ] CHK029 - Is the validation responsibility split between frontend and backend explicitly defined — does CC-004 ("backend validates, frontend receives validated data") prohibit *all* client-side validation, or allow optimistic pre-validation? [Clarity, Spec §CC-004] [Partial]
-  - **Finding**: CC-004 は「バックエンドで実施し，フロントエンドにはバリデーション済みのデータのみを返す」と記載。バックエンドが権威的であることは明確だが，フロントエンド側の楽観的事前バリデーション（UX 向上目的）の可否は未言及 <!-- CC-004: バックエンド権威的。フロントエンド事前バリデーションの可否は未言及 -->
+- [x] CHK029 - Is the validation responsibility split between frontend and backend explicitly defined — does CC-004 ("backend validates, frontend receives validated data") prohibit *all* client-side validation, or allow optimistic pre-validation? [Clarity, Spec §CC-004]
+  - **OK**: spec CC-004 に「フロントエンドは UX 向上のため楽観的な事前バリデーション（入力形式チェック等）を行ってよいが（SHOULD），バックエンドが最終的な権威とする」と明記済み（checklist-apply: G-04） <!-- spec CC-004 でフロントエンド事前バリデーション SHOULD を明記 -->
 - [x] CHK030 - Are validation rules for each of the 5 property types enumerated in the contracts as well as in the data model — or does the contract defer to data-model.md without restating? [Completeness, contracts / data-model.md §PropertyValue]
-  - **OK**: contracts がエラー kind（`invalidNumber`, `invalidSelectOption`, `typeMismatch` 等）をコマンド単位で列挙し，data-model.md §PropertyValue が型ごとのバリデーション規則を詳述。両文書の相互参照で網羅されている <!-- contracts: エラー kind 列挙 + data-model: 型別バリデーション規則で網羅 -->
-- [ ] CHK031 - Is the validation behavior for `add_property` with a `config` that contradicts the `propertyType` specified — e.g., `propertyType: "text"` with `config: { options: [...] }`? [Coverage, contracts §add_property] [Partial]
-  - **Finding**: `add_property` エラーに `invalidConfig` があり，Rust の `PropertyConfig` enum が型ごとにバリアントを持つため不整合は拒否される設計。ただし「propertyType と config の型不整合」というケースが contracts 上で明示されていない <!-- invalidConfig エラー + PropertyConfig enum で拒否設計。contracts に明記なし -->
-- [ ] CHK032 - Are string trimming rules documented in the IPC contract — does the backend trim whitespace from `title` and `name` inputs before validation, or is leading/trailing whitespace preserved? [Gap, contracts / data-model.md §Database] [Partial]
-  - **Finding**: data-model.md §Database で title は「1–255文字（トリム後）」と記載あり，トリミング実施が明確。しかし PropertyName ではトリム記載なし。contracts 側にトリミングの記載なし <!-- DatabaseTitle: トリム後（data-model）。PropertyName: トリム記載なし。contracts: トリム記載なし -->
+  - **OK**: contracts がエラー kind（`invalidNumber`, `invalidDate`, `invalidSelectOption`, `typeMismatch` 等）をコマンド単位で列挙し，data-model.md §PropertyValue が型ごとのバリデーション規則を詳述。両文書の相互参照で網羅されている <!-- contracts: エラー kind 列挙 + data-model: 型別バリデーション規則で網羅 -->
+- [x] CHK031 - Is the validation behavior for `add_property` with a `config` that contradicts the `propertyType` specified — e.g., `propertyType: "text"` with `config: { options: [...] }`? [Coverage, contracts §add_property]
+  - **OK**: contracts §add_property に「propertyType と config の型が不整合の場合（例: propertyType: "text" に options を含む config）は invalidConfig エラーを返す」と具体例付きで明記済み（checklist-apply: P-18） <!-- contracts §add_property で型不整合→invalidConfig を具体例付きで明記 -->
+- [x] CHK032 - Are string trimming rules documented in the IPC contract — does the backend trim whitespace from `title` and `name` inputs before validation, or is leading/trailing whitespace preserved? [Clarity, contracts / data-model.md §Database]
+  - **OK**: data-model.md で DatabaseTitle は「1–255文字（トリム後）」，PropertyName は「1–100文字（トリム後），DB 内一意」と双方にトリミング規則を明記済み（checklist-apply: P-19） <!-- data-model: DatabaseTitle + PropertyName ともに「トリム後」を明記 -->
 
 ## Dependencies & Assumptions
 
-- [ ] CHK033 - Is the assumption that Tauri IPC serialization handles the `PropertyValueInputDto` tagged union correctly documented — does serde's externally-tagged enum map to the TypeScript discriminated union as specified? [Assumption, Gap] [Gap]
-  - **Finding**: Rust の serde tagged enum と TS の discriminated union のマッピングが Tauri IPC で透過的に動作する前提だが，この想定が文書化されていない <!-- serde tagged enum ↔ TS discriminated union マッピング前提が未文書化 -->
-- [ ] CHK034 - Is the dependency on existing `PageDto` and `PageError` types documented — which fields and error kinds are being extended vs. reused? [Dependency, contracts §add_page_to_database / §Error Kind Extensions] [Partial]
-  - **Finding**: PageDto に `databaseId` フィールドが追加済み（P-04），`pageAlreadyInDatabase` が PageError 拡張として定義済み。ただし既存 `PageDto` のどのフィールドが再利用でどれが新規拡張かの明示がない <!-- PageDto 拡張（P-04）+ pageAlreadyInDatabase 定義済み。既存フィールドとの差分が不明確 -->
-- [ ] CHK035 - Is the assumption that all IPC commands are *synchronous* from the frontend's perspective (single request → single response, no streaming) explicitly stated? [Assumption, Gap] [Gap]
-  - **Finding**: 全コマンドが Request→Response パターンで記述されており同期的な前提だが，明示的な記載がない。Tauri IPC の特性として自明だが文書化すると明確になる <!-- 全コマンド Request→Response。同期的前提は暗黙的 -->
+- [x] CHK033 - Is the assumption that Tauri IPC serialization handles the `PropertyValueInputDto` tagged union correctly documented — does serde's externally-tagged enum map to the TypeScript discriminated union as specified? [Assumption, contracts]
+  - **OK**: contracts プリアンブルに「Tauri IPC は Rust の serde シリアライズ結果をそのまま JSON として送受信する...TS 型はこの JSON 構造に対応する型として定義する」と明記済み（checklist-apply: P-11） <!-- プリアンブルに serde シリアライズ前提を明記 -->
+- [x] CHK034 - Is the dependency on existing `PageDto` and `PageError` types documented — which fields and error kinds are being extended vs. reused? [Dependency, contracts §DTO Definitions / §Error Kind Extensions]
+  - **OK**: PageDto コメントに「既存フィールド: id, title, createdAt, updatedAt / 新規追加: databaseId」と差分を明記。`pageAlreadyInDatabase` も PageError 拡張として定義済み（checklist-apply: P-20） <!-- PageDto: 既存/新規差分を明記 + pageAlreadyInDatabase 定義済み -->
+- [x] CHK035 - Is the assumption that all IPC commands are *synchronous* from the frontend's perspective (single request → single response, no streaming) explicitly stated? [Assumption, contracts]
+  - **OK**: contracts プリアンブルに「すべての IPC コマンドは同期的な Request→Response パターンで動作する（ストリーミングやイベント通知は使用しない）」と明記済み（checklist-apply: P-12） <!-- プリアンブルに同期的 Request→Response を明記 -->
 
 ## Notes
 

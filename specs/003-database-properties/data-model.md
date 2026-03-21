@@ -50,7 +50,7 @@
 |-----------|---------|-----------|------|
 | id | `PropertyId(Uuid)` | TEXT PK | UUIDv7 |
 | database_id | `DatabaseId` | TEXT NOT NULL FK | → databases.id |
-| name | `PropertyName(String)` | TEXT NOT NULL | 1–100文字，DB 内一意 |
+| name | `PropertyName(String)` | TEXT NOT NULL | 1–100文字（トリム後），DB 内一意 |
 | property_type | `PropertyType` | TEXT NOT NULL | "text"\|"number"\|"date"\|"select"\|"checkbox" |
 | config | `PropertyConfig` | TEXT | JSON，型固有設定。NULL 可 |
 | position | `i64` | INTEGER NOT NULL | 0始まり表示順 |
@@ -58,7 +58,8 @@
 | updated_at | `DateTime<Utc>` | TEXT NOT NULL | RFC 3339 |
 
 **バリデーション規則**:
-- `PropertyName`: 空不可，100文字上限，同一データベース内で一意
+- `PropertyName`: 空不可，100文字上限（トリム後），同一データベース内で一意
+  <!-- refined by checklist-apply: P-19 -->
 - `PropertyType`: 5種類の enum（`Text`, `Number`, `Date`, `Select`, `Checkbox`）
 - `position`: 非負整数
 
@@ -142,7 +143,9 @@ pub struct SelectOption {
 **UNIQUE 制約**: `(page_id, property_id)` — 1ページ×1プロパティにつき最大1値
 
 **バリデーション規則（PropertyType に応じて）**:
-- `Text`: `text_value` に格納。文字数制限なし（将来検討）
+- `Text`: `text_value` に格納。文字数制限なし（将来検討）。空文字列（`""`）は
+  有効な値として保存する。値の未設定状態に戻すには `clear_property_value` を使用する
+  <!-- refined by checklist-apply: G-03 -->
 - `Number`: `number_value` に格納。有限数値のみ（NaN, Infinity 拒否）。
   -0.0 は 0.0 として正規化する。subnormal, MAX/MIN f64 は有限値として受け入れる
   <!-- refined by checklist-apply: P-07 -->
@@ -282,11 +285,14 @@ pub enum PropertyError {
 ```rust
 pub enum PropertyValueError {
     InvalidNumber { reason: String },
+    InvalidDate { reason: String },
     InvalidSelectOption { option_id: String, property_id: PropertyId },
     TypeMismatch { expected: PropertyType, property_id: PropertyId },
+    PageNotInDatabase { page_id: PageId, database_id: DatabaseId },
     NotFound { id: PropertyValueId },
 }
 ```
+<!-- refined by checklist-apply: P-07 (PageNotInDatabase), P-10 (InvalidDate) -->
 
 ## Repository Traits
 

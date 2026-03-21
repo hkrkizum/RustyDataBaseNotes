@@ -3,8 +3,18 @@
 **Date**: 2026-03-21
 
 すべてのコマンドは Tauri IPC（`@tauri-apps/api/core#invoke`）経由で呼び出される。
+すべての IPC コマンドは同期的な Request→Response パターンで動作する
+（ストリーミングやイベント通知は使用しない）。
+<!-- added by checklist-apply: P-12 -->
+
 レスポンスは `Result<T, CommandError>` 形式。エラーは `{kind, message}` オブジェクト
 として Frontend に伝達される。
+
+**シリアライズ規則**: Tauri IPC は Rust の serde シリアライズ結果をそのまま JSON
+として送受信する。Rust の snake_case フィールド名は TS DTO では camelCase に変換する
+（`#[serde(rename_all = "camelCase")]`）。TS 型はこの JSON 構造に対応する型として
+定義する。
+<!-- added by checklist-apply: P-11, P-15 -->
 
 ## Database Commands
 
@@ -64,7 +74,11 @@
 
 ### `add_property`
 
-データベースにプロパティを追加する。
+データベースにプロパティを追加する。`config` を省略した場合，`PropertyDto.config` は
+`null` を返す（型固有のデフォルト config は自動生成しない）。`propertyType` と
+`config` の型が不整合の場合（例: `propertyType: "text"` に `options` を含む config）は
+`invalidConfig` エラーを返す。
+<!-- refined by checklist-apply: P-05, P-18 -->
 
 | 方向 | 型 |
 |------|-----|
@@ -85,6 +99,8 @@
 ### `update_property_config`
 
 プロパティの型固有設定を更新する（セレクト選択肢の追加・削除，日付モード変更）。
+`propertyType` と異なる型の config を送信した場合は `invalidConfig` エラーを返す。
+<!-- refined by checklist-apply: P-14 -->
 
 | 方向 | 型 |
 |------|-----|
@@ -106,7 +122,9 @@
 
 ### `delete_property`
 
-プロパティを削除する。関連するすべてのプロパティ値も削除される。
+プロパティを削除する。関連するすべてのプロパティ値も CASCADE で自動削除される。
+削除件数はレスポンスに含まない（`void`）。
+<!-- refined by checklist-apply: P-17 -->
 
 | 方向 | 型 |
 |------|-----|
@@ -120,13 +138,16 @@
 
 ### `set_property_value`
 
-ページのプロパティ値を設定する（upsert）。
+ページのプロパティ値を設定する（upsert）。ページは対象プロパティのデータベースに
+属している必要がある。属していない場合は `pageNotInDatabase` エラーを返す。
+不正な日付文字列（RFC 3339 パース失敗）の場合は `invalidDate` エラーを返す。
+<!-- refined by checklist-apply: P-07, P-10 -->
 
 | 方向 | 型 |
 |------|-----|
 | **Args** | `{ pageId: string, propertyId: string, value: PropertyValueInputDto }` |
 | **Response** | `PropertyValueDto` |
-| **Errors** | `invalidNumber`, `invalidSelectOption`, `typeMismatch`, `pageNotFound`, `propertyNotFound`, `storage` |
+| **Errors** | `invalidNumber`, `invalidDate`, `invalidSelectOption`, `typeMismatch`, `pageNotInDatabase`, `pageNotFound`, `propertyNotFound`, `storage` |
 
 ### `clear_property_value`
 
@@ -177,6 +198,9 @@ no-op（エラーなし）として正常終了する。
 ### `remove_page_from_database`
 
 ページをデータベースから除外する（ページ自体は保持，プロパティ値を削除）。
+スタンドアロンページ（`database_id` が NULL）に対して呼び出した場合は
+冪等に成功する（no-op，エラーなし）。
+<!-- refined by checklist-apply: P-08 -->
 
 | 方向 | 型 |
 |------|-----|
@@ -187,6 +211,8 @@ no-op（エラーなし）として正常終了する。
 ### `list_standalone_pages`
 
 どのデータベースにも属していないページの一覧を取得する（「既存ページを追加」の候補用）。
+作成日時降順で返す。
+<!-- refined by checklist-apply: P-09 -->
 
 | 方向 | 型 |
 |------|-----|
@@ -199,12 +225,19 @@ no-op（エラーなし）として正常終了する。
 ## DTO Definitions (TypeScript)
 
 ```typescript
+// Command Error（全コマンド共通のエラーレスポンス型）
+// added by checklist-apply: P-01
+interface CommandError {
+  kind: string;       // エラー種別（camelCase，下記 Error Kind Extensions 参照）
+  message: string;    // デバッグ用メッセージ（英語）。ユーザー向け表示文は Frontend が kind に基づいて生成する
+}
+
 // Database
 interface DatabaseDto {
   id: string;
   title: string;
-  createdAt: string;   // ISO 8601
-  updatedAt: string;   // ISO 8601
+  createdAt: string;   // RFC 3339 / UTC
+  updatedAt: string;   // RFC 3339 / UTC
 }
 
 // Property
@@ -215,9 +248,16 @@ interface SelectOptionDto {
   value: string;
 }
 
+// PropertyConfigDto — Rust 側は serde internally tagged enum（#[serde(tag = "type")]）。
+// IPC ワイヤーフォーマット例:
+//   Text 型:   {"type": "Text"}
+//   Date 型:   {"type": "Date", "mode": "Date"}
+//   Select 型: {"type": "Select", "options": [{"id": "...", "value": "..."}]}
+// TS 側は以下のフラット構造で受け渡し，Tauri IPC が serde 形式と相互変換する。
+// refined by checklist-apply: P-02, P-03
 interface PropertyConfigDto {
-  mode?: "date" | "datetime";        // 日付型のみ
-  options?: SelectOptionDto[];       // セレクト型のみ
+  mode?: "date" | "datetime";        // 日付型のみ（Date 型では必須）
+  options?: SelectOptionDto[];       // セレクト型のみ（Select 型では必須）
 }
 
 interface PropertyDto {
@@ -227,9 +267,10 @@ interface PropertyDto {
   propertyType: PropertyTypeDto;
   config: PropertyConfigDto | null;
   position: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string;               // RFC 3339 / UTC
+  updatedAt: string;               // RFC 3339 / UTC
 }
+// refined by checklist-apply: P-04
 
 // Property Value
 interface PropertyValueDto {
@@ -238,31 +279,36 @@ interface PropertyValueDto {
   propertyId: string;
   textValue: string | null;
   numberValue: number | null;
-  dateValue: string | null;         // ISO 8601
+  dateValue: string | null;         // RFC 3339 / UTC
   booleanValue: boolean | null;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string;                // RFC 3339 / UTC
+  updatedAt: string;                // RFC 3339 / UTC
 }
 
 // Page（既存 PageDto の拡張 — databaseId フィールドを追加）
-// added by checklist-apply: P-04
+// 既存フィールド: id, title, createdAt, updatedAt
+// 新規追加: databaseId
+// added by checklist-apply: P-04, refined by checklist-apply: P-20
 interface PageDto {
   id: string;
   title: string;
-  databaseId: string | null;  // null = スタンドアロンページ
-  createdAt: string;           // ISO 8601
-  updatedAt: string;           // ISO 8601
+  databaseId: string | null;  // null = スタンドアロンページ（新規追加）
+  createdAt: string;           // RFC 3339 / UTC
+  updatedAt: string;           // RFC 3339 / UTC
 }
 
 // Property Value Input (set_property_value 用)
 type PropertyValueInputDto =
   | { type: "text"; value: string }
   | { type: "number"; value: number }
-  | { type: "date"; value: string }         // ISO 8601
+  | { type: "date"; value: string }         // RFC 3339 / UTC
   | { type: "select"; optionId: string }
   | { type: "checkbox"; value: boolean };
 
 // Table View
+// values: 未入力（値未設定）のプロパティはキーが欠落する（Record に含まれない）。
+// Frontend は properties 配列のキーで存在チェックし，欠落時は未入力として表示する。
+// added by checklist-apply: P-06
 interface TableRowDto {
   page: PageDto;
   values: Record<string, PropertyValueDto>;  // key = propertyId
@@ -277,7 +323,10 @@ interface TableDataDto {
 
 ## Error Kind Extensions
 
-既存の `CommandError` に以下の kind を追加:
+既存の `CommandError` に以下の kind を追加する。エラー kind は **camelCase** で命名する。
+`message` フィールドはデバッグ用の英語文字列とし，ユーザー向け表示文は Frontend が
+`kind` に基づいて生成する。
+<!-- refined by checklist-apply: P-13, P-16 -->
 
 | kind | 発生元 | 説明 |
 |------|--------|------|
@@ -287,12 +336,15 @@ interface TableDataDto {
 | `duplicatePropertyName` | PropertyError::DuplicateName | 同名プロパティが既に存在 |
 | `tooManyProperties` | PropertyError::TooManyProperties | プロパティ数上限（50）超過 |
 | `propertyNotFound` | PropertyError::NotFound | 指定 ID のプロパティが存在しない |
-| `invalidConfig` | PropertyError::InvalidConfig | 型固有設定が不正 |
+| `invalidConfig` | PropertyError::InvalidConfig | 型固有設定が不正（型と config の不整合を含む） |
 | `tooManyOptions` | PropertyError::TooManyOptions | セレクト選択肢上限（100）超過 |
 | `optionValueEmpty` | PropertyError::OptionValueEmpty | 選択肢の値が空 |
 | `duplicateOptionValue` | PropertyError::DuplicateOptionValue | 選択肢の値が重複 |
 | `invalidNumber` | PropertyValueError::InvalidNumber | 数値が NaN/Infinity |
+| `invalidDate` | PropertyValueError::InvalidDate | 日付文字列が RFC 3339 パース不可 |
 | `invalidSelectOption` | PropertyValueError::InvalidSelectOption | 存在しない選択肢 |
 | `typeMismatch` | PropertyValueError::TypeMismatch | プロパティ型と値型の不一致 |
+| `pageNotInDatabase` | PropertyValueError::PageNotInDatabase | ページが対象プロパティのデータベースに属していない |
 | `propertyValueNotFound` | PropertyValueError::NotFound | プロパティ値が存在しない |
 | `pageAlreadyInDatabase` | PageError（拡張） | ページが既にデータベースに所属 |
+<!-- added by checklist-apply: P-07 (pageNotInDatabase), P-10 (invalidDate) -->
