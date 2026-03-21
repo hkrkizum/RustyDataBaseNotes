@@ -787,6 +787,33 @@ mod tests {
         ));
     }
 
+    // T079: property_count_limit_50_reached
+    #[tokio::test]
+    async fn property_count_limit_50_reached() {
+        let pool = setup_pool().await;
+        let repo = SqlxPropertyRepository::new(pool.clone());
+        let database = create_test_database(&pool).await;
+        let db_id = database.id().clone();
+
+        // Create 50 properties (the maximum)
+        for i in 0..50 {
+            let name = PropertyName::try_from(format!("Prop {i}")).expect("valid name");
+            let prop = Property::new(db_id.clone(), name, PropertyType::Text, None, i64::from(i))
+                .expect("valid property");
+            repo.create(&prop).await.expect("create property");
+        }
+
+        // count_by_database_id should return 50
+        let count = repo.count_by_database_id(&db_id).await.expect("count");
+        assert_eq!(count, MAX_PROPERTIES, "count should equal MAX_PROPERTIES");
+
+        // Verify the service-layer check would reject a 51st property
+        assert!(
+            count >= MAX_PROPERTIES,
+            "count ({count}) should be >= MAX_PROPERTIES ({MAX_PROPERTIES}), preventing a 51st property"
+        );
+    }
+
     #[tokio::test]
     async fn duplicate_name_rejected() {
         let pool = setup_pool().await;

@@ -809,6 +809,263 @@ mod tests {
         assert_eq!(found.text_value(), None);
     }
 
+    // T077: no orphaned values after property delete
+    #[tokio::test]
+    async fn no_orphaned_values_after_property_delete() {
+        let pool = setup_pool().await;
+        let database = create_test_database(&pool).await;
+        let prop = create_test_property(&pool, database.id()).await;
+        let page = create_test_page(&pool, database.id()).await;
+
+        let pv = PropertyValue::new_validated(
+            page.id().clone(),
+            prop.id().clone(),
+            PropertyType::Text,
+            None,
+            PropertyValueInput::Text("will be orphaned?".to_owned()),
+        )
+        .expect("valid value");
+
+        let repo = SqlxPropertyValueRepository::new(pool.clone());
+        repo.upsert(&pv).await.expect("upsert");
+
+        // Verify value exists before delete
+        let before = repo
+            .find_by_property_id(prop.id())
+            .await
+            .expect("find before");
+        assert_eq!(before.len(), 1);
+
+        // Delete the property
+        let prop_repo = SqlxPropertyRepository::new(pool.clone());
+        prop_repo.delete(prop.id()).await.expect("delete property");
+
+        // Property values should be cascade-deleted
+        let after = repo
+            .find_by_property_id(prop.id())
+            .await
+            .expect("find after");
+        assert!(
+            after.is_empty(),
+            "property_values should be cascade-deleted when property is deleted"
+        );
+    }
+
+    // T077: no orphaned values after page delete
+    #[tokio::test]
+    async fn no_orphaned_values_after_page_delete() {
+        let pool = setup_pool().await;
+        let database = create_test_database(&pool).await;
+        let prop = create_test_property(&pool, database.id()).await;
+        let page = create_test_page(&pool, database.id()).await;
+
+        let pv = PropertyValue::new_validated(
+            page.id().clone(),
+            prop.id().clone(),
+            PropertyType::Text,
+            None,
+            PropertyValueInput::Text("will be orphaned?".to_owned()),
+        )
+        .expect("valid value");
+
+        let repo = SqlxPropertyValueRepository::new(pool.clone());
+        repo.upsert(&pv).await.expect("upsert");
+
+        // Verify value exists before delete
+        let before = repo.find_by_page_id(page.id()).await.expect("find before");
+        assert_eq!(before.len(), 1);
+
+        // Delete the page
+        let page_repo = SqlxPageRepository::new(pool.clone());
+        page_repo.delete(page.id()).await.expect("delete page");
+
+        // Property values should be cascade-deleted
+        let after = repo.find_by_page_id(page.id()).await.expect("find after");
+        assert!(
+            after.is_empty(),
+            "property_values should be cascade-deleted when page is deleted"
+        );
+    }
+
+    // T077: no orphaned values after database delete
+    #[tokio::test]
+    async fn no_orphaned_values_after_database_delete() {
+        let pool = setup_pool().await;
+        let database = create_test_database(&pool).await;
+        let prop = create_test_property(&pool, database.id()).await;
+        let page = create_test_page(&pool, database.id()).await;
+
+        let pv = PropertyValue::new_validated(
+            page.id().clone(),
+            prop.id().clone(),
+            PropertyType::Text,
+            None,
+            PropertyValueInput::Text("cascade through db".to_owned()),
+        )
+        .expect("valid value");
+
+        let repo = SqlxPropertyValueRepository::new(pool.clone());
+        repo.upsert(&pv).await.expect("upsert");
+
+        // Delete the database
+        let db_repo = SqlxDatabaseRepository::new(pool.clone());
+        db_repo
+            .delete(database.id())
+            .await
+            .expect("delete database");
+
+        // Properties should be cascade-deleted
+        let prop_repo = SqlxPropertyRepository::new(pool.clone());
+        let props = prop_repo
+            .find_by_database_id(database.id())
+            .await
+            .expect("find props");
+        assert!(
+            props.is_empty(),
+            "properties should be cascade-deleted when database is deleted"
+        );
+
+        // Property values should be cascade-deleted (via property CASCADE)
+        let values = repo
+            .find_by_property_id(prop.id())
+            .await
+            .expect("find values");
+        assert!(
+            values.is_empty(),
+            "property_values should be cascade-deleted when database is deleted"
+        );
+
+        // Page should still exist with database_id = NULL
+        let page_repo = SqlxPageRepository::new(pool.clone());
+        let found_page = page_repo
+            .find_by_id(page.id())
+            .await
+            .expect("page should still exist");
+        assert!(
+            found_page.database_id().is_none(),
+            "page.database_id should be NULL after database delete"
+        );
+    }
+
+    // T078: Performance — 100 pages x 10 properties
+    #[tokio::test]
+    async fn performance_100_pages_10_properties() {
+        let pool = setup_pool().await;
+        let database = create_test_database(&pool).await;
+        let db_id = database.id().clone();
+
+        // Create 10 properties
+        let prop_repo = SqlxPropertyRepository::new(pool.clone());
+        let mut prop_ids = Vec::new();
+        for i in 0..10 {
+            let name = PropertyName::try_from(format!("Prop {i}")).expect("valid name");
+            let prop = Property::new(db_id.clone(), name, PropertyType::Text, None, i64::from(i))
+                .expect("valid property");
+            prop_ids.push(prop.id().clone());
+            prop_repo.create(&prop).await.expect("create property");
+        }
+
+        // Create 100 pages with property values
+        let page_repo = SqlxPageRepository::new(pool.clone());
+        let pv_repo = SqlxPropertyValueRepository::new(pool.clone());
+        for i in 0..100 {
+            let title = PageTitle::try_from(format!("Page {i}")).expect("valid title");
+            let page = Page::new(title);
+            page_repo.create(&page).await.expect("create page");
+            page_repo
+                .set_database_id(page.id(), Some(&db_id))
+                .await
+                .expect("set db_id");
+            for prop_id in &prop_ids {
+                let pv = PropertyValue::new_validated(
+                    page.id().clone(),
+                    prop_id.clone(),
+                    PropertyType::Text,
+                    None,
+                    PropertyValueInput::Text(format!("val-{i}")),
+                )
+                .expect("valid value");
+                pv_repo.upsert(&pv).await.expect("upsert");
+            }
+        }
+
+        // Measure: find_all_for_database should complete in < 1s
+        let start = std::time::Instant::now();
+        let values = pv_repo
+            .find_all_for_database(&db_id)
+            .await
+            .expect("find_all_for_database");
+        let elapsed = start.elapsed();
+
+        assert_eq!(values.len(), 1000); // 100 pages x 10 properties
+        assert!(
+            elapsed < std::time::Duration::from_secs(1),
+            "find_all_for_database took {elapsed:?}"
+        );
+    }
+
+    // T079: find_all_for_database returns empty when no values exist
+    #[tokio::test]
+    async fn find_all_for_database_empty() {
+        let pool = setup_pool().await;
+        let database = create_test_database(&pool).await;
+
+        let repo = SqlxPropertyValueRepository::new(pool.clone());
+        let values = repo
+            .find_all_for_database(database.id())
+            .await
+            .expect("find_all_for_database");
+        assert!(
+            values.is_empty(),
+            "empty database should have no property values"
+        );
+    }
+
+    // T079: select option limit 100 verified at domain level
+    #[tokio::test]
+    async fn select_option_limit_100_at_domain() {
+        // Create 100 options (the maximum)
+        let options: Vec<SelectOption> = (0..100)
+            .map(|i| SelectOption {
+                id: SelectOptionId::new(),
+                value: format!("Option {i}"),
+            })
+            .collect();
+        let config = PropertyConfig::Select { options };
+        let name = PropertyName::try_from("Select Prop".to_owned()).expect("valid name");
+        let result = Property::new(
+            DatabaseId::new(),
+            name,
+            PropertyType::Select,
+            Some(config),
+            0,
+        );
+        assert!(result.is_ok(), "100 options should be accepted");
+
+        // Try 101 — should fail
+        let options_101: Vec<SelectOption> = (0..101)
+            .map(|i| SelectOption {
+                id: SelectOptionId::new(),
+                value: format!("Option {i}"),
+            })
+            .collect();
+        let config_101 = PropertyConfig::Select {
+            options: options_101,
+        };
+        let name2 = PropertyName::try_from("Select Prop 2".to_owned()).expect("valid name");
+        let result_101 = Property::new(
+            DatabaseId::new(),
+            name2,
+            PropertyType::Select,
+            Some(config_101),
+            0,
+        );
+        assert!(
+            result_101.is_err(),
+            "101 options should be rejected by domain validation"
+        );
+    }
+
     // T043: delete_by_page_and_database
     #[tokio::test]
     async fn delete_by_page_and_database_removes_values() {

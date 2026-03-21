@@ -738,4 +738,43 @@ mod tests {
         // Cleanup
         let _ = std::fs::remove_dir_all(&dir);
     }
+
+    // T079: 1-page-1-database constraint — page already assigned is detectable
+    #[tokio::test]
+    async fn page_already_in_database_detectable() {
+        let pool = setup_pool().await;
+        let repo = SqlxPageRepository::new(pool.clone());
+
+        let title = PageTitle::try_from("Assigned Page".to_owned()).expect("valid");
+        let page = Page::new(title);
+        let page_id = page.id().clone();
+        repo.create(&page).await.expect("create page");
+
+        let db_id_str = create_test_database(&pool).await;
+        let db_id: DatabaseId = db_id_str.parse().expect("valid db id");
+
+        repo.set_database_id(&page_id, Some(&db_id))
+            .await
+            .expect("assign to db");
+
+        // Refetch and verify database_id is set (mimics add_existing_page_to_database check)
+        let found = repo.find_by_id(&page_id).await.expect("find page");
+        assert!(
+            found.database_id().is_some(),
+            "page should have a database_id, which would trigger AlreadyInDatabase at IPC layer"
+        );
+    }
+
+    // T079: find_by_database_id returns empty for database with no pages
+    #[tokio::test]
+    async fn find_by_database_id_empty_database() {
+        let pool = setup_pool().await;
+        let repo = SqlxPageRepository::new(pool.clone());
+
+        let db_id_str = create_test_database(&pool).await;
+        let db_id: DatabaseId = db_id_str.parse().expect("valid db id");
+
+        let pages = repo.find_by_database_id(&db_id).await.expect("find pages");
+        assert!(pages.is_empty(), "empty database should have no pages");
+    }
 }
