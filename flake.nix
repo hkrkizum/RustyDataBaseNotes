@@ -47,6 +47,7 @@
           cargo-nextest
           cargo-make
           cargo-llvm-cov
+          sqlite
 
           gtk3
           webkitgtk_4_1
@@ -77,6 +78,7 @@
             packages = (projectPackagesFor pkgs) ++ (fontPackagesFor pkgs);
             shellHook = ''
               export CODEX_HOME="$PWD/.codex"
+              export PATH="$HOME/.local/bin:$PATH"
               export FONTCONFIG_FILE="${pkgs.makeFontsConf { fontDirectories = fontPackagesFor pkgs; }}"
               export __EGL_VENDOR_LIBRARY_DIRS="${pkgs.mesa}/share/glvnd/egl_vendor.d"
               export LD_LIBRARY_PATH="${
