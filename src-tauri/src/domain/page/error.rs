@@ -1,4 +1,5 @@
 use super::entity::PageId;
+use crate::domain::database::entity::DatabaseId;
 
 /// Errors originating from the Page domain model.
 #[derive(Debug, PartialEq, thiserror::Error)]
@@ -21,5 +22,14 @@ pub enum PageError {
     NotFound {
         /// The ID that was looked up.
         id: PageId,
+    },
+
+    /// The page is already in a database.
+    #[error("page {page_id} already in database {database_id}")]
+    AlreadyInDatabase {
+        /// The page ID.
+        page_id: PageId,
+        /// The database ID.
+        database_id: DatabaseId,
     },
 }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO property_values (id, page_id, property_id, text_value, number_value, date_value, boolean_value, created_at, updated_at)\n               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n               ON CONFLICT (page_id, property_id) DO UPDATE SET\n                   text_value = excluded.text_value,\n                   number_value = excluded.number_value,\n                   date_value = excluded.date_value,\n                   boolean_value = excluded.boolean_value,\n                   updated_at = excluded.updated_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "609518ff202f900a537bbe8b307cada4565e6a5c21b2466c92521ac5a1a47e2f"
+}

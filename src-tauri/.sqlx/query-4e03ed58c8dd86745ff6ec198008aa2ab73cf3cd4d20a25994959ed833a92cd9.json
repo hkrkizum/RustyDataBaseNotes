@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT COALESCE(MAX(position) + 1, 0) as next_pos FROM properties WHERE database_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "next_pos",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4e03ed58c8dd86745ff6ec198008aa2ab73cf3cd4d20a25994959ed833a92cd9"
+}

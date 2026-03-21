@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::error::PageError;
+use crate::domain::database::entity::DatabaseId;
 
 /// Maximum number of characters allowed in a page title.
 const MAX_TITLE_LENGTH: usize = 255;
@@ -97,6 +98,7 @@ impl fmt::Display for PageTitle {
 pub struct Page {
     id: PageId,
     title: PageTitle,
+    database_id: Option<DatabaseId>,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
@@ -108,6 +110,7 @@ impl Page {
         Self {
             id: PageId::new(),
             title,
+            database_id: None,
             created_at: now,
             updated_at: now,
         }
@@ -117,12 +120,14 @@ impl Page {
     pub fn from_stored(
         id: PageId,
         title: PageTitle,
+        database_id: Option<DatabaseId>,
         created_at: DateTime<Utc>,
         updated_at: DateTime<Utc>,
     ) -> Self {
         Self {
             id,
             title,
+            database_id,
             created_at,
             updated_at,
         }
@@ -136,6 +141,11 @@ impl Page {
     /// Returns a reference to the page's title.
     pub fn title(&self) -> &PageTitle {
         &self.title
+    }
+
+    /// Returns a reference to the optional database ID this page belongs to.
+    pub fn database_id(&self) -> Option<&DatabaseId> {
+        self.database_id.as_ref()
     }
 
     /// Returns the page's creation timestamp.

@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT pv.id, pv.page_id, pv.property_id, pv.text_value, pv.number_value, pv.date_value, pv.boolean_value, pv.created_at, pv.updated_at\n               FROM property_values pv\n               INNER JOIN pages p ON pv.page_id = p.id\n               WHERE p.database_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "page_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "property_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "text_value",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "number_value",
+        "ordinal": 4,
+        "type_info": "Float"
+      },
+      {
+        "name": "date_value",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "boolean_value",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 8,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "6ecc486e965c0a3a77674151be00cda2ca9c426abed5108e2829d34abc251c66"
+}

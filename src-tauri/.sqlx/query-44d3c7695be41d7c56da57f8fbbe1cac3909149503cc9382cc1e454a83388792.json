@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, page_id, property_id, text_value, number_value, date_value, boolean_value, created_at, updated_at\n               FROM property_values\n               WHERE property_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "page_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "property_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "text_value",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "number_value",
+        "ordinal": 4,
+        "type_info": "Float"
+      },
+      {
+        "name": "date_value",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "boolean_value",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 8,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "44d3c7695be41d7c56da57f8fbbe1cac3909149503cc9382cc1e454a83388792"
+}
