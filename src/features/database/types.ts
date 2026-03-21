@@ -7,7 +7,12 @@ export interface DatabaseDto {
 }
 
 /** Property type enum values. */
-export type PropertyTypeDto = "text" | "number" | "date" | "select" | "checkbox";
+export type PropertyTypeDto =
+  | "text"
+  | "number"
+  | "date"
+  | "select"
+  | "checkbox";
 
 /** A select option within a property. */
 export interface SelectOptionDto {

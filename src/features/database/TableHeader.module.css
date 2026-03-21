@@ -1,0 +1,41 @@
+.headerRow {
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.headerCell {
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+  min-width: 120px;
+  border-right: 1px solid #eee;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.typeHint {
+  font-weight: 400;
+  color: #999;
+  font-size: 0.75rem;
+  margin-left: 0.3rem;
+}
+
+.addColumnBtn {
+  padding: 0.6rem 0.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #999;
+  min-width: 40px;
+  text-align: center;
+}
+
+.addColumnBtn:hover {
+  color: #4a9eff;
+  background: #f0f7ff;
+}

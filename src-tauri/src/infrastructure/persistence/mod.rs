@@ -8,3 +8,5 @@ pub mod database_repository;
 pub mod error;
 /// Page persistence implementation.
 pub mod page_repository;
+/// Property persistence implementation.
+pub mod property_repository;

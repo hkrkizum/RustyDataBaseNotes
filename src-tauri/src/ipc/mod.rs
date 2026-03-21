@@ -8,3 +8,7 @@ pub mod editor_commands;
 pub mod error;
 /// Page-related IPC command handlers.
 pub mod page_commands;
+/// Property-related IPC command handlers.
+pub mod property_commands;
+/// Table-related IPC command handlers (database-page operations).
+pub mod table_commands;

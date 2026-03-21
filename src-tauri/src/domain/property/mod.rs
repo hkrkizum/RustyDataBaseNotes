@@ -2,3 +2,5 @@
 pub mod entity;
 /// Property domain error types.
 pub mod error;
+/// Property domain repository traits.
+pub mod repository;

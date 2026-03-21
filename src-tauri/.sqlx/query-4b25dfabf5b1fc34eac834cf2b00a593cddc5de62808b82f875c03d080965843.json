@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, database_id, name, property_type, config, position, created_at, updated_at\n               FROM properties\n               WHERE database_id = ?\n               ORDER BY position ASC",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "database_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "property_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "config",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "position",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 7,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4b25dfabf5b1fc34eac834cf2b00a593cddc5de62808b82f875c03d080965843"
+}

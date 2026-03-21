@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO properties (id, database_id, name, property_type, config, position, created_at, updated_at)\n               VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "0b3ed76ddfc29cb1db3ff3e95464e08df046beb8377ecac4a744eb686fa16e80"
+}

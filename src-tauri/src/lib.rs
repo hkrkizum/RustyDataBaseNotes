@@ -22,6 +22,10 @@ use crate::ipc::editor_commands::{
 use crate::ipc::page_commands::{
     create_page, delete_page, get_page, list_pages, update_page_title,
 };
+use crate::ipc::property_commands::{add_property, list_properties};
+use crate::ipc::table_commands::{
+    add_existing_page_to_database, add_page_to_database, list_standalone_pages,
+};
 
 /// Application-wide shared state managed by Tauri.
 pub struct AppState {
@@ -58,6 +62,11 @@ pub fn run() {
             move_block_down,
             remove_block,
             save_editor,
+            add_property,
+            list_properties,
+            add_page_to_database,
+            add_existing_page_to_database,
+            list_standalone_pages,
         ])
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;

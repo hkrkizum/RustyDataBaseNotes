@@ -67,9 +67,7 @@ impl Serialize for CommandError {
                 ("cannotMoveDown", self.to_string())
             }
             // Database errors
-            CommandError::Database(DatabaseError::TitleEmpty) => {
-                ("titleEmpty", self.to_string())
-            }
+            CommandError::Database(DatabaseError::TitleEmpty) => ("titleEmpty", self.to_string()),
             CommandError::Database(DatabaseError::TitleTooLong { .. }) => {
                 ("titleTooLong", self.to_string())
             }

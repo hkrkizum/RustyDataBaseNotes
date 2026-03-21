@@ -46,10 +46,7 @@ pub trait PropertyRepository {
     async fn delete(&self, id: &PropertyId) -> Result<(), Self::Error>;
 
     /// Returns the number of properties in the given database.
-    async fn count_by_database_id(
-        &self,
-        database_id: &DatabaseId,
-    ) -> Result<usize, Self::Error>;
+    async fn count_by_database_id(&self, database_id: &DatabaseId) -> Result<usize, Self::Error>;
 
     /// Returns the next available position value for a new property in the
     /// given database.
@@ -75,10 +72,7 @@ pub trait PropertyValueRepository {
     ) -> Result<Option<PropertyValue>, Self::Error>;
 
     /// Returns all property values attached to the given page.
-    async fn find_by_page_id(
-        &self,
-        page_id: &PageId,
-    ) -> Result<Vec<PropertyValue>, Self::Error>;
+    async fn find_by_page_id(&self, page_id: &PageId) -> Result<Vec<PropertyValue>, Self::Error>;
 
     /// Returns all property values for the given property across all pages.
     async fn find_by_property_id(
