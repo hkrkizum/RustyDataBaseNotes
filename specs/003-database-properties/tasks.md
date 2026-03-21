@@ -73,7 +73,7 @@ tested, and reviewed independently.
 - [ ] T019 [P] [US1] Implement SqlxDatabaseRepository (create, find_by_id, find_all) in `src-tauri/src/infrastructure/persistence/database_repository.rs`, register in `src-tauri/src/infrastructure/persistence/mod.rs`
 - [ ] T020 [US1] Implement create_database, list_databases, get_database IPC commands in `src-tauri/src/ipc/database_commands.rs`, register module in `src-tauri/src/ipc/mod.rs` and add handlers to invoke_handler in `src-tauri/src/lib.rs`
 - [ ] T021 [P] [US1] Create useDatabase hook (createDatabase, listDatabases, getDatabase) with Tauri invoke calls in `src/features/database/useDatabase.ts`
-- [ ] T022 [US1] Implement DatabaseListView (unified page + database list with type-distinguishing icons, click database to open table view) in `src/features/database/DatabaseListView.tsx`
+- [ ] T022 [US1] Implement DatabaseListView (replaces existing PageList — unified list showing both pages and databases with type-distinguishing icons, click page to open editor, click database to open table view) in `src/features/database/DatabaseListView.tsx`
 - [ ] T023 [US1] Implement TableView shell component (database title header, empty state with page-add prompt) in `src/features/database/TableView.tsx`
 - [ ] T024 [US1] Integrate database views into App.tsx navigation (list view ↔ table view ↔ editor transitions) in `src/App.tsx`
 - [ ] T025 [US1] Add `///` documentation for all public items in `src-tauri/src/domain/database/` and run `cargo make qa-rs`
@@ -259,6 +259,7 @@ tested, and reviewed independently.
 - [ ] T078 [P] Verify performance targets: table view with 100 pages × 10 properties loads ≤ 1s, inline edit save completes ≤ 500ms (manual verification or benchmark test)
 - [ ] T079 [P] Verify edge cases: 1-page-1-database constraint enforcement, empty database table view, property count limit 50 rejection, select option limit 100 rejection, empty title rejection for both database and property
 - [ ] T080 Run full QA suite: `cargo make qa` (fmt-rs, clippy, test, doc-test, doc-check, fmt-ts, lint-ts, ts-check, test-ts)
+- [ ] T081 [P] Verify SC-001: end-to-end workflow (database creation → property definition → page addition → property value input) completes within 3 minutes by a first-time user. Manual walkthrough on dev machine
 
 ---
 

@@ -273,7 +273,7 @@ pub enum PropertyError {
     InvalidType { value: String },
     TooManyProperties { count: usize, max: usize },
     NotFound { id: PropertyId },
-    InvalidConfig { reason: String },
+    InvalidConfig { reason: String },  // SelectOption.value の文字数上限（1–100文字）違反もこのバリアントで処理する
     TooManyOptions { count: usize, max: usize },
     OptionValueEmpty,
     DuplicateOptionValue { value: String },
