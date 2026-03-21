@@ -43,7 +43,8 @@
       "Bash(pnpm biome:*)",
       "Bash(wc -l /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/src-tauri/src/**/*.rs)",
       "Bash(ls:*)",
-      "Bash(bash /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/.specify/scripts/bash/update-agent-context.sh claude 2>&1)"
+      "Bash(bash /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/.specify/scripts/bash/update-agent-context.sh claude 2>&1)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json)"
     ]
   }
 }
