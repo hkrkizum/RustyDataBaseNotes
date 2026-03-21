@@ -218,6 +218,103 @@ impl PageRepository for SqlxPageRepository {
 
         Ok(())
     }
+
+    async fn set_database_id(
+        &self,
+        page_id: &PageId,
+        database_id: Option<&DatabaseId>,
+    ) -> Result<(), Self::Error> {
+        let id_str = page_id.to_string();
+        let db_id_str = database_id.map(|id| id.to_string());
+
+        let result = sqlx::query!(
+            "UPDATE pages SET database_id = ? WHERE id = ?",
+            db_id_str,
+            id_str
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        if result.rows_affected() == 0 {
+            return Err(PageError::NotFound {
+                id: page_id.clone(),
+            }
+            .into());
+        }
+        Ok(())
+    }
+
+    async fn find_standalone_pages(&self) -> Result<Vec<Page>, Self::Error> {
+        let rows = sqlx::query!(
+            "SELECT id, title, database_id, created_at, updated_at FROM pages WHERE database_id IS NULL ORDER BY created_at DESC"
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        let mut pages = Vec::with_capacity(rows.len());
+        for row in rows {
+            let page_id: PageId = row.id.parse().map_err(|_| {
+                crate::infrastructure::persistence::error::StorageError::from(
+                    sqlx::Error::ColumnDecode {
+                        index: "id".to_owned(),
+                        source: Box::new(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "invalid page id",
+                        )),
+                    },
+                )
+            })?;
+            let title = PageTitle::try_from(row.title)?;
+            let database_id = row
+                .database_id
+                .map(|s| s.parse::<DatabaseId>())
+                .transpose()
+                .map_err(|_| {
+                    crate::infrastructure::persistence::error::StorageError::from(
+                        sqlx::Error::ColumnDecode {
+                            index: "database_id".to_owned(),
+                            source: Box::new(std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "invalid database_id",
+                            )),
+                        },
+                    )
+                })?;
+            let created_at: DateTime<Utc> = row.created_at.parse().map_err(|_| {
+                crate::infrastructure::persistence::error::StorageError::from(
+                    sqlx::Error::ColumnDecode {
+                        index: "created_at".to_owned(),
+                        source: Box::new(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "invalid created_at timestamp",
+                        )),
+                    },
+                )
+            })?;
+            let updated_at: DateTime<Utc> = row.updated_at.parse().map_err(|_| {
+                crate::infrastructure::persistence::error::StorageError::from(
+                    sqlx::Error::ColumnDecode {
+                        index: "updated_at".to_owned(),
+                        source: Box::new(std::io::Error::new(
+                            std::io::ErrorKind::InvalidData,
+                            "invalid updated_at timestamp",
+                        )),
+                    },
+                )
+            })?;
+            pages.push(Page::from_stored(
+                page_id,
+                title,
+                database_id,
+                created_at,
+                updated_at,
+            ));
+        }
+
+        Ok(pages)
+    }
 }
 
 #[cfg(test)]
@@ -374,6 +471,89 @@ mod tests {
 
         let pages = repo.find_all().await.expect("find_all");
         assert!(pages.is_empty());
+    }
+
+    async fn create_test_database(pool: &SqlitePool) -> String {
+        let id = uuid::Uuid::now_v7().to_string();
+        let now = chrono::Utc::now().to_rfc3339();
+        sqlx::query!(
+            "INSERT INTO databases (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)",
+            id,
+            "Test DB",
+            now,
+            now
+        )
+        .execute(pool)
+        .await
+        .expect("create test database");
+        id
+    }
+
+    // T034: set_database_id assigns page to database
+    #[tokio::test]
+    async fn set_database_id_assigns_page_to_database() {
+        let pool = setup_pool().await;
+        let repo = SqlxPageRepository::new(pool.clone());
+
+        let title = PageTitle::try_from("Test Page".to_owned()).expect("valid title");
+        let page = Page::new(title);
+        let page_id = page.id().clone();
+        repo.create(&page).await.expect("create page");
+
+        let db_id_str = create_test_database(&pool).await;
+        let db_id: DatabaseId = db_id_str.parse().expect("valid database id");
+
+        repo.set_database_id(&page_id, Some(&db_id))
+            .await
+            .expect("set_database_id");
+
+        let found = repo.find_by_id(&page_id).await.expect("find page");
+        assert_eq!(
+            found.database_id().map(|id| id.to_string()),
+            Some(db_id_str)
+        );
+    }
+
+    // T034: set_database_id on non-existent page returns NotFound
+    #[tokio::test]
+    async fn set_database_id_not_found() {
+        let pool = setup_pool().await;
+        let repo = SqlxPageRepository::new(pool);
+
+        let page_id = PageId::new();
+        let db_id = DatabaseId::new();
+        let result = repo.set_database_id(&page_id, Some(&db_id)).await;
+        assert!(matches!(
+            result,
+            Err(CommandError::Page(PageError::NotFound { .. }))
+        ));
+    }
+
+    // T034: find_standalone_pages excludes assigned pages
+    #[tokio::test]
+    async fn find_standalone_pages_excludes_assigned() {
+        let pool = setup_pool().await;
+        let repo = SqlxPageRepository::new(pool.clone());
+
+        let title1 = PageTitle::try_from("Standalone".to_owned()).expect("valid");
+        let page1 = Page::new(title1);
+        repo.create(&page1).await.expect("create 1");
+
+        let title2 = PageTitle::try_from("Assigned".to_owned()).expect("valid");
+        let page2 = Page::new(title2);
+        let page2_id = page2.id().clone();
+        repo.create(&page2).await.expect("create 2");
+
+        let db_id_str = create_test_database(&pool).await;
+        let db_id: DatabaseId = db_id_str.parse().expect("valid database id");
+
+        repo.set_database_id(&page2_id, Some(&db_id))
+            .await
+            .expect("set_database_id");
+
+        let standalone = repo.find_standalone_pages().await.expect("standalone");
+        assert_eq!(standalone.len(), 1);
+        assert_eq!(standalone[0].title().as_str(), "Standalone");
     }
 
     // T045: Performance — 1,000 pages insert and find_all < 1s

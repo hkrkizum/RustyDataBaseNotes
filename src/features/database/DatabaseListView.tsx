@@ -1,6 +1,6 @@
 import type { Page } from "../pages/types";
-import type { DatabaseDto } from "./types";
 import styles from "./DatabaseListView.module.css";
+import type { DatabaseDto } from "./types";
 
 type ListItem =
   | { kind: "page"; data: Page }

@@ -1,5 +1,6 @@
 use super::entity::{Page, PageId, PageTitle};
 use super::error::PageError;
+use crate::domain::database::entity::DatabaseId;
 
 /// Trait defining the persistence operations for [`Page`] entities.
 ///
@@ -23,4 +24,14 @@ pub trait PageRepository {
 
     /// Deletes a page by its ID. Returns [`PageError::NotFound`] if absent.
     async fn delete(&self, id: &PageId) -> Result<(), Self::Error>;
+
+    /// Sets the `database_id` for a page.
+    async fn set_database_id(
+        &self,
+        page_id: &PageId,
+        database_id: Option<&DatabaseId>,
+    ) -> Result<(), Self::Error>;
+
+    /// Returns all pages not belonging to any database (`database_id IS NULL`).
+    async fn find_standalone_pages(&self) -> Result<Vec<Page>, Self::Error>;
 }

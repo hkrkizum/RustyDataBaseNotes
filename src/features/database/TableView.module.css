@@ -27,6 +27,52 @@
   font-size: 1.5rem;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  width: 200px;
+}
+
+.submitBtn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.submitBtn:hover {
+  background-color: #f5f5f5;
+}
+
+.existingBtn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.existingBtn:hover {
+  background-color: #f5f5f5;
+}
+
 .emptyState {
   text-align: center;
   padding: 3rem;
@@ -36,4 +82,20 @@
 .hint {
   font-size: 0.85rem;
   color: #aaa;
+}
+
+.pageList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pageItem {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.95rem;
+}
+
+.pageItem:last-child {
+  border-bottom: none;
 }
