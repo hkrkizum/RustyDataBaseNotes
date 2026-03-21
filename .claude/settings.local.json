@@ -44,7 +44,13 @@
       "Bash(wc -l /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/src-tauri/src/**/*.rs)",
       "Bash(ls:*)",
       "Bash(bash /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/.specify/scripts/bash/update-agent-context.sh claude 2>&1)",
-      "Bash(.specify/scripts/bash/check-prerequisites.sh --json)"
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json)",
+      "Bash(find /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/src-tauri/src -type f \\\\\\(-name *.rs \\\\\\))",
+      "Bash(find /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/src -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(printf 'INSERT INTO pages \\(id, title, created_at, updated_at\\) VALUES \\(?, ?, ?, ?\\)')",
+      "Bash(grep -v \"set \\\\`DATABASE_URL\\\\`\")",
+      "Bash(git status:*)",
+      "Bash(grep:*)"
     ]
   }
 }
