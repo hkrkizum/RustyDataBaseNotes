@@ -248,17 +248,21 @@ interface SelectOptionDto {
   value: string;
 }
 
-// PropertyConfigDto — Rust 側は serde internally tagged enum（#[serde(tag = "type")]）。
+// PropertyConfigDto — Rust 側の serde internally tagged enum（#[serde(tag = "type")]）と
+// 同一のワイヤーフォーマットを使用する判別共用体（discriminated union）。
 // IPC ワイヤーフォーマット例:
-//   Text 型:   {"type": "Text"}
-//   Date 型:   {"type": "Date", "mode": "Date"}
-//   Select 型: {"type": "Select", "options": [{"id": "...", "value": "..."}]}
-// TS 側は以下のフラット構造で受け渡し，Tauri IPC が serde 形式と相互変換する。
-// refined by checklist-apply: P-02, P-03
-interface PropertyConfigDto {
-  mode?: "date" | "datetime";        // 日付型のみ（Date 型では必須）
-  options?: SelectOptionDto[];       // セレクト型のみ（Select 型では必須）
-}
+//   Text 型:       {"type": "Text"}
+//   Number 型:     {"type": "Number"}
+//   Date 型:       {"type": "Date", "mode": "Date"}
+//   Select 型:     {"type": "Select", "options": [{"id": "...", "value": "..."}]}
+//   Checkbox 型:   {"type": "Checkbox"}
+// refined by checklist-apply: P-02, P-03; refined by speckit.analyze: F1
+type PropertyConfigDto =
+  | { type: "Text" }
+  | { type: "Number" }
+  | { type: "Date"; mode: "Date" | "DateTime" }
+  | { type: "Select"; options: SelectOptionDto[] }
+  | { type: "Checkbox" };
 
 interface PropertyDto {
   id: string;

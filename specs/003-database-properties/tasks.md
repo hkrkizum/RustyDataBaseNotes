@@ -45,11 +45,11 @@ tested, and reviewed independently.
 - [ ] T007 [P] Implement PropertyValue entity (PropertyValue, PropertyValueId) with type-specific validation (Number: finite only, -0.0→0.0 normalization; Select: option ID exists; type mismatch check) and PropertyValueError enum in `src-tauri/src/domain/property/entity.rs` and `src-tauri/src/domain/property/error.rs`
 - [ ] T008 [P] Define DatabaseRepository trait (create, find_by_id, find_all, update_title, delete) in `src-tauri/src/domain/database/repository.rs`
 - [ ] T009 [P] Define PropertyRepository trait (create, find_by_database_id, find_by_id, update_name, update_config, update_positions, delete, count_by_database_id, next_position) and PropertyValueRepository trait (upsert, find_by_page_and_property, find_by_page_id, find_by_property_id, delete_by_page_and_database, reset_select_option, find_all_for_database) in `src-tauri/src/domain/property/repository.rs`
-- [ ] T010 Extend Page entity with `database_id: Option<DatabaseId>` field, update `new` and `from_stored` constructors in `src-tauri/src/domain/page/entity.rs`
+- [ ] T010 Extend Page entity with `database_id: Option<DatabaseId>` field, update `new` and `from_stored` constructors in `src-tauri/src/domain/page/entity.rs`. Also update existing SqlxPageRepository's SQL queries and row mapping to include `database_id` column in `src-tauri/src/infrastructure/persistence/page_repository.rs`
 - [ ] T011 Create `mod.rs` for database and property modules, register `pub mod database` and `pub mod property` in `src-tauri/src/domain/mod.rs`
 - [ ] T012 [P] Add Rust DTO types (DatabaseDto, PropertyDto, PropertyValueDto, PropertyConfigDto, PropertyTypeDto, SelectOptionDto, PropertyValueInputDto, TableRowDto, TableDataDto) and extend PageDto with `database_id` in `src-tauri/src/ipc/dto.rs`
-- [ ] T013 [P] Add 16 error kind extensions per contracts/ipc-commands.md (databaseNotFound, propertyNameEmpty, duplicatePropertyName, invalidConfig, invalidNumber, invalidSelectOption, typeMismatch, pageNotInDatabase, pageAlreadyInDatabase, etc.) in `src-tauri/src/ipc/error.rs`
-- [ ] T014 [P] Create TypeScript type definitions (DatabaseDto, PropertyDto, PropertyValueDto, PropertyConfigDto, PropertyTypeDto, SelectOptionDto, PropertyValueInputDto, TableRowDto, TableDataDto, CommandError) in `src/features/database/types.ts`
+- [ ] T013 [P] Add 17 error kind extensions per contracts/ipc-commands.md (databaseNotFound, propertyNameEmpty, duplicatePropertyName, invalidConfig, invalidNumber, invalidDate, invalidSelectOption, typeMismatch, pageNotInDatabase, pageAlreadyInDatabase, propertyValueNotFound, etc.) in `src-tauri/src/ipc/error.rs`
+- [ ] T014 [P] Create TypeScript type definitions (DatabaseDto, PropertyDto, PropertyValueDto, PropertyConfigDto as discriminated union matching serde tagged format, PropertyTypeDto, SelectOptionDto, PropertyValueInputDto, TableRowDto, TableDataDto, CommandError) in `src/features/database/types.ts`
 - [ ] T015 [P] Update PageDto TypeScript type with `databaseId: string | null` field in `src/features/pages/types.ts`
 - [ ] T016 Run foundational verification: `cargo make check` to confirm compilation passes
 
@@ -125,6 +125,7 @@ tested, and reviewed independently.
 - [ ] T039 [P] [US3] Add addPageToDatabase, addExistingPageToDatabase, listStandalonePages to useTableData hook in `src/features/database/useTableData.ts`
 - [ ] T040 [US3] Implement AddPageModal (list standalone pages, select to add to database) in `src/features/database/AddPageModal.tsx`
 - [ ] T041 [US3] Add new-page creation row and existing-page-add button to TableView in `src/features/database/TableView.tsx`
+- [ ] T041a [US3] Add `///` documentation for table_commands and Page database_id extension public items, run `cargo make qa-rs`
 
 **Checkpoint**: User Story 3 is functional — pages can be added to databases
 
@@ -193,8 +194,10 @@ tested, and reviewed independently.
 - [ ] T059 [US6] Implement SqlxPropertyRepository::update_name, update_config, update_positions, delete in `src-tauri/src/infrastructure/persistence/property_repository.rs`
 - [ ] T060 [US6] Implement SqlxPropertyValueRepository::reset_select_option in `src-tauri/src/infrastructure/persistence/property_value_repository.rs`
 - [ ] T061 [US6] Implement update_property_name, update_property_config (with select option delete → value reset in transaction), reorder_properties (validate full property ID list), delete_property IPC commands in `src-tauri/src/ipc/property_commands.rs`, add handlers to `src-tauri/src/lib.rs`
+- [ ] T061a [P] [US6] Add updatePropertyName, updatePropertyConfig, reorderProperties, deleteProperty to useTableData hook in `src/features/database/useTableData.ts`
 - [ ] T062 [P] [US6] Implement PropertyConfigPanel (rename input, select option list management with add/delete, date mode toggle, delete property with confirmation dialog) in `src/features/database/PropertyConfigPanel.tsx`
 - [ ] T063 [US6] Integrate PropertyConfigPanel into TableHeader (column header click/popover opens config panel, drag-based or button-based reorder) in `src/features/database/TableHeader.tsx`
+- [ ] T063a [US6] Add `///` documentation for property schema editing public items and run `cargo make qa-rs`
 
 **Checkpoint**: Property schema can be fully managed
 
@@ -215,8 +218,10 @@ tested, and reviewed independently.
 
 - [ ] T066 [US7] Implement SqlxDatabaseRepository::update_title, delete in `src-tauri/src/infrastructure/persistence/database_repository.rs`
 - [ ] T067 [US7] Implement update_database_title, delete_database IPC commands in `src-tauri/src/ipc/database_commands.rs`, add handlers to `src-tauri/src/lib.rs`
+- [ ] T067a [P] [US7] Add updateDatabaseTitle, deleteDatabase to useDatabase hook in `src/features/database/useDatabase.ts`
 - [ ] T068 [US7] Add database title inline editing to TableView header and delete button with confirmation dialog (warning about property/value deletion, page preservation message) in `src/features/database/TableView.tsx`
 - [ ] T069 [US7] Add database delete option to DatabaseListView item context menu in `src/features/database/DatabaseListView.tsx`
+- [ ] T069a [US7] Add `///` documentation for database management public items and run `cargo make qa-rs`
 
 **Checkpoint**: Database lifecycle (create, rename, delete) is complete
 
@@ -239,6 +244,7 @@ tested, and reviewed independently.
 - [ ] T073 [US8] Implement remove_page_from_database IPC command (transaction: set page.database_id = NULL + delete property values for page) in `src-tauri/src/ipc/table_commands.rs`, add handler to `src-tauri/src/lib.rs`
 - [ ] T074 [US8] Add row context menu to TableRow with "データベースから除外" and "完全に削除" options (full delete reuses existing delete_page command) in `src/features/database/TableRow.tsx`
 - [ ] T075 [US8] Add confirmation dialogs for exclude (property values will be lost) and full delete (page and blocks will be deleted) in `src/features/database/TableView.tsx`
+- [ ] T075a [US8] Add `///` documentation for page removal public items and run `cargo make qa-rs`
 
 **Checkpoint**: Page removal (exclude and full delete) works correctly
 
