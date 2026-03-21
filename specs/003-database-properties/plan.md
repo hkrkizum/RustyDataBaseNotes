@@ -56,7 +56,7 @@
 **Post-Design Re-check (Phase 1 完了後)**:
 - I. ローカル完結: マイグレーション3本は追加的変更のみ。`pages.database_id` の `ON DELETE SET NULL` でデータベース削除時もページ保護。トランザクション境界は data-model.md で明示 ✓
 - II. ドメイン語彙: `Database`，`Property`，`PropertyValue`，`View` を一貫使用。既存の `Page`，`Block` と衝突なし ✓
-- III. 型付き境界: IPC コマンド17本を contracts/ipc-commands.md で定義。DTO はすべて camelCase。エラー kind 17種を追加 ✓
+- III. 型付き境界: IPC コマンド18本を contracts/ipc-commands.md で定義（`list_properties` 追加）。DTO はすべて camelCase。エラー kind 17種を追加 ✓
 - IV. テスト先行: quickstart.md に TDD フロー明記。ドメイン→インフラ→IPC→フロントエンドの順で各層にテスト ✓
 - V. SOLID: リポジトリ3分割（ISP），ドメイン層の外部技術非依存（DIP），独立モジュール（SRP） ✓
 - VI. ドキュメント: 新規公開アイテムに doc コメント必須。`#![warn(missing_docs)]` 既設 ✓

@@ -86,6 +86,18 @@
 | **Response** | `PropertyDto` |
 | **Errors** | `propertyNameEmpty`, `propertyNameTooLong`, `duplicatePropertyName`, `tooManyProperties`, `invalidConfig`, `databaseNotFound`, `storage` |
 
+### `list_properties`
+<!-- added by speckit.analyze: C2 -->
+
+指定データベースのプロパティ一覧を表示順（position ASC）で取得する。
+Phase 4 以降でフロントエンドがプロパティを単独取得する際に使用する。
+
+| 方向 | 型 |
+|------|-----|
+| **Args** | `{ databaseId: string }` |
+| **Response** | `PropertyDto[]` |
+| **Errors** | `databaseNotFound`, `storage` |
+
 ### `update_property_name`
 
 プロパティ名を変更する。
@@ -256,6 +268,13 @@ interface SelectOptionDto {
 //   Date 型:       {"type": "Date", "mode": "Date"}
 //   Select 型:     {"type": "Select", "options": [{"id": "...", "value": "..."}]}
 //   Checkbox 型:   {"type": "Checkbox"}
+//
+// ⚠️ ケーシング注意: PropertyTypeDto は lowercase（"text", "number" 等 — serde
+//   rename_all = "camelCase" による）だが，PropertyConfigDto の tag は PascalCase
+//   （"Text", "Number" 等 — serde internally tagged enum のデフォルト）。
+//   同一 API コール内（例: add_property）で両形式が共存するため，
+//   フロントエンド実装時は注意すること。
+//   例: { propertyType: "select", config: { type: "Select", options: [...] } }
 // refined by checklist-apply: P-02, P-03; refined by speckit.analyze: F1
 type PropertyConfigDto =
   | { type: "Text" }

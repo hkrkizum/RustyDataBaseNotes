@@ -44,7 +44,7 @@ tested, and reviewed independently.
 - [ ] T006 [P] Implement PropertyError enum (NameEmpty, NameTooLong, DuplicateName, InvalidType, TooManyProperties, NotFound, InvalidConfig, TooManyOptions, OptionValueEmpty, DuplicateOptionValue) in `src-tauri/src/domain/property/error.rs`
 - [ ] T007 [P] Implement PropertyValue entity (PropertyValue, PropertyValueId) with type-specific validation (Number: finite only, -0.0→0.0 normalization; Select: option ID exists; type mismatch check) and PropertyValueError enum in `src-tauri/src/domain/property/entity.rs` and `src-tauri/src/domain/property/error.rs`
 - [ ] T008 [P] Define DatabaseRepository trait (create, find_by_id, find_all, update_title, delete) in `src-tauri/src/domain/database/repository.rs`
-- [ ] T009 [P] Define PropertyRepository trait (create, find_by_database_id, find_by_id, update_name, update_config, update_positions, delete, count_by_database_id, next_position) and PropertyValueRepository trait (upsert, find_by_page_and_property, find_by_page_id, find_by_property_id, delete_by_page_and_database, reset_select_option, find_all_for_database) in `src-tauri/src/domain/property/repository.rs`
+- [ ] T009 [P] Define PropertyRepository trait (create, find_by_database_id, find_by_id, update_name, update_config, update_positions, delete, count_by_database_id, next_position) and PropertyValueRepository trait (upsert, find_by_page_and_property, find_by_page_id, find_by_property_id, delete_by_page_and_property, delete_by_page_and_database, reset_select_option, find_all_for_database) in `src-tauri/src/domain/property/repository.rs`
 - [ ] T010 Extend Page entity with `database_id: Option<DatabaseId>` field, update `new` and `from_stored` constructors in `src-tauri/src/domain/page/entity.rs`. Also update existing SqlxPageRepository's SQL queries and row mapping to include `database_id` column in `src-tauri/src/infrastructure/persistence/page_repository.rs`
 - [ ] T011 Create `mod.rs` for database and property modules, register `pub mod database` and `pub mod property` in `src-tauri/src/domain/mod.rs`
 - [ ] T012 [P] Add Rust DTO types (DatabaseDto, PropertyDto, PropertyValueDto, PropertyConfigDto, PropertyTypeDto, SelectOptionDto, PropertyValueInputDto, TableRowDto, TableDataDto) and extend PageDto with `database_id` in `src-tauri/src/ipc/dto.rs`
@@ -96,8 +96,8 @@ tested, and reviewed independently.
 ### Implementation for User Story 2
 
 - [ ] T028 [P] [US2] Implement SqlxPropertyRepository (create, find_by_database_id, find_by_id, count_by_database_id, next_position) in `src-tauri/src/infrastructure/persistence/property_repository.rs`, register in `src-tauri/src/infrastructure/persistence/mod.rs`
-- [ ] T029 [US2] Implement add_property IPC command with config validation (type-config consistency check, duplicate name check, count limit check) in `src-tauri/src/ipc/property_commands.rs`, register module in `src-tauri/src/ipc/mod.rs` and add handler to `src-tauri/src/lib.rs`
-- [ ] T030 [P] [US2] Create useTableData hook (addProperty, list properties for database) with Tauri invoke calls in `src/features/database/useTableData.ts`
+- [ ] T029 [US2] Implement add_property, list_properties IPC commands with config validation (type-config consistency check, duplicate name check, count limit check) in `src-tauri/src/ipc/property_commands.rs`, register module in `src-tauri/src/ipc/mod.rs` and add handlers to `src-tauri/src/lib.rs`
+- [ ] T030 [P] [US2] Create useTableData hook (addProperty, listProperties via `list_properties` IPC command) with Tauri invoke calls in `src/features/database/useTableData.ts`
 - [ ] T031 [US2] Implement AddPropertyModal (name input, type selector with 5 types, config panel for select options / date mode) in `src/features/database/AddPropertyModal.tsx`
 - [ ] T032 [US2] Implement TableHeader (property column headers from properties array, add-property button triggering AddPropertyModal) in `src/features/database/TableHeader.tsx`
 - [ ] T033 [US2] Add `///` documentation for all public items in `src-tauri/src/domain/property/` and run `cargo make qa-rs`
@@ -144,7 +144,7 @@ tested, and reviewed independently.
 
 ### Implementation for User Story 4
 
-- [ ] T044 [P] [US4] Implement SqlxPropertyValueRepository (upsert, find_by_page_and_property, find_by_page_id, find_by_property_id) in `src-tauri/src/infrastructure/persistence/property_value_repository.rs`, register in `src-tauri/src/infrastructure/persistence/mod.rs`
+- [ ] T044 [P] [US4] Implement SqlxPropertyValueRepository (upsert, find_by_page_and_property, find_by_page_id, find_by_property_id, delete_by_page_and_property) in `src-tauri/src/infrastructure/persistence/property_value_repository.rs`, register in `src-tauri/src/infrastructure/persistence/mod.rs`
 - [ ] T045 [US4] Implement set_property_value (with pageNotInDatabase check, type-specific validation) and clear_property_value (no-op if not exists) IPC commands in `src-tauri/src/ipc/property_commands.rs`, add handlers to `src-tauri/src/lib.rs`
 - [ ] T046 [P] [US4] Add setPropertyValue, clearPropertyValue to useTableData hook in `src/features/database/useTableData.ts`
 - [ ] T047 [US4] Implement PropertyCell component (type-specific inline editors: text input, number input with NaN/Infinity client-side guard, date/datetime picker, select dropdown from options, checkbox toggle with immediate save) in `src/features/database/PropertyCell.tsx`

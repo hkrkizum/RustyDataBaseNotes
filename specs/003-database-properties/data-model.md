@@ -338,6 +338,7 @@ pub trait PropertyValueRepository {
     async fn find_by_page_and_property(&self, page_id: &PageId, property_id: &PropertyId) -> Result<Option<PropertyValue>, Self::Error>;
     async fn find_by_page_id(&self, page_id: &PageId) -> Result<Vec<PropertyValue>, Self::Error>;
     async fn find_by_property_id(&self, property_id: &PropertyId) -> Result<Vec<PropertyValue>, Self::Error>;
+    async fn delete_by_page_and_property(&self, page_id: &PageId, property_id: &PropertyId) -> Result<(), Self::Error>;
     async fn delete_by_page_and_database(&self, page_id: &PageId, database_id: &DatabaseId) -> Result<(), Self::Error>;
     async fn reset_select_option(&self, property_id: &PropertyId, option_id: &str) -> Result<(), Self::Error>;
     async fn find_all_for_database(&self, database_id: &DatabaseId) -> Result<Vec<PropertyValue>, Self::Error>;
@@ -356,6 +357,22 @@ pub trait PropertyValueRepository {
 | データベースの削除 | DatabaseRepository（CASCADE で Property, PropertyValue を自動削除，Page.database_id を SET NULL） | DB レベルの CASCADE で一括処理 |
 
 **Note**: データベース削除は SQL の CASCADE 制約により DB レベルで原子的に処理されるため，アプリケーションレベルのトランザクション管理は不要。
+
+### PageError（既存拡張）
+<!-- added by speckit.analyze: U1 -->
+
+```rust
+pub enum PageError {
+    // ... 既存バリアント ...
+    AlreadyInDatabase { page_id: PageId, database_id: DatabaseId },
+}
+```
+
+**Note**: `AlreadyInDatabase` はページが既にいずれかのデータベースに所属している状態で
+`add_existing_page_to_database` が呼び出された場合に発生する。IPC 層で
+`pageAlreadyInDatabase` error kind にマッピングされる。
+
+---
 
 ## State Transitions
 
