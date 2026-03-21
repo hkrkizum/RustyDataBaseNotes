@@ -31,6 +31,39 @@ pub async fn list_databases(state: State<'_, AppState>) -> Result<Vec<DatabaseDt
     Ok(databases.into_iter().map(DatabaseDto::from).collect())
 }
 
+/// Updates the title of an existing database.
+#[tauri::command]
+pub async fn update_database_title(
+    state: State<'_, AppState>,
+    id: String,
+    title: String,
+) -> Result<DatabaseDto, CommandError> {
+    let db_id: DatabaseId =
+        id.parse().map_err(
+            |_| crate::domain::database::error::DatabaseError::NotFound {
+                id: DatabaseId::new(),
+            },
+        )?;
+    let new_title = DatabaseTitle::try_from(title)?;
+    let repo = SqlxDatabaseRepository::new(state.db.clone());
+    let database = repo.update_title(&db_id, &new_title).await?;
+    Ok(DatabaseDto::from(database))
+}
+
+/// Deletes a database by its ID.
+#[tauri::command]
+pub async fn delete_database(state: State<'_, AppState>, id: String) -> Result<(), CommandError> {
+    let db_id: DatabaseId =
+        id.parse().map_err(
+            |_| crate::domain::database::error::DatabaseError::NotFound {
+                id: DatabaseId::new(),
+            },
+        )?;
+    let repo = SqlxDatabaseRepository::new(state.db.clone());
+    repo.delete(&db_id).await?;
+    Ok(())
+}
+
 /// Returns a single database by its ID.
 #[tauri::command]
 pub async fn get_database(

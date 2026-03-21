@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE properties SET position = ?, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "3a3c8a73c38d3976ae0cc2117f26cce3f4d81a99460577fdd1e3ade39fe42fb8"
+}

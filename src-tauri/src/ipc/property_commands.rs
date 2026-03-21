@@ -219,6 +219,120 @@ pub async fn set_property_value(
     Ok(PropertyValueDto::from(pv))
 }
 
+/// Updates the name of an existing property.
+#[tauri::command]
+pub async fn update_property_name(
+    state: State<'_, AppState>,
+    id: String,
+    name: String,
+) -> Result<PropertyDto, CommandError> {
+    let prop_id: crate::domain::property::entity::PropertyId =
+        id.parse().map_err(|_| PropertyError::NotFound {
+            id: crate::domain::property::entity::PropertyId::new(),
+        })?;
+    let prop_name = PropertyName::try_from(name)?;
+    let repo = SqlxPropertyRepository::new(state.db.clone());
+    let prop = repo.update_name(&prop_id, &prop_name).await?;
+    Ok(PropertyDto::from(prop))
+}
+
+/// Updates the configuration of an existing property.
+#[tauri::command]
+pub async fn update_property_config(
+    state: State<'_, AppState>,
+    id: String,
+    config: PropertyConfig,
+) -> Result<PropertyDto, CommandError> {
+    let prop_id: crate::domain::property::entity::PropertyId =
+        id.parse().map_err(|_| PropertyError::NotFound {
+            id: crate::domain::property::entity::PropertyId::new(),
+        })?;
+    let repo = SqlxPropertyRepository::new(state.db.clone());
+    let prop = repo.update_config(&prop_id, &config).await?;
+    Ok(PropertyDto::from(prop))
+}
+
+/// Reorders properties by assigning new positions based on the given ID order.
+#[tauri::command]
+pub async fn reorder_properties(
+    state: State<'_, AppState>,
+    database_id: String,
+    property_ids: Vec<String>,
+) -> Result<Vec<PropertyDto>, CommandError> {
+    let db_id: DatabaseId = database_id.parse().map_err(|_| {
+        crate::domain::database::error::DatabaseError::NotFound {
+            id: DatabaseId::new(),
+        }
+    })?;
+
+    // Verify database exists
+    let db_repo = SqlxDatabaseRepository::new(state.db.clone());
+    db_repo.find_by_id(&db_id).await?;
+
+    // Get all properties for this database
+    let prop_repo = SqlxPropertyRepository::new(state.db.clone());
+    let properties = prop_repo.find_by_database_id(&db_id).await?;
+
+    // Verify the provided IDs match the existing set exactly
+    let existing_ids: std::collections::HashSet<String> =
+        properties.iter().map(|p| p.id().to_string()).collect();
+    let provided_ids: std::collections::HashSet<String> = property_ids.iter().cloned().collect();
+
+    if existing_ids != provided_ids || existing_ids.len() != property_ids.len() {
+        return Err(PropertyError::InvalidConfig {
+            reason: "property_ids must contain all and only existing property IDs".to_owned(),
+        }
+        .into());
+    }
+
+    // Build position updates
+    let updates: Vec<(crate::domain::property::entity::PropertyId, i64)> = property_ids
+        .iter()
+        .enumerate()
+        .map(|(i, id_str)| {
+            let pid: crate::domain::property::entity::PropertyId =
+                id_str.parse().map_err(|_| PropertyError::NotFound {
+                    id: crate::domain::property::entity::PropertyId::new(),
+                })?;
+            Ok((pid, i as i64))
+        })
+        .collect::<Result<Vec<_>, PropertyError>>()?;
+
+    prop_repo.update_positions(&updates).await?;
+
+    // Return updated properties
+    let updated = prop_repo.find_by_database_id(&db_id).await?;
+    Ok(updated.into_iter().map(PropertyDto::from).collect())
+}
+
+/// Deletes a property by its ID.
+#[tauri::command]
+pub async fn delete_property(state: State<'_, AppState>, id: String) -> Result<(), CommandError> {
+    let prop_id: crate::domain::property::entity::PropertyId =
+        id.parse().map_err(|_| PropertyError::NotFound {
+            id: crate::domain::property::entity::PropertyId::new(),
+        })?;
+    let repo = SqlxPropertyRepository::new(state.db.clone());
+    repo.delete(&prop_id).await?;
+    Ok(())
+}
+
+/// Resets property values for a given select option, clearing them to NULL.
+#[tauri::command]
+pub async fn reset_select_option(
+    state: State<'_, AppState>,
+    property_id: String,
+    option_id: String,
+) -> Result<(), CommandError> {
+    let prop_id: crate::domain::property::entity::PropertyId =
+        property_id.parse().map_err(|_| PropertyError::NotFound {
+            id: crate::domain::property::entity::PropertyId::new(),
+        })?;
+    let pv_repo = SqlxPropertyValueRepository::new(state.db.clone());
+    pv_repo.reset_select_option(&prop_id, &option_id).await?;
+    Ok(())
+}
+
 /// Clears (deletes) a property value for a page.
 #[tauri::command]
 pub async fn clear_property_value(

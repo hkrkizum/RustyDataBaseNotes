@@ -225,29 +225,108 @@ impl PropertyRepository for SqlxPropertyRepository {
     async fn update_name(
         &self,
         id: &PropertyId,
-        _name: &PropertyName,
+        name: &PropertyName,
     ) -> Result<Property, Self::Error> {
-        // Stub: will be implemented in Phase 8
-        Err(PropertyError::NotFound { id: id.clone() }.into())
+        let id_str = id.to_string();
+        let name_str = name.to_string();
+        let updated_at = chrono::Utc::now().to_rfc3339();
+
+        let result = sqlx::query!(
+            "UPDATE properties SET name = ?, updated_at = ? WHERE id = ?",
+            name_str,
+            updated_at,
+            id_str
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|e| {
+            if let sqlx::Error::Database(ref db_err) = e
+                && db_err.message().contains("UNIQUE")
+                && db_err.message().contains("properties")
+            {
+                return CommandError::Property(PropertyError::DuplicateName {
+                    name: name.to_string(),
+                    database_id: DatabaseId::new(), // placeholder — real DB id unknown here
+                });
+            }
+            CommandError::Storage(crate::infrastructure::persistence::error::StorageError::from(e))
+        })?;
+
+        if result.rows_affected() == 0 {
+            return Err(PropertyError::NotFound { id: id.clone() }.into());
+        }
+
+        self.find_by_id(id).await
     }
 
     async fn update_config(
         &self,
         id: &PropertyId,
-        _config: &PropertyConfig,
+        config: &PropertyConfig,
     ) -> Result<Property, Self::Error> {
-        // Stub: will be implemented in Phase 8
-        Err(PropertyError::NotFound { id: id.clone() }.into())
+        let id_str = id.to_string();
+        let config_json = serde_json::to_string(config).map_err(|e| {
+            crate::infrastructure::persistence::error::StorageError::from(
+                sqlx::Error::ColumnDecode {
+                    index: "config".to_owned(),
+                    source: Box::new(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        e.to_string(),
+                    )),
+                },
+            )
+        })?;
+        let updated_at = chrono::Utc::now().to_rfc3339();
+
+        let result = sqlx::query!(
+            "UPDATE properties SET config = ?, updated_at = ? WHERE id = ?",
+            config_json,
+            updated_at,
+            id_str
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        if result.rows_affected() == 0 {
+            return Err(PropertyError::NotFound { id: id.clone() }.into());
+        }
+
+        self.find_by_id(id).await
     }
 
-    async fn update_positions(&self, _updates: &[(PropertyId, i64)]) -> Result<(), Self::Error> {
-        // Stub: will be implemented in Phase 8
+    async fn update_positions(&self, updates: &[(PropertyId, i64)]) -> Result<(), Self::Error> {
+        let updated_at = chrono::Utc::now().to_rfc3339();
+
+        for (prop_id, position) in updates {
+            let id_str = prop_id.to_string();
+            sqlx::query!(
+                "UPDATE properties SET position = ?, updated_at = ? WHERE id = ?",
+                position,
+                updated_at,
+                id_str
+            )
+            .execute(&self.pool)
+            .await
+            .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+        }
+
         Ok(())
     }
 
     async fn delete(&self, id: &PropertyId) -> Result<(), Self::Error> {
-        // Stub: will be implemented in Phase 8
-        Err(PropertyError::NotFound { id: id.clone() }.into())
+        let id_str = id.to_string();
+
+        let result = sqlx::query!("DELETE FROM properties WHERE id = ?", id_str)
+            .execute(&self.pool)
+            .await
+            .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        if result.rows_affected() == 0 {
+            return Err(PropertyError::NotFound { id: id.clone() }.into());
+        }
+
+        Ok(())
     }
 
     async fn count_by_database_id(&self, database_id: &DatabaseId) -> Result<usize, Self::Error> {
@@ -555,6 +634,156 @@ mod tests {
             PropertyConfig::Date {
                 mode: DateMode::DateTime
             }
+        ));
+    }
+
+    // ---- T056-T058: Phase 8 update/delete tests ----
+
+    #[tokio::test]
+    async fn update_name_success() {
+        let pool = setup_pool().await;
+        let repo = SqlxPropertyRepository::new(pool.clone());
+        let database = create_test_database(&pool).await;
+
+        let name = PropertyName::try_from("Original".to_owned()).expect("valid name");
+        let prop = Property::new(database.id().clone(), name, PropertyType::Text, None, 0)
+            .expect("valid property");
+        let prop_id = prop.id().clone();
+        repo.create(&prop).await.expect("create");
+
+        let new_name = PropertyName::try_from("Renamed".to_owned()).expect("valid name");
+        let updated = repo
+            .update_name(&prop_id, &new_name)
+            .await
+            .expect("update_name should succeed");
+
+        assert_eq!(updated.name().as_str(), "Renamed");
+        assert!(updated.updated_at() >= prop.created_at());
+    }
+
+    #[tokio::test]
+    async fn update_name_duplicate_rejected() {
+        let pool = setup_pool().await;
+        let repo = SqlxPropertyRepository::new(pool.clone());
+        let database = create_test_database(&pool).await;
+        let db_id = database.id().clone();
+
+        let name1 = PropertyName::try_from("First".to_owned()).expect("valid");
+        let prop1 =
+            Property::new(db_id.clone(), name1, PropertyType::Text, None, 0).expect("valid");
+        repo.create(&prop1).await.expect("create first");
+
+        let name2 = PropertyName::try_from("Second".to_owned()).expect("valid");
+        let prop2 = Property::new(db_id, name2, PropertyType::Text, None, 1).expect("valid");
+        let prop2_id = prop2.id().clone();
+        repo.create(&prop2).await.expect("create second");
+
+        let dup_name = PropertyName::try_from("First".to_owned()).expect("valid");
+        let result = repo.update_name(&prop2_id, &dup_name).await;
+        assert!(matches!(
+            result,
+            Err(CommandError::Property(PropertyError::DuplicateName { .. }))
+        ));
+    }
+
+    #[tokio::test]
+    async fn update_config_success() {
+        let pool = setup_pool().await;
+        let repo = SqlxPropertyRepository::new(pool.clone());
+        let database = create_test_database(&pool).await;
+
+        let name = PropertyName::try_from("Due Date".to_owned()).expect("valid name");
+        let config = Some(PropertyConfig::Date {
+            mode: DateMode::DateTime,
+        });
+        let prop = Property::new(database.id().clone(), name, PropertyType::Date, config, 0)
+            .expect("valid property");
+        let prop_id = prop.id().clone();
+        repo.create(&prop).await.expect("create");
+
+        let new_config = PropertyConfig::Date {
+            mode: DateMode::DateTime,
+        };
+        let updated = repo
+            .update_config(&prop_id, &new_config)
+            .await
+            .expect("update_config should succeed");
+
+        let cfg = updated.config().expect("should have config");
+        assert!(matches!(
+            cfg,
+            PropertyConfig::Date {
+                mode: DateMode::DateTime
+            }
+        ));
+    }
+
+    #[tokio::test]
+    async fn update_positions_success() {
+        let pool = setup_pool().await;
+        let repo = SqlxPropertyRepository::new(pool.clone());
+        let database = create_test_database(&pool).await;
+        let db_id = database.id().clone();
+
+        let mut ids = Vec::new();
+        for (name, pos) in [("A", 0), ("B", 1), ("C", 2)] {
+            let pname = PropertyName::try_from(name.to_owned()).expect("valid name");
+            let prop = Property::new(db_id.clone(), pname, PropertyType::Text, None, pos)
+                .expect("valid property");
+            ids.push(prop.id().clone());
+            repo.create(&prop).await.expect("create");
+        }
+
+        // Reverse the order: C=0, B=1, A=2
+        let updates = vec![
+            (ids[2].clone(), 0_i64),
+            (ids[1].clone(), 1_i64),
+            (ids[0].clone(), 2_i64),
+        ];
+        repo.update_positions(&updates)
+            .await
+            .expect("update_positions should succeed");
+
+        let props = repo.find_by_database_id(&db_id).await.expect("find");
+        assert_eq!(props[0].name().as_str(), "C");
+        assert_eq!(props[0].position(), 0);
+        assert_eq!(props[1].name().as_str(), "B");
+        assert_eq!(props[1].position(), 1);
+        assert_eq!(props[2].name().as_str(), "A");
+        assert_eq!(props[2].position(), 2);
+    }
+
+    #[tokio::test]
+    async fn delete_property_success() {
+        let pool = setup_pool().await;
+        let repo = SqlxPropertyRepository::new(pool.clone());
+        let database = create_test_database(&pool).await;
+
+        let name = PropertyName::try_from("ToDelete".to_owned()).expect("valid name");
+        let prop = Property::new(database.id().clone(), name, PropertyType::Text, None, 0)
+            .expect("valid property");
+        let prop_id = prop.id().clone();
+        repo.create(&prop).await.expect("create");
+
+        repo.delete(&prop_id).await.expect("delete should succeed");
+
+        let result = repo.find_by_id(&prop_id).await;
+        assert!(matches!(
+            result,
+            Err(CommandError::Property(PropertyError::NotFound { .. }))
+        ));
+    }
+
+    #[tokio::test]
+    async fn delete_property_not_found() {
+        let pool = setup_pool().await;
+        let repo = SqlxPropertyRepository::new(pool);
+
+        let fake_id = PropertyId::new();
+        let result = repo.delete(&fake_id).await;
+        assert!(matches!(
+            result,
+            Err(CommandError::Property(PropertyError::NotFound { .. }))
         ));
     }
 

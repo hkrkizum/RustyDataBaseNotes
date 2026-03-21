@@ -318,6 +318,73 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn delete_cascades_properties_and_values() {
+        use crate::domain::page::entity::{Page, PageTitle};
+        use crate::domain::page::repository::PageRepository;
+        use crate::domain::property::entity::{
+            Property, PropertyName, PropertyType, PropertyValue, PropertyValueInput,
+        };
+        use crate::domain::property::repository::{PropertyRepository, PropertyValueRepository};
+        use crate::infrastructure::persistence::page_repository::SqlxPageRepository;
+        use crate::infrastructure::persistence::property_repository::SqlxPropertyRepository;
+        use crate::infrastructure::persistence::property_value_repository::SqlxPropertyValueRepository;
+
+        let pool = setup_pool().await;
+        let db_repo = SqlxDatabaseRepository::new(pool.clone());
+
+        // Create database
+        let title = DatabaseTitle::try_from("Cascade DB".to_owned()).expect("valid");
+        let database = Database::new(title);
+        let db_id = database.id().clone();
+        db_repo.create(&database).await.expect("create db");
+
+        // Create property
+        let prop_repo = SqlxPropertyRepository::new(pool.clone());
+        let pname = PropertyName::try_from("Status".to_owned()).expect("valid");
+        let prop = Property::new(db_id.clone(), pname, PropertyType::Text, None, 0).expect("valid");
+        let prop_id = prop.id().clone();
+        prop_repo.create(&prop).await.expect("create prop");
+
+        // Create page and attach to database
+        let page_repo = SqlxPageRepository::new(pool.clone());
+        let page_title = PageTitle::try_from("Test Page".to_owned()).expect("valid");
+        let page = Page::new(page_title);
+        let page_id = page.id().clone();
+        page_repo.create(&page).await.expect("create page");
+        page_repo
+            .set_database_id(&page_id, Some(&db_id))
+            .await
+            .expect("set db id");
+
+        // Create property value
+        let pv_repo = SqlxPropertyValueRepository::new(pool.clone());
+        let pv = PropertyValue::new_validated(
+            page_id.clone(),
+            prop_id.clone(),
+            PropertyType::Text,
+            None,
+            PropertyValueInput::Text("hello".to_owned()),
+        )
+        .expect("valid");
+        pv_repo.upsert(&pv).await.expect("upsert");
+
+        // Delete database
+        db_repo.delete(&db_id).await.expect("delete db");
+
+        // Properties should be cascade-deleted
+        let props = prop_repo.find_by_database_id(&db_id).await.expect("find");
+        assert!(props.is_empty());
+
+        // Property values should be cascade-deleted (via property CASCADE)
+        let values = pv_repo.find_by_property_id(&prop_id).await.expect("find");
+        assert!(values.is_empty());
+
+        // Page should still exist, but with database_id = NULL
+        let page_found = page_repo.find_by_id(&page_id).await.expect("find page");
+        assert!(page_found.database_id().is_none());
+    }
+
+    #[tokio::test]
     async fn delete_not_found() {
         let pool = setup_pool().await;
         let repo = SqlxDatabaseRepository::new(pool);

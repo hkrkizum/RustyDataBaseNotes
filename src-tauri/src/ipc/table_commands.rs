@@ -104,6 +104,32 @@ pub async fn list_standalone_pages(
     Ok(pages.into_iter().map(PageDto::from).collect())
 }
 
+/// Removes a page from its database, deleting associated property values and
+/// setting its `database_id` to NULL. No-op if the page is already standalone.
+#[tauri::command]
+pub async fn remove_page_from_database(
+    state: State<'_, AppState>,
+    page_id: String,
+) -> Result<(), CommandError> {
+    let pid: PageId = page_id
+        .parse()
+        .map_err(|_| PageError::NotFound { id: PageId::new() })?;
+
+    let page_repo = SqlxPageRepository::new(state.db.clone());
+    let page = page_repo.find_by_id(&pid).await?;
+
+    // If already standalone, no-op
+    if let Some(db_id) = page.database_id() {
+        // Delete property values for this page in this database
+        let pv_repo = SqlxPropertyValueRepository::new(state.db.clone());
+        pv_repo.delete_by_page_and_database(&pid, db_id).await?;
+        // Set database_id to NULL
+        page_repo.set_database_id(&pid, None).await?;
+    }
+
+    Ok(())
+}
+
 /// Returns the full table view data for a database (pages, properties, values).
 #[tauri::command]
 pub async fn get_table_data(
