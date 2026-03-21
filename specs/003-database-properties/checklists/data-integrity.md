@@ -15,10 +15,10 @@
   - **明示されている。** data-model.md §PropertyValue ライフサイクルで「未作成 (レコードなし — 未入力状態)」→「初回入力」→「存在 (値あり)」と定義。ページ追加時はレコード不在が初期状態
 - [x] CHK003 - Is the behavior specified when `add_existing_page_to_database` is called for a page that already belongs to a *different* database? [Completeness, Spec §Assumptions]
   - **記載あり。** contracts/ipc-commands.md で `add_existing_page_to_database` のエラーに `pageAlreadyInDatabase` を定義（「ページが既にデータベースに所属」）。spec.md §FR-006 でも候補を「スタンドアロンページに限定」と明記
-- [ ] CHK004 - Are requirements for `updated_at` timestamp updates specified — which operations trigger an update on Database, Property, and PropertyValue respectively? [Completeness, Gap]
-  - **未記載。** data-model.md でフィールドとして `updated_at` は定義されているが，どの操作（タイトル変更，名前変更，config 更新，値更新等）でタイムスタンプが更新されるかの規則が明記されていない
-- [ ] CHK005 - Is the `position` rebalancing strategy specified when a property is deleted from the middle of the ordered list? [Completeness, data-model.md §Property]
-  - **未記載。** `reorder_properties` コマンドは存在するが，プロパティ削除時に残りのプロパティの position を詰めるか，ギャップを許容するかの方針が未定義
+- [x] CHK004 - Are requirements for `updated_at` timestamp updates specified — which operations trigger an update on Database, Property, and PropertyValue respectively? [Completeness, Gap] [Gap → Resolved by checklist-apply: G-01]
+  - **対応済み。** spec.md §Key Entities に各エンティティの更新タイミングを追記，data-model.md に「updated_at 更新トリガー一覧」セクションを追加
+- [x] CHK005 - Is the `position` rebalancing strategy specified when a property is deleted from the middle of the ordered list? [Completeness, data-model.md §Property] [Gap → Resolved by checklist-apply: P-01]
+  - **対応済み。** data-model.md §Property に「削除時はギャップを許容し，必要に応じて reorder_properties で再配置」の方針を追記
 - [x] CHK006 - Are requirements for Text type property value length limits documented, or is "no limit (future consideration)" an explicit, accepted decision? [Completeness, data-model.md §PropertyValue]
   - **明示的に記載。** data-model.md §PropertyValue バリデーション規則で「Text: text_value に格納。文字数制限なし（将来検討）」と明記。意図的な決定として文書化済み
 
@@ -26,14 +26,14 @@
 
 - [x] CHK007 - Is "atomic deletion" of property and related values quantified — does it mean a single SQL transaction, or does it include application-level rollback guarantees? [Clarity, Spec §FR-010/CC-001]
   - **明確に記載。** spec.md §CC-001 で「プロパティ定義の削除と関連値の削除は単一トランザクションで原子的に実行する」と明記。SQL スキーマでは `ON DELETE CASCADE` で DB レベルでも保証。セレクト選択肢削除フローも「すべてトランザクション内」と明記（data-model.md §セレクト選択肢の削除フロー）
-- [ ] CHK008 - Is the `PropertyConfig` serialization format (JSON in SQLite TEXT column) explicitly specified with a concrete schema, or is "serde tagged" sufficient for implementers? [Clarity, data-model.md §Property]
-  - **部分的。** Rust の enum 定義（data-model.md §PropertyConfig enum）は示されているが，実際の JSON ワイヤーフォーマット（externally tagged / internally tagged / adjacently tagged）が未指定。実装者がどの serde tag 方式を使うかで JSON 形状が変わるため，具体例が必要
-- [ ] CHK009 - Is "有限数値のみ" (finite numbers only) for Number type defined with explicit boundaries — are there min/max value constraints, or is any IEEE 754 finite f64 accepted? [Clarity, Spec §FR-004]
-  - **部分的。** spec.md §Assumptions で「有限数値のみ許可。NaN, Infinity, -Infinity はバリデーションで拒否」「小数および負数を許容」と記載。しかし「任意の IEEE 754 finite f64 を受け入れる」という明示的な宣言がなく，min/max 制約の有無も不明
-- [ ] CHK010 - Is the `SelectOption.id` format explicitly specified as UUIDv7, and is the rationale for storing option *ID* (not display value) in `text_value` documented? [Clarity, data-model.md §PropertyValue]
-  - **部分的。** data-model.md で `SelectOption.id: SelectOptionId // UUIDv7` と形式は明記。`text_value` に「選択肢 ID（UUID 文字列）を格納」とも記載。ただし，表示値ではなく ID を格納する根拠（選択肢名変更時の参照整合性保持）が文書化されていない
-- [ ] CHK011 - Are "1-255 characters (after trim)" and "1-100 characters" title/name length constraints specified as byte length or character (grapheme cluster) length? [Clarity, data-model.md §Database/Property]
-  - **未記載。** data-model.md で「文字」としか記載されておらず，バイト長・Unicode コードポイント数・書記素クラスタ数のいずれかが不明確。「PageTitle と同パターン」との記載あるが，既存実装の定義も参照先が示されていない
+- [x] CHK008 - Is the `PropertyConfig` serialization format (JSON in SQLite TEXT column) explicitly specified with a concrete schema, or is "serde tagged" sufficient for implementers? [Clarity, data-model.md §Property] [Partial → Resolved by checklist-apply: P-02]
+  - **対応済み。** data-model.md に serde internally tagged 方式（`#[serde(tag = "type")]`）を明示し，Text/Date/Select の JSON 出力例を追加
+- [x] CHK009 - Is "有限数値のみ" (finite numbers only) for Number type defined with explicit boundaries — are there min/max value constraints, or is any IEEE 754 finite f64 accepted? [Clarity, Spec §FR-004] [Partial → Resolved by checklist-apply: G-02]
+  - **対応済み。** spec.md §Assumptions に「任意の IEEE 754 finite f64 を受け入れ，min/max 制約は設けない」を追記
+- [x] CHK010 - Is the `SelectOption.id` format explicitly specified as UUIDv7, and is the rationale for storing option *ID* (not display value) in `text_value` documented? [Clarity, data-model.md §PropertyValue] [Partial → Resolved by checklist-apply: P-03]
+  - **対応済み。** data-model.md §PropertyValue に「表示値ではなく ID を格納する理由: 選択肢名変更時の参照整合性を保持するため」を追記
+- [x] CHK011 - Are "1-255 characters (after trim)" and "1-100 characters" title/name length constraints specified as byte length or character (grapheme cluster) length? [Clarity, data-model.md §Database/Property] [Gap → Resolved by checklist-apply: G-03]
+  - **対応済み。** spec.md §Assumptions に「Unicode スカラー値（Rust の char::count）をカウント単位とする」を追記
 
 ## Requirement Consistency
 
@@ -41,8 +41,8 @@
   - **一貫している。** SQL スキーマ（data-model.md §0004, §0005）で全 FK の ON DELETE 動作が明示され，マイグレーション設計ノートで各動作の根拠（FR-010, FR-011 との対応）も記載。spec の要件と SQL 定義に矛盾なし
 - [x] CHK013 - Is the error type hierarchy consistent — `DatabaseError`, `PropertyError`, `PropertyValueError` are defined, but is there a unified `CommandError` mapping documented to avoid gaps between domain errors and IPC error kinds? [Consistency, data-model.md §Domain Error Types / contracts §Error Kind Extensions]
   - **記載あり。** contracts/ipc-commands.md §Error Kind Extensions で全ドメインエラー → IPC error kind のマッピングテーブルが定義されている。`DatabaseError`, `PropertyError`, `PropertyValueError` の全バリアントに対応する kind が漏れなく記載。`pageAlreadyInDatabase` も `PageError（拡張）` として含む
-- [ ] CHK014 - Is `PageDto` reuse consistent — the `add_page_to_database` returns `PageDto` but the existing Page DTO definition is in a separate feature; is the extended `PageDto` (with `databaseId` field) documented? [Consistency, contracts §DTO Definitions]
-  - **未記載。** contracts/ipc-commands.md の DTO Definitions セクションに `PageDto` の定義がない。`TableRowDto.page: PageDto` で参照されているが，`databaseId` フィールドの有無を含む拡張定義が示されていない。既存 feature の PageDto との差分が不明
+- [x] CHK014 - Is `PageDto` reuse consistent — the `add_page_to_database` returns `PageDto` but the existing Page DTO definition is in a separate feature; is the extended `PageDto` (with `databaseId` field) documented? [Consistency, contracts §DTO Definitions] [Gap → Resolved by checklist-apply: P-04]
+  - **対応済み。** contracts/ipc-commands.md §DTO Definitions に PageDto 拡張定義（`databaseId: string | null`）を追加
 - [x] CHK015 - Are `ON DELETE CASCADE` behaviors in SQLite schema consistent with the application-level "select option reset" flow, which requires application-level UPDATE before property config update? [Consistency, data-model.md §セレクト選択肢の削除フロー]
   - **一貫している。** CASCADE はエンティティ削除（property/page の行削除）に対応し，アプリケーションレベルの UPDATE は選択肢削除（config 内のオプション除去）に対応。異なるシナリオに異なるメカニズムを適用しており，矛盾なし。セレクト選択肢削除フローは 3 ステップを「すべてトランザクション内」と明記
 
@@ -50,10 +50,10 @@
 
 - [x] CHK016 - Can "data integrity is 100% maintained" (SC-003) be objectively measured — are there specific invariants listed (e.g., no orphan property_values, no property_values referencing deleted properties)? [Measurability, Spec §SC-003]
   - **測定可能。** SC-003 で「孤立したプロパティ値が発生しない」と具体的な不変条件が記載されている。orphan property_values の有無は SQL クエリで検証可能
-- [ ] CHK017 - Is the "3-minute end-to-end workflow" success criterion (SC-001) testable — is the exact task sequence defined, and are there prerequisites specified? [Measurability, Spec §SC-001]
-  - **部分的。** SC-001 で「データベースの作成→プロパティ定義→ページ追加→プロパティ値入力」のタスク順序は記載。ただし，前提条件（初回ユーザー？既存データの有無？ハードウェア要件？）が未定義
-- [ ] CHK018 - Are performance targets (CC-003: table view ≤1s, edit ≤500ms) specified with measurement conditions — cold start vs. warm cache, data shape, hardware baseline? [Measurability, Spec §CC-003]
-  - **未記載。** CC-003 でデータ規模（100件×10プロパティ，1,000件）は指定されているが，コールドスタート/ウォームキャッシュ，データ形状（テキスト長，数値分布等），ハードウェアベースラインの測定条件が未定義
+- [x] CHK017 - Is the "3-minute end-to-end workflow" success criterion (SC-001) testable — is the exact task sequence defined, and are there prerequisites specified? [Measurability, Spec §SC-001] [Partial → Resolved by checklist-apply: G-04]
+  - **対応済み。** spec.md §SC-001 に前提条件を追記（初回ユーザー，空の状態，開発用デスクトップマシン）
+- [x] CHK018 - Are performance targets (CC-003: table view ≤1s, edit ≤500ms) specified with measurement conditions — cold start vs. warm cache, data shape, hardware baseline? [Measurability, Spec §CC-003] [Partial → Resolved by checklist-apply: G-05]
+  - **対応済み。** spec.md §CC-003 に測定条件を追記（ウォームキャッシュ，標準テキスト長，開発用マシン）
 
 ## Scenario Coverage
 
@@ -61,41 +61,41 @@
   - **記載あり。** contracts/ipc-commands.md で `add_property` のエラーに `tooManyProperties` を定義。data-model.md で `PropertyError::TooManyProperties { count, max }` も定義済み
 - [x] CHK020 - Are requirements specified for the scenario where a select property's options reach the 100-option limit while options are being added? [Coverage, Spec §Assumptions]
   - **記載あり。** contracts/ipc-commands.md で `update_property_config` のエラーに `tooManyOptions` を定義。data-model.md で `PropertyError::TooManyOptions { count, max }` も定義済み
-- [ ] CHK021 - Is the behavior defined when `reorder_properties` receives a partial list of property IDs (not all properties in the database)? [Coverage, contracts §reorder_properties]
-  - **未記載。** `reorder_properties` は `propertyIds: string[]` を受け取るが，全プロパティのサブセットが渡された場合の動作（エラー？未指定分は末尾に追加？）が定義されていない
-- [ ] CHK022 - Are requirements for concurrent operations on the same database defined — e.g., two rapid `set_property_value` calls for the same page×property? [Coverage, Gap]
-  - **未記載。** SQLite の WAL モードによる並行性は暗黙に前提されているが，同一 page×property への連続書き込みの動作（last-write-wins？キュー？）が明記されていない。ローカルデスクトップアプリのため低リスクだが未定義
-- [ ] CHK023 - Is the behavior specified when `clear_property_value` is called for a property value that doesn't exist (never set)? [Coverage, contracts §clear_property_value]
-  - **暗黙的のみ。** `clear_property_value` のエラーリストに `propertyValueNotFound` が含まれておらず，存在しない値のクリアはエラーにならない（no-op）ことが暗示されている。ただし明示的な記述はない
+- [x] CHK021 - Is the behavior defined when `reorder_properties` receives a partial list of property IDs (not all properties in the database)? [Coverage, contracts §reorder_properties] [Gap → Resolved by checklist-apply: P-05]
+  - **対応済み。** contracts/ipc-commands.md に「全プロパティ ID の完全リストを要求し，サブセットの場合はエラー」を追記
+- [x] CHK022 - Are requirements for concurrent operations on the same database defined — e.g., two rapid `set_property_value` calls for the same page×property? [Coverage, Gap] [Gap → Resolved by checklist-apply: G-06]
+  - **対応済み。** spec.md §Assumptions に「single-writer 前提，SQLite WAL モードにより last-write-wins で動作」を追記
+- [x] CHK023 - Is the behavior specified when `clear_property_value` is called for a property value that doesn't exist (never set)? [Coverage, contracts §clear_property_value] [Partial → Resolved by checklist-apply: P-06]
+  - **対応済み。** contracts/ipc-commands.md に「値が存在しない場合は no-op（エラーなし）で正常終了」を追記
 
 ## Edge Case Coverage
 
-- [ ] CHK024 - Is the behavior specified for Number type edge values: -0.0, subnormal floats, MAX/MIN f64 values? [Edge Case, Spec §FR-004]
-  - **未記載。** 「有限数値のみ」の定義から -0.0, subnormal, MAX/MIN f64 はすべて有限値として受け入れられると推論できるが，明示的な記載なし
-- [ ] CHK025 - Are requirements defined for Date type boundary values — e.g., dates before Unix epoch, far-future dates, timezone handling (UTC enforcement)? [Edge Case, data-model.md §PropertyValue]
-  - **部分的。** Rust 型 `DateTime<Utc>` と RFC 3339 形式は指定されており UTC が暗黙的に示されている。ただし，Unix epoch 以前の日付や遠い将来の日付の受け入れ可否は未定義
-- [ ] CHK026 - Is the behavior specified when a SelectOption value contains characters that could interfere with JSON serialization in the `config` column? [Edge Case, data-model.md §PropertyConfig]
-  - **暗黙的に処理済み。** serde による JSON シリアライズが特殊文字を自動エスケープするため実装上は安全。ただし仕様として明示されていない
-- [ ] CHK027 - Is the behavior defined when deleting the *last* property from a database — does the table view show only titles, or is there a minimum property requirement? [Edge Case, Gap]
-  - **未記載。** FR-005 で「列はプロパティ定義に基づき動的に構成」とあり，0 個の場合はタイトル列のみと推論できるが，明示的な記述も最小プロパティ数の制約もない
+- [x] CHK024 - Is the behavior specified for Number type edge values: -0.0, subnormal floats, MAX/MIN f64 values? [Edge Case, Spec §FR-004] [Partial → Resolved by checklist-apply: P-07]
+  - **対応済み。** data-model.md に「-0.0 は 0.0 として正規化，subnormal/MAX/MIN f64 は有限値として受入」を追記
+- [x] CHK025 - Are requirements defined for Date type boundary values — e.g., dates before Unix epoch, far-future dates, timezone handling (UTC enforcement)? [Edge Case, data-model.md §PropertyValue] [Partial → Resolved by checklist-apply: P-08]
+  - **対応済み。** data-model.md に「DateTime<Utc> が表現可能な範囲を受け入れる。UTC を強制する」を追記
+- [x] CHK026 - Is the behavior specified when a SelectOption value contains characters that could interfere with JSON serialization in the `config` column? [Edge Case, data-model.md §PropertyConfig] [Partial → Resolved by checklist-apply: P-09]
+  - **対応済み。** data-model.md §PropertyConfig に「serde の JSON シリアライズが特殊文字を自動エスケープするため追加サニタイズ不要」を注記
+- [x] CHK027 - Is the behavior defined when deleting the *last* property from a database — does the table view show only titles, or is there a minimum property requirement? [Edge Case, Gap] [Partial → Resolved by checklist-apply: G-07]
+  - **対応済み。** spec.md §FR-005 に「プロパティが 0 個の場合はタイトル列のみ表示」を追記
 
 ## Migration & Schema Requirements
 
-- [ ] CHK028 - Are rollback/downgrade requirements specified for the 3 new migrations — if migration 0005 fails, is the expected state defined? [Gap, data-model.md §SQLite Schema]
-  - **未記載。** sqlx のマイグレーションは forward-only が標準だが，部分失敗時の期待状態やロールバック手順が文書化されていない
+- [x] CHK028 - Are rollback/downgrade requirements specified for the 3 new migrations — if migration 0005 fails, is the expected state defined? [Gap, data-model.md §SQLite Schema] [Gap → Resolved by checklist-apply: P-10]
+  - **対応済み。** data-model.md §マイグレーション設計ノートに「forward-only ポリシー，部分失敗時はバックアップからのリストア」を追記
 - [x] CHK029 - Is the requirement that existing pages get `database_id = NULL` after migration explicitly stated as a post-condition, and is it tested? [Completeness, data-model.md §Migration Design Notes]
   - **記載あり。** data-model.md §マイグレーション設計ノートで「既存データへの影響: pages への database_id カラム追加のみ（NULL デフォルト）」と明記。ALTER TABLE ADD COLUMN は NULL がデフォルト
-- [ ] CHK030 - Are SQLite foreign key enforcement requirements specified — is `PRAGMA foreign_keys = ON` documented as a prerequisite for CASCADE behavior to function? [Gap, data-model.md §SQLite Schema]
-  - **未記載。** SQLite では FK 制約はデフォルト無効であり `PRAGMA foreign_keys = ON` が必要。CASCADE 動作の前提条件として本 feature の仕様に記載がない（既存アプリケーション設定で対応済みの可能性あり）
+- [x] CHK030 - Are SQLite foreign key enforcement requirements specified — is `PRAGMA foreign_keys = ON` documented as a prerequisite for CASCADE behavior to function? [Gap, data-model.md §SQLite Schema] [Gap → Resolved by checklist-apply: P-11]
+  - **対応済み。** data-model.md §マイグレーション設計ノートに「PRAGMA foreign_keys = ON がアプリ起動時に実行済みであること」を追記
 
 ## Dependencies & Assumptions
 
 - [x] CHK031 - Is the assumption "1 page = max 1 database" validated at both the schema level (single `database_id` column) and the application level (IPC validation in `add_existing_page_to_database`)? [Assumption, Spec §Assumptions]
   - **両レベルで記載。** スキーマ: pages テーブルの単一 `database_id` カラムで構造的に保証（data-model.md §Page 拡張）。アプリケーション: `add_existing_page_to_database` に `pageAlreadyInDatabase` エラー定義（contracts/ipc-commands.md）。spec.md §Assumptions でも「1ページ = 最大1データベース」と明記
-- [ ] CHK032 - Is the assumption that "type conversion is out of scope" documented with a clear migration path for when it becomes in-scope — e.g., what happens to existing PropertyValues? [Assumption, Spec §Assumptions]
-  - **部分的。** spec.md §Assumptions で「型を変えたい場合はプロパティを削除して新規作成する」と暫定ワークアラウンドが記載。ただし将来スコープとなった際の既存 PropertyValues の扱い（変換？削除？保持？）のマイグレーションパスは未定義
-- [ ] CHK033 - Are the dependencies between the 3 repository traits and their transaction boundaries specified — which cross-repository operations require a shared transaction? [Dependency, data-model.md §Repository Traits]
-  - **部分的。** セレクト選択肢削除フロー（PropertyValueRepository + PropertyRepository を「すべてトランザクション内」）は明記。CC-001 でも「単一トランザクション」の原則を記載。ただし，ページ除外（page.database_id NULL 化 + property_values 削除）等，他のクロスリポジトリ操作のトランザクション境界が網羅されていない
+- [x] CHK032 - Is the assumption that "type conversion is out of scope" documented with a clear migration path for when it becomes in-scope — e.g., what happens to existing PropertyValues? [Assumption, Spec §Assumptions] [Partial → Resolved by checklist-apply: G-08]
+  - **対応済み。** spec.md §Assumptions に「将来の型変換対応時はデータマイグレーション設計が別途必要」を追記
+- [x] CHK033 - Are the dependencies between the 3 repository traits and their transaction boundaries specified — which cross-repository operations require a shared transaction? [Dependency, data-model.md §Repository Traits] [Partial → Resolved by checklist-apply: P-12]
+  - **対応済み。** data-model.md §Repository Traits に「クロスリポジトリ操作のトランザクション要件」セクションを追加。ページ除外・セレクト選択肢削除・DB 削除のトランザクション境界を網羅
 
 ## Notes
 

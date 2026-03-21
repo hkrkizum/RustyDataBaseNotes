@@ -73,8 +73,10 @@ pub enum PropertyType {
 }
 ```
 
-**PropertyConfig enum**（型固有設定，serde tagged）:
+**PropertyConfig enum**（型固有設定，serde internally tagged: `#[serde(tag = "type")]`）:
+<!-- refined by checklist-apply: P-02 -->
 ```rust
+#[serde(tag = "type")]
 pub enum PropertyConfig {
     Text,
     Number,
@@ -92,7 +94,28 @@ pub struct SelectOption {
     pub id: SelectOptionId,  // UUIDv7
     pub value: String,       // 表示名（1–100文字，選択肢内一意）
 }
+// Note: SelectOption.value に含まれる JSON 特殊文字（", \, 制御文字等）は
+// serde の JSON シリアライズが自動エスケープするため，追加のサニタイズは不要
 ```
+<!-- refined by checklist-apply: P-09 -->
+
+**JSON ワイヤーフォーマット例**（internally tagged）:
+<!-- added by checklist-apply: P-02 -->
+```json
+// Text 型
+{"type": "Text"}
+
+// Date 型
+{"type": "Date", "mode": "Date"}
+
+// Select 型
+{"type": "Select", "options": [{"id": "019...", "value": "未着手"}]}
+```
+
+**Position 管理**:
+- 削除時は既存 position のギャップを許容する（詰め直しは行わない）。
+  必要に応じて `reorder_properties` で明示的に再配置する
+<!-- added by checklist-apply: P-01 -->
 
 **ライフサイクル**:
 - Database に従属。Database 削除時にカスケード削除
@@ -120,9 +143,15 @@ pub struct SelectOption {
 
 **バリデーション規則（PropertyType に応じて）**:
 - `Text`: `text_value` に格納。文字数制限なし（将来検討）
-- `Number`: `number_value` に格納。有限数値のみ（NaN, Infinity 拒否）
-- `Date`: `date_value` に格納。mode に応じて date/datetime
-- `Select`: `text_value` に選択肢 ID（UUID 文字列）を格納。存在する選択肢のみ許可
+- `Number`: `number_value` に格納。有限数値のみ（NaN, Infinity 拒否）。
+  -0.0 は 0.0 として正規化する。subnormal, MAX/MIN f64 は有限値として受け入れる
+  <!-- refined by checklist-apply: P-07 -->
+- `Date`: `date_value` に格納。mode に応じて date/datetime。
+  `DateTime<Utc>` が表現可能な範囲を受け入れる。タイムゾーンは UTC を強制する
+  <!-- refined by checklist-apply: P-08 -->
+- `Select`: `text_value` に選択肢 ID（UUID 文字列）を格納。存在する選択肢のみ許可。
+  表示値ではなく ID を格納する理由: 選択肢名変更時の参照整合性を保持するため
+  <!-- refined by checklist-apply: P-03 -->
 - `Checkbox`: `boolean_value` に格納（0 or 1）。新規作成時のデフォルト = false (0)
 
 **ライフサイクル**:
@@ -211,6 +240,13 @@ CREATE INDEX idx_property_values_property_id
   - ページ削除時 → property_values も削除
   - プロパティ削除時 → property_values も削除（FR-010）
 - 既存データへの影響: `pages` への `database_id` カラム追加のみ（NULL デフォルト）
+- **ロールバック方針**: sqlx マイグレーションは forward-only。部分失敗時は手動での
+  データベースファイル復旧（バックアップからのリストア）を前提とする
+  <!-- added by checklist-apply: P-10 -->
+- **前提条件**: アプリケーション起動時に `PRAGMA foreign_keys = ON` を実行済みであること。
+  SQLite では FK 制約はデフォルト無効であり，CASCADE 動作にはこの設定が必須。
+  既存基盤で対応済みであることを確認すること
+  <!-- added by checklist-apply: P-11 -->
 
 ## Domain Error Types
 
@@ -302,6 +338,19 @@ pub trait PropertyValueRepository {
 }
 ```
 
+### クロスリポジトリ操作のトランザクション要件
+<!-- added by checklist-apply: P-12 -->
+
+以下のクロスリポジトリ操作は単一トランザクション内で実行しなければならない:
+
+| 操作 | 関与するリポジトリ | トランザクション内容 |
+|------|-------------------|-------------------|
+| セレクト選択肢の削除 | PropertyValueRepository + PropertyRepository | 該当値の NULL リセット → config 更新 |
+| ページのデータベースからの除外 | PageRepository + PropertyValueRepository | page.database_id を NULL 化 → 該当ページの property_values を削除 |
+| データベースの削除 | DatabaseRepository（CASCADE で Property, PropertyValue を自動削除，Page.database_id を SET NULL） | DB レベルの CASCADE で一括処理 |
+
+**Note**: データベース削除は SQL の CASCADE 制約により DB レベルで原子的に処理されるため，アプリケーションレベルのトランザクション管理は不要。
+
 ## State Transitions
 
 ### Page の所属状態
@@ -338,3 +387,18 @@ pub trait PropertyValueRepository {
 3. Property の config を更新
 （すべてトランザクション内）
 ```
+
+---
+
+## updated_at 更新トリガー一覧
+<!-- added by checklist-apply: G-01 -->
+
+各エンティティの `updated_at` がどの操作で更新されるかを定義する。
+
+| エンティティ | 更新トリガーとなる操作 |
+|------------|---------------------|
+| Database | タイトル変更（`update_database_title`） |
+| Property | 名前変更（`update_property_name`），config 更新（`update_property_config`），並び替え（`reorder_properties`） |
+| PropertyValue | 値の設定・更新（`set_property_value`），値のクリア時は行削除のためトリガーなし |
+
+**Note**: 作成時は `created_at` = `updated_at` として初期化する。子エンティティの変更は親の `updated_at` を更新しない（例: Property の変更は Database の `updated_at` に影響しない）。

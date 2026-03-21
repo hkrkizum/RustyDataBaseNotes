@@ -94,7 +94,9 @@
 
 ### `reorder_properties`
 
-プロパティの表示順を変更する。
+プロパティの表示順を変更する。`propertyIds` にはデータベース内の全プロパティ ID を
+含む完全なリストを渡す必要がある。サブセット（一部のみ）の場合はエラーとする。
+<!-- refined by checklist-apply: P-05 -->
 
 | 方向 | 型 |
 |------|-----|
@@ -128,7 +130,9 @@
 
 ### `clear_property_value`
 
-ページのプロパティ値をクリア（NULL に戻す）。
+ページのプロパティ値をクリア（NULL に戻す）。値が存在しない（未設定の）場合は
+no-op（エラーなし）として正常終了する。
+<!-- refined by checklist-apply: P-06 -->
 
 | 方向 | 型 |
 |------|-----|
@@ -238,6 +242,16 @@ interface PropertyValueDto {
   booleanValue: boolean | null;
   createdAt: string;
   updatedAt: string;
+}
+
+// Page（既存 PageDto の拡張 — databaseId フィールドを追加）
+// added by checklist-apply: P-04
+interface PageDto {
+  id: string;
+  title: string;
+  databaseId: string | null;  // null = スタンドアロンページ
+  createdAt: string;           // ISO 8601
+  updatedAt: string;           // ISO 8601
 }
 
 // Property Value Input (set_property_value 用)
