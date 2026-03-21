@@ -14,6 +14,7 @@ use tauri::Manager;
 use crate::domain::editor::session::EditorSession;
 use crate::domain::page::entity::PageId;
 use crate::infrastructure::persistence::database;
+use crate::ipc::database_commands::{create_database, get_database, list_databases};
 use crate::ipc::editor_commands::{
     add_block, close_editor, edit_block_content, move_block_down, move_block_up, open_editor,
     remove_block, save_editor,
@@ -41,6 +42,9 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            create_database,
+            list_databases,
+            get_database,
             create_page,
             list_pages,
             get_page,

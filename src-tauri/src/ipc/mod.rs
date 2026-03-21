@@ -1,3 +1,5 @@
+/// Database-related IPC command handlers.
+pub mod database_commands;
 /// Data transfer objects for IPC.
 pub mod dto;
 /// Editor-related IPC command handlers.

@@ -536,7 +536,7 @@ impl PropertyValue {
     ///
     /// - [`PropertyValueError::TypeMismatch`] if the input variant does not
     ///   match the property type.
-    /// - [`PropertyValueError::NumberNotFinite`] if a numeric value is NaN or
+    /// - [`PropertyValueError::InvalidNumber`] if a numeric value is NaN or
     ///   infinite.
     /// - [`PropertyValueError::InvalidSelectOption`] if the select option ID
     ///   is not present in the property's configuration.
@@ -870,10 +870,7 @@ mod tests {
         // Provide a Text config for a Number type
         let cfg = Some(PropertyConfig::Text);
         let result = Property::new(db_id, name, PropertyType::Number, cfg, 0);
-        assert!(matches!(
-            result,
-            Err(PropertyError::InvalidConfig { .. })
-        ));
+        assert!(matches!(result, Err(PropertyError::InvalidConfig { .. })));
     }
 
     #[test]
@@ -881,10 +878,7 @@ mod tests {
         let db_id = DatabaseId::new();
         let name = PropertyName::try_from("Col".to_owned()).expect("valid name");
         let result = Property::new(db_id, name, PropertyType::Text, None, -1);
-        assert!(matches!(
-            result,
-            Err(PropertyError::InvalidConfig { .. })
-        ));
+        assert!(matches!(result, Err(PropertyError::InvalidConfig { .. })));
     }
 
     // -- SelectOption validation --------------------------------------------

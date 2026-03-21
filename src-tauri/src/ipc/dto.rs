@@ -125,6 +125,7 @@ impl From<Database> for DatabaseDto {
 }
 
 /// Data transfer object for [`Property`].
+#[allow(dead_code)] // Used in later phases
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyDto {
@@ -162,6 +163,7 @@ impl From<Property> for PropertyDto {
 }
 
 /// Data transfer object for [`PropertyValue`].
+#[allow(dead_code)] // Used in later phases
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyValueDto {
@@ -202,6 +204,7 @@ impl From<PropertyValue> for PropertyValueDto {
 }
 
 /// Data transfer object for a table row (page with its property values).
+#[allow(dead_code)] // Used in later phases
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TableRowDto {
@@ -212,6 +215,7 @@ pub struct TableRowDto {
 }
 
 /// Data transfer object for the full table view data.
+#[allow(dead_code)] // Used in later phases
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TableDataDto {
