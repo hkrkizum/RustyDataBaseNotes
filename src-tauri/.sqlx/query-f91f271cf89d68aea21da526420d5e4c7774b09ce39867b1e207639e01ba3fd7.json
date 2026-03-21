@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id, title, created_at, updated_at FROM pages WHERE id = ?",
+  "query": "SELECT id, title, database_id, created_at, updated_at FROM pages ORDER BY created_at DESC",
   "describe": {
     "columns": [
       {
@@ -14,25 +14,31 @@
         "type_info": "Text"
       },
       {
-        "name": "created_at",
+        "name": "database_id",
         "ordinal": 2,
         "type_info": "Text"
       },
       {
-        "name": "updated_at",
+        "name": "created_at",
         "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 4,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 0
     },
     "nullable": [
       false,
       false,
+      true,
       false,
       false
     ]
   },
-  "hash": "89b730473c3e382ed4f0a8ab3653850c4449d121648b62d424ef25e312dc3d17"
+  "hash": "f91f271cf89d68aea21da526420d5e4c7774b09ce39867b1e207639e01ba3fd7"
 }

@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
 use sqlx::SqlitePool;
 
+use crate::domain::database::entity::DatabaseId;
 use crate::domain::page::entity::{Page, PageId, PageTitle};
 use crate::domain::page::error::PageError;
 use crate::domain::page::repository::PageRepository;
@@ -24,13 +25,15 @@ impl PageRepository for SqlxPageRepository {
     async fn create(&self, page: &Page) -> Result<(), Self::Error> {
         let id = page.id().to_string();
         let title = page.title().to_string();
+        let database_id = page.database_id().map(|id| id.to_string());
         let created_at = page.created_at().to_rfc3339();
         let updated_at = page.updated_at().to_rfc3339();
 
         sqlx::query!(
-            "INSERT INTO pages (id, title, created_at, updated_at) VALUES (?, ?, ?, ?)",
+            "INSERT INTO pages (id, title, database_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
             id,
             title,
+            database_id,
             created_at,
             updated_at
         )
@@ -45,7 +48,7 @@ impl PageRepository for SqlxPageRepository {
         let id_str = id.to_string();
 
         let row = sqlx::query!(
-            "SELECT id, title, created_at, updated_at FROM pages WHERE id = ?",
+            "SELECT id, title, database_id, created_at, updated_at FROM pages WHERE id = ?",
             id_str
         )
         .fetch_optional(&self.pool)
@@ -59,6 +62,21 @@ impl PageRepository for SqlxPageRepository {
                     .parse()
                     .map_err(|_| PageError::NotFound { id: id.clone() })?;
                 let title = PageTitle::try_from(row.title)?;
+                let database_id = row
+                    .database_id
+                    .map(|s| s.parse::<DatabaseId>())
+                    .transpose()
+                    .map_err(|_| {
+                        crate::infrastructure::persistence::error::StorageError::from(
+                            sqlx::Error::ColumnDecode {
+                                index: "database_id".to_owned(),
+                                source: Box::new(std::io::Error::new(
+                                    std::io::ErrorKind::InvalidData,
+                                    "invalid database_id",
+                                )),
+                            },
+                        )
+                    })?;
                 let created_at: DateTime<Utc> = row.created_at.parse().map_err(|_| {
                     crate::infrastructure::persistence::error::StorageError::from(
                         sqlx::Error::ColumnDecode {
@@ -81,7 +99,13 @@ impl PageRepository for SqlxPageRepository {
                         },
                     )
                 })?;
-                Ok(Page::from_stored(page_id, title, created_at, updated_at))
+                Ok(Page::from_stored(
+                    page_id,
+                    title,
+                    database_id,
+                    created_at,
+                    updated_at,
+                ))
             }
             None => Err(PageError::NotFound { id: id.clone() }.into()),
         }
@@ -89,7 +113,7 @@ impl PageRepository for SqlxPageRepository {
 
     async fn find_all(&self) -> Result<Vec<Page>, Self::Error> {
         let rows = sqlx::query!(
-            "SELECT id, title, created_at, updated_at FROM pages ORDER BY created_at DESC"
+            "SELECT id, title, database_id, created_at, updated_at FROM pages ORDER BY created_at DESC"
         )
         .fetch_all(&self.pool)
         .await
@@ -109,6 +133,21 @@ impl PageRepository for SqlxPageRepository {
                 )
             })?;
             let title = PageTitle::try_from(row.title)?;
+            let database_id = row
+                .database_id
+                .map(|s| s.parse::<DatabaseId>())
+                .transpose()
+                .map_err(|_| {
+                    crate::infrastructure::persistence::error::StorageError::from(
+                        sqlx::Error::ColumnDecode {
+                            index: "database_id".to_owned(),
+                            source: Box::new(std::io::Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                "invalid database_id",
+                            )),
+                        },
+                    )
+                })?;
             let created_at: DateTime<Utc> = row.created_at.parse().map_err(|_| {
                 crate::infrastructure::persistence::error::StorageError::from(
                     sqlx::Error::ColumnDecode {
@@ -131,7 +170,13 @@ impl PageRepository for SqlxPageRepository {
                     },
                 )
             })?;
-            pages.push(Page::from_stored(page_id, title, created_at, updated_at));
+            pages.push(Page::from_stored(
+                page_id,
+                title,
+                database_id,
+                created_at,
+                updated_at,
+            ));
         }
 
         Ok(pages)

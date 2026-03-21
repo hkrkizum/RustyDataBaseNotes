@@ -2,6 +2,7 @@
 export interface Page {
   id: string;
   title: string;
+  databaseId: string | null;
   createdAt: string;
   updatedAt: string;
 }

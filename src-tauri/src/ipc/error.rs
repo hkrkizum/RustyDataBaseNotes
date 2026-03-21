@@ -1,7 +1,9 @@
 use serde::Serialize;
 
 use crate::domain::block::error::BlockError;
+use crate::domain::database::error::DatabaseError;
 use crate::domain::page::error::PageError;
+use crate::domain::property::error::{PropertyError, PropertyValueError};
 use crate::infrastructure::persistence::error::StorageError;
 
 /// Unified error type for IPC command handlers.
@@ -17,6 +19,18 @@ pub enum CommandError {
     /// A domain-level block error.
     #[error(transparent)]
     Block(#[from] BlockError),
+
+    /// A domain-level database error.
+    #[error(transparent)]
+    Database(#[from] DatabaseError),
+
+    /// A domain-level property error.
+    #[error(transparent)]
+    Property(#[from] PropertyError),
+
+    /// A domain-level property value error.
+    #[error(transparent)]
+    PropertyValue(#[from] PropertyValueError),
 
     /// A storage-level error.
     #[error(transparent)]
@@ -36,6 +50,9 @@ impl Serialize for CommandError {
                 ("titleTooLong", self.to_string())
             }
             CommandError::Page(PageError::NotFound { .. }) => ("notFound", self.to_string()),
+            CommandError::Page(PageError::AlreadyInDatabase { .. }) => {
+                ("pageAlreadyInDatabase", self.to_string())
+            }
             CommandError::Block(BlockError::ContentTooLong { .. }) => {
                 ("contentTooLong", self.to_string())
             }
@@ -49,6 +66,69 @@ impl Serialize for CommandError {
             CommandError::Block(BlockError::CannotMoveDown { .. }) => {
                 ("cannotMoveDown", self.to_string())
             }
+            // Database errors
+            CommandError::Database(DatabaseError::TitleEmpty) => {
+                ("titleEmpty", self.to_string())
+            }
+            CommandError::Database(DatabaseError::TitleTooLong { .. }) => {
+                ("titleTooLong", self.to_string())
+            }
+            CommandError::Database(DatabaseError::NotFound { .. }) => {
+                ("databaseNotFound", self.to_string())
+            }
+
+            // Property errors
+            CommandError::Property(PropertyError::NameEmpty) => {
+                ("propertyNameEmpty", self.to_string())
+            }
+            CommandError::Property(PropertyError::NameTooLong { .. }) => {
+                ("propertyNameTooLong", self.to_string())
+            }
+            CommandError::Property(PropertyError::DuplicateName { .. }) => {
+                ("duplicatePropertyName", self.to_string())
+            }
+            CommandError::Property(PropertyError::InvalidType { .. }) => {
+                ("invalidConfig", self.to_string())
+            }
+            CommandError::Property(PropertyError::TooManyProperties { .. }) => {
+                ("tooManyProperties", self.to_string())
+            }
+            CommandError::Property(PropertyError::NotFound { .. }) => {
+                ("propertyNotFound", self.to_string())
+            }
+            CommandError::Property(PropertyError::InvalidConfig { .. }) => {
+                ("invalidConfig", self.to_string())
+            }
+            CommandError::Property(PropertyError::TooManyOptions { .. }) => {
+                ("tooManyOptions", self.to_string())
+            }
+            CommandError::Property(PropertyError::OptionValueEmpty) => {
+                ("optionValueEmpty", self.to_string())
+            }
+            CommandError::Property(PropertyError::DuplicateOptionValue { .. }) => {
+                ("duplicateOptionValue", self.to_string())
+            }
+
+            // PropertyValue errors
+            CommandError::PropertyValue(PropertyValueError::InvalidNumber { .. }) => {
+                ("invalidNumber", self.to_string())
+            }
+            CommandError::PropertyValue(PropertyValueError::InvalidDate { .. }) => {
+                ("invalidDate", self.to_string())
+            }
+            CommandError::PropertyValue(PropertyValueError::InvalidSelectOption { .. }) => {
+                ("invalidSelectOption", self.to_string())
+            }
+            CommandError::PropertyValue(PropertyValueError::TypeMismatch { .. }) => {
+                ("typeMismatch", self.to_string())
+            }
+            CommandError::PropertyValue(PropertyValueError::PageNotInDatabase { .. }) => {
+                ("pageNotInDatabase", self.to_string())
+            }
+            CommandError::PropertyValue(PropertyValueError::NotFound { .. }) => {
+                ("propertyValueNotFound", self.to_string())
+            }
+
             CommandError::Storage(_) => ("storage", self.to_string()),
         };
 
