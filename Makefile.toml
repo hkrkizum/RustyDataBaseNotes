@@ -34,8 +34,16 @@ script = [
 # Quality Gate
 # ─────────────────────────────────────────────
 [tasks.qa]
-description = "Run full quality gate: Rust + TypeScript"
-run_task = { name = ["qa-rs", "qa-ts"], fork = true }
+description = "Run full quality gate: sqlx-prepare → Rust + TypeScript"
+run_task = { name = ["sqlx-prepare", "qa-rs", "qa-ts"], fork = true }
+
+[tasks.sqlx-prepare]
+description = "Reset dev.db from migrations and regenerate .sqlx/ query cache"
+cwd = "src-tauri"
+script = [
+  "cargo sqlx database reset -y",
+  "cargo sqlx prepare --workspace",
+]
 
 [tasks.check-all]
 description = "Static checks only (no tests): fmt-check → clippy → lint-ts → ts-check"

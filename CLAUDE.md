@@ -20,7 +20,8 @@
 
 | タスク | 内容 |
 |--------|------|
-| `qa` | フル QA（`qa-rs` → `qa-ts` を順次実行） |
+| `qa` | フル QA（`sqlx-prepare` → `qa-rs` → `qa-ts` を順次実行） |
+| `sqlx-prepare` | dev.db をマイグレーションからリセットし `.sqlx/` キャッシュを再生成 |
 | `check-all` | テスト抜き静的チェック（fmt-check → clippy → lint-ts → ts-check） |
 
 #### Formatting
