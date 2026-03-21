@@ -40,7 +40,9 @@
       "Bash(cargo sqlx:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(pnpm biome:*)"
+      "Bash(pnpm biome:*)",
+      "Bash(wc -l /home/hikaru/Develop/RustyDataBaseNotes/.worktrees/feature/src-tauri/src/**/*.rs)",
+      "Bash(ls:*)"
     ]
   }
 }
