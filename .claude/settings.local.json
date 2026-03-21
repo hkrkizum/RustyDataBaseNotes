@@ -50,7 +50,8 @@
       "Bash(printf 'INSERT INTO pages \\(id, title, created_at, updated_at\\) VALUES \\(?, ?, ?, ?\\)')",
       "Bash(grep -v \"set \\\\`DATABASE_URL\\\\`\")",
       "Bash(git status:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebFetch(domain:biomejs.dev)"
     ]
   }
 }
