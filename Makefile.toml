@@ -23,7 +23,9 @@ command = "cargo"
 args = ["tauri", "build"]
 
 [tasks.clean]
+clear = true
 description = "Remove build artifacts (Rust target + frontend dist)"
+category = "Cleanup"
 run_task = { name = ["clean-rs", "clean-dist"] }
 
 [tasks.clean-rs]
