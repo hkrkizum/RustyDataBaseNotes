@@ -24,10 +24,18 @@ args = ["tauri", "build"]
 
 [tasks.clean]
 description = "Remove build artifacts (Rust target + frontend dist)"
-script = [
-  "cargo clean --manifest-path ${RUST_WORKSPACE}/Cargo.toml",
-  "rm -rf dist",
-]
+run_task = { name = ["clean-rs", "clean-dist"] }
+
+[tasks.clean-rs]
+private = true
+command = "cargo"
+args = ["clean", "--manifest-path", "${RUST_WORKSPACE}/Cargo.toml"]
+
+[tasks.clean-dist]
+private = true
+ignore_errors = true
+command = "rm"
+args = ["-rf", "dist"]
 
 # ─────────────────────────────────────────────
 # Quality Gate
@@ -38,11 +46,19 @@ run_task = { name = ["sqlx-prepare", "qa-rs", "qa-ts"], fork = true }
 
 [tasks.sqlx-prepare]
 description = "Reset dev.db from migrations and regenerate .sqlx/ query cache"
+run_task = { name = ["sqlx-db-reset", "sqlx-cache-prepare"] }
+
+[tasks.sqlx-db-reset]
+private = true
+command = "cargo"
+args = ["sqlx", "database", "reset", "-y"]
 cwd = "${RUST_WORKSPACE}"
-script = [
-  "cargo sqlx database reset -y",
-  "cargo sqlx prepare --workspace",
-]
+
+[tasks.sqlx-cache-prepare]
+private = true
+command = "cargo"
+args = ["sqlx", "prepare", "--workspace"]
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.check-all]
 description = "Static checks only (no tests)"
@@ -70,24 +86,39 @@ run_task = { name = ["fmt-rs", "fmt-ts"], fork = true }
 
 [tasks.fmt-rs]
 description = "Format Rust (check-only when QA_CHECK_ONLY=1)"
+run_task = [
+    { name = "fmt-rs-check", condition = { env_true = ["QA_CHECK_ONLY"] } },
+    { name = "fmt-rs-write" },
+]
+
+[tasks.fmt-rs-check]
+private = true
+command = "cargo"
+args = ["fmt", "--all", "--check"]
 cwd = "${RUST_WORKSPACE}"
-script = ['''
-if [ "${QA_CHECK_ONLY:-}" = "1" ]; then
-  cargo fmt --all --check
-else
-  cargo fmt --all
-fi
-''']
+
+[tasks.fmt-rs-write]
+private = true
+command = "cargo"
+args = ["fmt", "--all"]
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.fmt-ts]
 description = "Format TypeScript (check-only when QA_CHECK_ONLY=1)"
-script = ['''
-if [ "${QA_CHECK_ONLY:-}" = "1" ]; then
-  pnpm biome check --linter-enabled=false .
-else
-  pnpm biome format --write .
-fi
-''']
+run_task = [
+    { name = "fmt-ts-check", condition = { env_true = ["QA_CHECK_ONLY"] } },
+    { name = "fmt-ts-write" },
+]
+
+[tasks.fmt-ts-check]
+private = true
+command = "pnpm"
+args = ["biome", "check", "--linter-enabled=false", "."]
+
+[tasks.fmt-ts-write]
+private = true
+command = "pnpm"
+args = ["biome", "format", "--write", "."]
 
 # ─────────────────────────────────────────────
 # Linting
@@ -124,19 +155,35 @@ description = "Run Rust tests (TEST_FILTER=pattern to filter)"
 install_crate = { crate_name = "cargo-nextest", binary = "cargo", test_arg = [
   "nextest", "--help",
 ] }
+run_task = [
+    { name = "test-rs-filtered", condition = { env_set = ["TEST_FILTER"] } },
+    { name = "test-rs-all" },
+]
+
+[tasks.test-rs-filtered]
+private = true
+command = "cargo"
+args = [
+    "nextest", "run", "--workspace",
+    "--build-jobs", "${TEST_BUILD_JOBS}",
+    "--status-level", "fail",
+    "--final-status-level", "skip",
+    "--no-tests=pass",
+    "-E", "test(/${TEST_FILTER}/)",
+]
 cwd = "${RUST_WORKSPACE}"
-script = ['''
-FILTER_ARGS=""
-if [ -n "${TEST_FILTER:-}" ]; then
-  FILTER_ARGS="-E test(/${TEST_FILTER}/)"
-fi
-cargo nextest run --workspace \
-  --build-jobs "${TEST_BUILD_JOBS}" \
-  --status-level fail \
-  --final-status-level skip \
-  --no-tests=pass \
-  $FILTER_ARGS
-''']
+
+[tasks.test-rs-all]
+private = true
+command = "cargo"
+args = [
+    "nextest", "run", "--workspace",
+    "--build-jobs", "${TEST_BUILD_JOBS}",
+    "--status-level", "fail",
+    "--final-status-level", "skip",
+    "--no-tests=pass",
+]
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.test-rs-std]
 description = "Run tests with standard cargo test (no nextest)"
@@ -219,15 +266,42 @@ args = ["tauri", "dev"]
 # ─────────────────────────────────────────────
 [tasks.setup-hooks]
 description = "Enable project git hooks (.githooks/)"
-script = ["git config core.hooksPath .githooks"]
+command = "git"
+args = ["config", "core.hooksPath", ".githooks"]
 
 # ─────────────────────────────────────────────
 # Database
 # ─────────────────────────────────────────────
 [tasks.dev-db-reset]
 description = "Delete development SQLite database and restart fresh"
-script = [
-  "rm -f ${RUST_WORKSPACE}/dev.db ${RUST_WORKSPACE}/dev.db-wal ${RUST_WORKSPACE}/dev.db-shm",
-  "rm -rf \"${XDG_DATA_HOME:-$HOME/.local/share}/com.vscode.rustydatabasenotes\"",
-  "echo 'Development database reset. Restart the app to re-initialize.'",
+run_task = { name = ["dev-db-reset-sqlite", "dev-db-reset-appdata", "dev-db-reset-msg"] }
+
+[tasks.dev-db-reset-sqlite]
+private = true
+ignore_errors = true
+command = "rm"
+args = ["-f", "${RUST_WORKSPACE}/dev.db", "${RUST_WORKSPACE}/dev.db-wal", "${RUST_WORKSPACE}/dev.db-shm"]
+
+[tasks.dev-db-reset-appdata]
+private = true
+run_task = [
+    { name = "dev-db-reset-appdata-xdg", condition = { env_set = ["XDG_DATA_HOME"] } },
+    { name = "dev-db-reset-appdata-default" },
 ]
+
+[tasks.dev-db-reset-appdata-xdg]
+private = true
+ignore_errors = true
+command = "rm"
+args = ["-rf", "${XDG_DATA_HOME}/com.vscode.rustydatabasenotes"]
+
+[tasks.dev-db-reset-appdata-default]
+private = true
+ignore_errors = true
+command = "rm"
+args = ["-rf", "${HOME}/.local/share/com.vscode.rustydatabasenotes"]
+
+[tasks.dev-db-reset-msg]
+private = true
+command = "echo"
+args = ["Development database reset. Restart the app to re-initialize."]
