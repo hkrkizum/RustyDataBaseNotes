@@ -1,9 +1,15 @@
 import { useCallback } from "react";
 import styles from "./FilterPanel.module.css";
+import {
+  getDefaultFilterValue,
+  getFilterDisplayValue,
+  isValueTypeCompatible,
+  NO_VALUE_OPERATORS,
+  parseFilterValue,
+} from "./filterUtils";
 import type {
   FilterConditionDto,
   FilterOperatorDto,
-  FilterValueDto,
   PropertyDto,
   PropertyTypeDto,
 } from "./types";
@@ -51,13 +57,6 @@ const OPERATOR_LABELS: Record<FilterOperatorDto, string> = {
   isNotEmpty: "空でない",
 };
 
-const NO_VALUE_OPERATORS: FilterOperatorDto[] = [
-  "isEmpty",
-  "isNotEmpty",
-  "isChecked",
-  "isUnchecked",
-];
-
 interface FilterConditionRowProps {
   condition: FilterConditionDto;
   properties: PropertyDto[];
@@ -88,7 +87,7 @@ export function FilterConditionRow({
         operator: defaultOp,
         value: NO_VALUE_OPERATORS.includes(defaultOp)
           ? null
-          : getDefaultValue(newType),
+          : getDefaultFilterValue(newType),
       });
     },
     [properties, index, onChange],
@@ -96,36 +95,20 @@ export function FilterConditionRow({
 
   const handleOperatorChange = useCallback(
     (operator: FilterOperatorDto) => {
-      let newValue: FilterValueDto | null = null;
-      if (!NO_VALUE_OPERATORS.includes(operator)) {
-        // Keep existing value only if its type matches the property type
-        const existingValue = condition.value;
-        const typeMatches =
-          existingValue &&
-          ((propType === "text" && existingValue.type === "text") ||
-            (propType === "number" && existingValue.type === "number") ||
-            (propType === "date" && existingValue.type === "date") ||
-            (propType === "select" && existingValue.type === "selectOption"));
-        newValue = typeMatches ? existingValue : getDefaultValue(propType);
+      let newValue = condition.value;
+      if (NO_VALUE_OPERATORS.includes(operator)) {
+        newValue = null;
+      } else if (!newValue || !isValueTypeCompatible(newValue, propType)) {
+        newValue = getDefaultFilterValue(propType);
       }
-      onChange(index, {
-        ...condition,
-        operator,
-        value: newValue,
-      });
+      onChange(index, { ...condition, operator, value: newValue });
     },
     [condition, propType, index, onChange],
   );
 
   const handleValueChange = useCallback(
     (rawValue: string) => {
-      let value: FilterValueDto | null = null;
-      if (propType === "text") value = { type: "text", value: rawValue };
-      else if (propType === "number")
-        value = { type: "number", value: Number(rawValue) || 0 };
-      else if (propType === "date") value = { type: "date", value: rawValue };
-      else if (propType === "select")
-        value = { type: "selectOption", value: rawValue };
+      const value = parseFilterValue(rawValue, propType);
       onChange(index, { ...condition, value });
     },
     [condition, propType, index, onChange],
@@ -163,7 +146,7 @@ export function FilterConditionRow({
         (propType === "select" ? (
           <select
             className={styles.select}
-            value={getDisplayValue(condition.value)}
+            value={getFilterDisplayValue(condition.value)}
             onChange={(e) => handleValueChange(e.target.value)}
           >
             <option value="">（選択してください）</option>
@@ -184,7 +167,7 @@ export function FilterConditionRow({
                   ? "datetime-local"
                   : "text"
             }
-            value={getDisplayValue(condition.value)}
+            value={getFilterDisplayValue(condition.value)}
             onChange={(e) => handleValueChange(e.target.value)}
             placeholder="値"
           />
@@ -198,22 +181,4 @@ export function FilterConditionRow({
       </button>
     </div>
   );
-}
-
-function getDefaultValue(propType: PropertyTypeDto): FilterValueDto {
-  switch (propType) {
-    case "number":
-      return { type: "number", value: 0 };
-    case "date":
-      return { type: "date", value: new Date().toISOString() };
-    case "select":
-      return { type: "selectOption", value: "" };
-    default:
-      return { type: "text", value: "" };
-  }
-}
-
-function getDisplayValue(value: FilterValueDto | null): string {
-  if (!value) return "";
-  return String(value.value);
 }
