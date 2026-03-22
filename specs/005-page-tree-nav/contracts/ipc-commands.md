@@ -94,33 +94,6 @@ Output: PageDto
 
 ---
 
-### `delete_page_with_promotion`
-
-ページを削除し，子ページを削除された親の親（またはルート）に昇格させる。
-
-```
-Input: {
-  pageId: string    // 削除対象ページの ID
-}
-Output: ()
-```
-
-**動作**:
-1. `pageId` のページを取得（`NotFound` チェック）
-2. 削除対象の `parent_id` を取得（昇格先）
-3. トランザクション内で:
-   a. 子ページの `parent_id` を削除対象の `parent_id` に一括更新
-   b. 対象ページを削除（blocks は CASCADE で削除）
-4. void 返却
-
-**エラー**:
-- `PageError::NotFound` — ページが存在しない
-
-**注**: 既存の `delete_page` コマンドをこのロジックに置き換える。
-子ページが存在しない場合は既存の動作と同一。
-
----
-
 ## Modified Commands
 
 ### `create_page`（変更）
@@ -175,10 +148,30 @@ Output: EditorStateDto {
 
 ---
 
-### `delete_page`（置き換え → `delete_page_with_promotion`）
+### `delete_page`（変更: 子ページ昇格ロジック追加）
 
-既存の `delete_page` を `delete_page_with_promotion` のロジックに変更する。
-コマンド名は `delete_page` のまま維持し，内部で子ページ昇格ロジックを追加する。
+ページを削除し，子ページを削除された親の親（またはルート）に昇格させる。
+コマンド名は `delete_page` のまま維持する。
+
+```
+Input: {
+  pageId: string    // 削除対象ページの ID
+}
+Output: ()
+```
+
+**動作**:
+1. `pageId` のページを取得（`NotFound` チェック）
+2. 削除対象の `parent_id` を取得（昇格先）
+3. トランザクション内で:
+   a. 子ページの `parent_id` を削除対象の `parent_id` に一括更新
+   b. 対象ページを削除（blocks は CASCADE で削除）
+4. void 返却
+
+**エラー**:
+- `PageError::NotFound` — ページが存在しない
+
+**注**: 子ページが存在しない場合は既存の動作と同一。
 
 ---
 
