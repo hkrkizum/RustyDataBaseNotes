@@ -22,7 +22,8 @@ TEST_FILTER="ipc::tests::editor" cargo make test-filter
 
 ```bash
 # tauri-driver のインストール（初回のみ）
-cargo install tauri-driver
+# Tauri v2 互換バージョンが必要。Nix devshell での管理を推奨
+cargo install tauri-driver <!-- refined by checklist-apply: P-04 -->
 
 # E2E テスト依存のインストール（初回のみ）
 cd e2e && pnpm install && cd ..

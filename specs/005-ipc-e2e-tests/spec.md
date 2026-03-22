@@ -27,6 +27,8 @@
 - クロスプラットフォーム検証（Windows / macOS / Linux 間の差異テスト）
 - IPC コマンドの並行呼び出しテスト（テスト間 DB 分離で間接的に安全性を確保する。Constitution V: YAGNI） <!-- added by checklist-apply: G-15 -->
 - 大量レコード（数百件）に対する IPC パフォーマンステスト（パフォーマンスベンチマークと同様に初期スコープ外） <!-- added by checklist-apply: G-16 -->
+- E2E レベルの異常系シナリオ（ネットワーク断，DB ロック，WebView クラッシュ等）。正常系ワークフローの検証を優先する <!-- added by checklist-apply: G-08 -->
+- ワークフロー横断 E2E シナリオ（DB 作成→ページ追加→ブロック編集→ビュー確認の一連操作）。各ワークフロー独立のシナリオで基本動作を検証する <!-- added by checklist-apply: G-09 -->
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -90,16 +92,17 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** アプリケーションが起動している, **When** ページを作成しタイトルを入力する, **Then** ページ一覧に新しいページが表示される
-2. **Given** データベースが存在する, **When** レコードを追加しプロパティ値を設定する, **Then** テーブルビューに正しいデータが表示される
-3. **Given** データベースにレコードが存在する, **When** フィルタ条件を設定する, **Then** 条件に一致するレコードのみが表示される
-4. **Given** ページが開かれている, **When** ブロックを追加・編集・移動・削除して保存する, **Then** 変更が永続化され再表示時にも反映されている
+1. **Given** アプリケーションが起動している, **When** ページ作成操作を行いタイトルを入力する, **Then** ページ一覧（サイドバー）に新しいページがタイトルテキストとして表示される <!-- refined by checklist-apply: G-01, G-07 -->
+2. **Given** データベースが存在する, **When** レコードを追加しプロパティ値を設定する, **Then** テーブルビューに追加したレコードのプロパティ値が表示される（検証対象フィールドは [data-model.md](./data-model.md) の TableDataDto 構造を参照） <!-- refined by checklist-apply: G-13, G-07 -->
+3. **Given** データベースにレコードが存在する, **When** テキストプロパティの等値フィルタ条件を設定する, **Then** 条件に一致するレコードのみが表示され，一致しないレコードは非表示となる <!-- refined by checklist-apply: G-04, G-07 -->
+4. **Given** ページが開かれている, **When** テキストブロックを追加・編集・移動・削除して保存する, **Then** 変更が永続化され再表示時にも反映されている <!-- refined by checklist-apply: G-02, G-07 -->
 
 ### Edge Cases
 
-- E2E テストがアプリケーションのクラッシュ後に適切にクリーンアップされること
+- E2E テストがアプリケーションのクラッシュ後に適切にクリーンアップされること（クリーンアップ対象: tauri-driver プロセスの終了，一時 DB ファイルの削除） <!-- refined by checklist-apply: G-15 -->
 - テスト間でデータベース状態が分離され，テスト順序に依存しないこと
 - コマンド固有の境界値（`reorder_properties` に空配列，`toggle_group_collapsed` に存在しないグループ名等）は P2 スコープで段階的にテストを追加する <!-- refined by checklist-apply: G-17 -->
+- 初期 E2E スコープはワークフローの主要フロー（作成→検証）を対象とする。ページ/データベースレベルの編集・削除フローは後続で追加可能 <!-- added by checklist-apply: G-16 -->
 
 ## Requirements *(mandatory)*
 
@@ -113,7 +116,8 @@
 - **FR-005**: E2E テストは少なくとも主要ワークフロー（ページ操作，エディタ操作，データベース操作，ビュー操作）をカバーしなければならない（MUST）
 - **FR-006**: E2E テストは `tauri-driver` + WebDriverIO を使用し，デバッグビルドの Tauri デスクトップアプリ全体（WebView + IPC + バックエンド）を対象として実際の UI を通じて操作を検証しなければならない（MUST）
 - **FR-007**: IPC テストは既存の品質ゲート（`cargo make qa`）に統合されなければならない（MUST）。E2E テストは独立タスク（`cargo make e2e`）として提供し，マージ前または手動で実行する（MUST）
-- **FR-008**: テスト実行結果は成功・失敗を明確に報告し，失敗時には原因特定に十分な情報を出力しなければならない（MUST）
+- **FR-008**: テスト実行結果は成功・失敗を明確に報告し，失敗時には原因特定に十分な情報を出力しなければならない（MUST）。E2E テスト失敗時は WebDriverIO の標準レポーター（spec reporter）出力を診断情報とする。スクリーンショット自動取得・DOM スナップショットは初期スコープ外とする <!-- refined by checklist-apply: G-03 -->
+- **FR-010**: アプリケーションは環境変数 `RDBN_DB_PATH` が設定されている場合，そのパスを SQLite データベースファイルとして使用しなければならない（MUST）。E2E テストのデータベース分離に使用する <!-- added by checklist-apply: G-05 -->
 
 ### Key Entities
 
@@ -123,11 +127,11 @@
 
 ## Constraints & Compliance *(mandatory)*
 
-- **CC-001 Data Integrity**: IPC テスト用データベースは各テストごとに一時 SQLite ファイルとして作成・マイグレーション適用され，テスト後に削除される。E2E テストではスイート開始時に一時 DB を作成し，各シナリオ前にデータリセットする。いずれも本番データに影響を与えてはならない
+- **CC-001 Data Integrity**: IPC テスト用データベースは各テストごとに一時 SQLite ファイルとして作成・マイグレーション適用され，テスト後に削除される。E2E テストではスイート開始時に一時 DB を作成し，各シナリオ前に全テーブルの行を DELETE する方式でデータリセットする（マイグレーション再適用より高速。research.md R-005 参照）。いずれも本番データに影響を与えてはならない <!-- refined by checklist-apply: G-14 -->
 - **CC-002 Privacy**: テストはローカル環境内で完結し，外部サービスへの通信を行わない。テストデータに個人情報を含まない
-- **CC-003 Performance**: IPC テストスイート全体は妥当な時間内（目安: 数分以内）に完了すること。初回実装後に実測値を取得し，必要に応じて具体的な SLA を設定する。E2E テストは個別シナリオごとに独立して実行可能であること <!-- refined by checklist-apply: G-05 -->
+- **CC-003 Performance**: IPC テストスイート全体は妥当な時間内（目安: 数分以内）に完了すること。初回実装後に実測値を取得し，必要に応じて具体的な SLA を設定する。E2E テストは個別シナリオごとに独立して実行可能であること。E2E テストスイート全体の実行時間目標は初回実装後に実測値を取得して設定する（IPC テストと同方針） <!-- refined by checklist-apply: G-05, G-10 -->
 - **CC-004 Boundary Types**: IPC テストは CommandError 型とフロントエンド側のエラーハンドリングの整合性を検証する。DTO の型安全性は正常系テストで返却 DTO の全フィールドを検証することで担保する（FR-009 参照） <!-- refined by checklist-apply: G-18 -->
-- **CC-005 Testability**: IPC テストは既存の `cargo make test` で実行可能であること。E2E テストは独立タスク `cargo make e2e` として `Makefile.toml` に追加し，`qa` パイプラインとは分離すること
+- **CC-005 Testability**: IPC テストは既存の `cargo make test` で実行可能であること。E2E テストは独立タスク `cargo make e2e` として `Makefile.toml` に追加し，`qa` パイプラインとは分離すること。E2E テストは実行コストが高いため pre-merge-commit フック（`.githooks/`）には含めない。マージ前に手動で `cargo make e2e` を実行する <!-- refined by checklist-apply: G-06 -->
 
 ## Success Criteria *(mandatory)*
 
@@ -143,3 +147,5 @@
 - IPC テストは `database::init_pool()` 関数に依存する。この関数はマイグレーション適用（`sqlx::migrate!()`）と外部キー有効化（`PRAGMA foreign_keys = ON`）を含む
 - IPC テストは `AppState` の公開フィールド（`pub db`, `pub sessions`）を直接構築してテストに使用する。`AppState` の構造変更時にはテストヘルパーの修正が必要となる
 - テスト対象のコマンドハンドラから内部ロジック関数を抽出する前提であるが，公開 API（IPC コマンドのシグネチャ）は変更しない
+- E2E テストは環境変数 `RDBN_DB_PATH` によるアプリの DB パス切り替えに依存する。この環境変数サポートはアプリケーション側の実装変更（FR-010）を必要とする <!-- added by checklist-apply: G-12 -->
+- E2E テストはデバッグビルドで実行する。デバッグビルド固有の動作（Clippy lint 有効，最適化なし）が存在するが，機能の正確性検証には影響しないことを前提とする <!-- added by checklist-apply: G-11 -->
