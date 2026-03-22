@@ -209,8 +209,8 @@ Sidebar
 
 ### Decision
 
-フロントエンド側で debounce 付き自動保存を実装する。debounce 間隔は **1000ms**。
-バックエンドの `EditorSession` は `isDirty` / `mark_saved` パターンを廃止する。
+フロントエンド側で debounce 付き自動保存を実装する。debounce 間隔は **~~1000ms~~ 500ms**（※ plan.md で改訂）。
+バックエンドの `EditorSession::is_dirty()` / `mark_saved()` メソッドは残す（save_editor の変更検出に使用）。`EditorStateDto::is_dirty` フィールドのみ IPC レスポンスから削除する。
 
 ### Rationale
 
@@ -268,8 +268,8 @@ function useAutoSave(pageId: string, saveInterval = 1000) {
 
 ### Retry Strategy
 
-- 保存失敗時: 1秒後にリトライ（最大3回，指数バックオフなし）
-- 全リトライ失敗時: `toast.warning("保存に失敗しました。再試行してください。")`
+- 保存失敗時: ~~1秒後にリトライ（最大3回，指数バックオフなし）~~ サイレントリトライ最大3回，間隔は指数バックオフ（1s → 2s → 4s）（※ plan.md で改訂）
+- 全リトライ失敗時: ~~`toast.warning("保存に失敗しました。再試行してください。")`~~ `toast.warning("保存に失敗しました")`（表示時間: 5秒，自動消去）（※ plan.md で改訂）
 - ユーザーがページを切り替えた場合: 最終保存を試行し，失敗してもナビゲーションは許可
 
 ### Alternatives Considered
@@ -277,7 +277,7 @@ function useAutoSave(pageId: string, saveInterval = 1000) {
 | 選択肢 | 却下理由 |
 |--------|---------|
 | バックエンド主導の定期保存 | Tauri の IPC は呼び出し側が主導。バックエンドからの push は複雑 |
-| 500ms debounce | 高速タイピング時の IPC 呼び出し頻度が高すぎる |
+| ~~500ms debounce~~ | ~~高速タイピング時の IPC 呼び出し頻度が高すぎる~~ ※ plan.md で 500ms に改訂。実測で問題ないと判断 |
 | 2000ms debounce | データ損失のウィンドウが大きすぎる |
 | lodash.debounce | 外部依存の追加。useRef + setTimeout で十分 |
 

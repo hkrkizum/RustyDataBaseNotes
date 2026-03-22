@@ -127,7 +127,7 @@ src-tauri/
 │   │   ├── block/           # 変更なし
 │   │   ├── database/        # 変更なし
 │   │   ├── editor/
-│   │   │   └── session.rs   # isDirty/mark_saved パターン廃止
+│   │   │   └── session.rs   # EditorStateDto::is_dirty 削除（メソッドは残存）
 │   │   ├── property/        # 変更なし
 │   │   └── view/            # 変更なし
 │   ├── infrastructure/
@@ -142,10 +142,14 @@ src-tauri/
 ```
 
 <!-- refined by checklist-apply: P-06 -->
-**isDirty 削除のフロントエンド影響箇所**:
-- `src/features/editor/` 配下で `isDirty` を参照するコンポーネント・フック
+**自動保存移行の影響箇所**:
+- `EditorSession::is_dirty()` / `mark_saved()` メソッドはバックエンドに**残存**する（save_editor の変更検出＝変更がある場合のみ DB 書き込みに使用）
+- `EditorStateDto::is_dirty` フィールドは IPC レスポンスから**削除**（フロントエンドで不使用）
+- `src/features/editor/` 配下で `isDirty` を参照するコンポーネント・フック → 参照削除
 - `UnsavedConfirmModal`（廃止対象）
-- `save_editor` / `open_editor` 呼び出し元の `isDirty` 参照箇所
+- `EditorToolbar` の保存ボタン・未保存インジケータ → 削除
+- Ctrl+S / Cmd+S → no-op（preventDefault で抑止）
+- `BlockEditor` のナビゲーション前確認ロジック → 削除
 
 **Structure Decision**: ページ階層ロジックは `domain/page/hierarchy.rs` に集約し，
 既存の `entity.rs` は Page 構造体の拡張に留める。サイドバーは `features/sidebar/` として
