@@ -60,7 +60,7 @@ jobs:
             rust-${{ runner.os }}-
 
       - name: Install sqlx-cli
-        run: cargo install sqlx-cli
+        run: cargo install sqlx-cli --no-default-features --features sqlite
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
