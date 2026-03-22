@@ -12,3 +12,5 @@ pub mod page_commands;
 pub mod property_commands;
 /// Table-related IPC command handlers (database-page operations).
 pub mod table_commands;
+/// View-related IPC command handlers (sort, filter, group operations).
+pub mod view_commands;

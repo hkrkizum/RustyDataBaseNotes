@@ -12,3 +12,5 @@ pub mod page_repository;
 pub mod property_repository;
 /// Property value persistence implementation.
 pub mod property_value_repository;
+/// View persistence implementation.
+pub mod view_repository;

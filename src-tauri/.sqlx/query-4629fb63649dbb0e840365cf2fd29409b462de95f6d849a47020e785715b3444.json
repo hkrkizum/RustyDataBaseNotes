@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO views (id, database_id, name, view_type, sort_conditions,\n                                  filter_conditions, group_condition, collapsed_groups,\n                                  created_at, updated_at)\n               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "4629fb63649dbb0e840365cf2fd29409b462de95f6d849a47020e785715b3444"
+}

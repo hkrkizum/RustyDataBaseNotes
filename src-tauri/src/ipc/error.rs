@@ -4,6 +4,7 @@ use crate::domain::block::error::BlockError;
 use crate::domain::database::error::DatabaseError;
 use crate::domain::page::error::PageError;
 use crate::domain::property::error::{PropertyError, PropertyValueError};
+use crate::domain::view::error::ViewError;
 use crate::infrastructure::persistence::error::StorageError;
 
 /// Unified error type for IPC command handlers.
@@ -31,6 +32,10 @@ pub enum CommandError {
     /// A domain-level property value error.
     #[error(transparent)]
     PropertyValue(#[from] PropertyValueError),
+
+    /// A domain-level view error.
+    #[error(transparent)]
+    View(#[from] ViewError),
 
     /// A storage-level error.
     #[error(transparent)]
@@ -125,6 +130,35 @@ impl Serialize for CommandError {
             }
             CommandError::PropertyValue(PropertyValueError::NotFound { .. }) => {
                 ("propertyValueNotFound", self.to_string())
+            }
+
+            // View errors
+            CommandError::View(ViewError::ViewNotFound { .. }) => {
+                ("viewNotFound", self.to_string())
+            }
+            CommandError::View(ViewError::InvalidSortCondition { .. }) => {
+                ("invalidSortCondition", self.to_string())
+            }
+            CommandError::View(ViewError::TooManySortConditions { .. }) => {
+                ("tooManySortConditions", self.to_string())
+            }
+            CommandError::View(ViewError::InvalidFilterOperator { .. }) => {
+                ("invalidFilterOperator", self.to_string())
+            }
+            CommandError::View(ViewError::InvalidFilterValue { .. }) => {
+                ("invalidFilterValue", self.to_string())
+            }
+            CommandError::View(ViewError::TooManyFilterConditions { .. }) => {
+                ("tooManyFilterConditions", self.to_string())
+            }
+            CommandError::View(ViewError::PropertyNotFound { .. }) => {
+                ("propertyNotFound", self.to_string())
+            }
+            CommandError::View(ViewError::NoGroupCondition) => {
+                ("noGroupCondition", self.to_string())
+            }
+            CommandError::View(ViewError::DuplicateSortProperty { .. }) => {
+                ("duplicateSortProperty", self.to_string())
             }
 
             CommandError::Storage(_) => ("storage", self.to_string()),

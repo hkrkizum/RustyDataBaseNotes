@@ -27,8 +27,8 @@ tested, and reviewed independently.
 
 **Purpose**: Establish module scaffolding and database schema for the View domain
 
-- [ ] T001 Create `src-tauri/src/domain/view/` directory with stub files: `mod.rs` (public re-exports), `entity.rs`, `repository.rs`, `error.rs`, `sort.rs`, `filter.rs`, `group.rs`
-- [ ] T002 Create migration `src-tauri/migrations/0006_create_views.sql` with views table, unique index on database_id, and `INSERT INTO views ... SELECT` for existing databases per data-model.md schema
+- [X] T001 Create `src-tauri/src/domain/view/` directory with stub files: `mod.rs` (public re-exports), `entity.rs`, `repository.rs`, `error.rs`, `sort.rs`, `filter.rs`, `group.rs`
+- [X] T002 Create migration `src-tauri/migrations/0006_create_views.sql` with views table, unique index on database_id, and `INSERT INTO views ... SELECT` for existing databases per data-model.md schema
 
 ---
 
@@ -38,17 +38,17 @@ tested, and reviewed independently.
 
 **⚠️ CRITICAL**: No user story work begins until this phase is complete
 
-- [ ] T003 [P] Implement ViewError enum with all variants (ViewNotFound, InvalidSortCondition, TooManySortConditions, InvalidFilterOperator, InvalidFilterValue, TooManyFilterConditions, PropertyNotFound, NoGroupCondition, DuplicateSortProperty) using thiserror in `src-tauri/src/domain/view/error.rs`
-- [ ] T004 [P] Implement View entity (ViewId, ViewName, ViewType, SortCondition, SortDirection, FilterCondition, FilterOperator, FilterValue, GroupCondition) with validation rules (name 1–100 chars, sort max 5, filter max 20, no duplicate sort property_id) and `#[cfg(test)]` unit tests in `src-tauri/src/domain/view/entity.rs`
-- [ ] T005 Define ViewRepository trait (find_by_database_id, save, update_sort_conditions, update_filter_conditions, update_group_condition, update_collapsed_groups, reset, remove_property_references) in `src-tauri/src/domain/view/repository.rs`
-- [ ] T006 Implement SqlxViewRepository with JSON serialization/deserialization for conditions columns and `#[cfg(test)]` CRUD tests (including FR-014: verify view is cascade-deleted when parent database is deleted) in `src-tauri/src/infrastructure/persistence/view_repository.rs`
-- [ ] T007 [P] Add ViewDto, SortConditionDto, FilterConditionDto, GroupConditionDto, GroupInfoDto with `#[serde(rename_all = "camelCase")]` to `src-tauri/src/ipc/dto.rs` and extend TableDataDto with `view: ViewDto` and `groups: Option<Vec<GroupInfoDto>>` fields
-- [ ] T008 [P] Add ViewError → CommandError kind mappings (viewNotFound, invalidSortCondition, tooManySortConditions, invalidFilterOperator, invalidFilterValue, tooManyFilterConditions, propertyNotFound, noGroupCondition, duplicateSortProperty) to `src-tauri/src/ipc/error.rs`
-- [ ] T009 [P] Add TypeScript types (ViewDto, SortConditionDto, FilterConditionDto, GroupConditionDto, GroupInfoDto, FilterOperatorDto, FilterValueDto) and extend TableDataDto with view and groups fields in `src/features/database/types.ts`
-- [ ] T010 Register `pub mod view` in `src-tauri/src/domain/mod.rs`, SqlxViewRepository in `src-tauri/src/infrastructure/persistence/mod.rs`, `pub mod view_commands` in `src-tauri/src/ipc/mod.rs`
-- [ ] T011 Implement get_view and reset_view IPC commands in `src-tauri/src/ipc/view_commands.rs` and register both in `src-tauri/src/lib.rs` generate_handler! macro
-- [ ] T012 Extend create_database to auto-create default View (name: "Table", view_type: Table, empty conditions) in `src-tauri/src/ipc/database_commands.rs` using SqlxViewRepository
-- [ ] T013 Run `cargo make sqlx-prepare` to reset dev.db with new migration and regenerate `.sqlx/` query cache
+- [X] T003 [P] Implement ViewError enum with all variants (ViewNotFound, InvalidSortCondition, TooManySortConditions, InvalidFilterOperator, InvalidFilterValue, TooManyFilterConditions, PropertyNotFound, NoGroupCondition, DuplicateSortProperty) using thiserror in `src-tauri/src/domain/view/error.rs`
+- [X] T004 [P] Implement View entity (ViewId, ViewName, ViewType, SortCondition, SortDirection, FilterCondition, FilterOperator, FilterValue, GroupCondition) with validation rules (name 1–100 chars, sort max 5, filter max 20, no duplicate sort property_id) and `#[cfg(test)]` unit tests in `src-tauri/src/domain/view/entity.rs`
+- [X] T005 Define ViewRepository trait (find_by_database_id, save, update_sort_conditions, update_filter_conditions, update_group_condition, update_collapsed_groups, reset, remove_property_references) in `src-tauri/src/domain/view/repository.rs`
+- [X] T006 Implement SqlxViewRepository with JSON serialization/deserialization for conditions columns and `#[cfg(test)]` CRUD tests (including FR-014: verify view is cascade-deleted when parent database is deleted) in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [X] T007 [P] Add ViewDto, SortConditionDto, FilterConditionDto, GroupConditionDto, GroupInfoDto with `#[serde(rename_all = "camelCase")]` to `src-tauri/src/ipc/dto.rs` and extend TableDataDto with `view: ViewDto` and `groups: Option<Vec<GroupInfoDto>>` fields
+- [X] T008 [P] Add ViewError → CommandError kind mappings (viewNotFound, invalidSortCondition, tooManySortConditions, invalidFilterOperator, invalidFilterValue, tooManyFilterConditions, propertyNotFound, noGroupCondition, duplicateSortProperty) to `src-tauri/src/ipc/error.rs`
+- [X] T009 [P] Add TypeScript types (ViewDto, SortConditionDto, FilterConditionDto, GroupConditionDto, GroupInfoDto, FilterOperatorDto, FilterValueDto) and extend TableDataDto with view and groups fields in `src/features/database/types.ts`
+- [X] T010 Register `pub mod view` in `src-tauri/src/domain/mod.rs`, SqlxViewRepository in `src-tauri/src/infrastructure/persistence/mod.rs`, `pub mod view_commands` in `src-tauri/src/ipc/mod.rs`
+- [X] T011 Implement get_view and reset_view IPC commands in `src-tauri/src/ipc/view_commands.rs` and register both in `src-tauri/src/lib.rs` generate_handler! macro
+- [X] T012 Extend create_database to auto-create default View (name: "Table", view_type: Table, empty conditions) in `src-tauri/src/ipc/database_commands.rs` using SqlxViewRepository
+- [X] T013 Run `cargo make sqlx-prepare` to reset dev.db with new migration and regenerate `.sqlx/` query cache
 
 **Checkpoint**: Foundation is ready — View entity, repository, migration, DTOs, and basic commands are in place. User stories can proceed.
 

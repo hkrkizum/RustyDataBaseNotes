@@ -12,12 +12,15 @@ use crate::domain::page::entity::{Page, PageId, PageTitle};
 use crate::domain::page::error::PageError;
 use crate::domain::page::repository::PageRepository;
 use crate::domain::property::repository::{PropertyRepository, PropertyValueRepository};
+use crate::domain::view::entity::View;
+use crate::domain::view::repository::ViewRepository;
 use crate::infrastructure::persistence::database_repository::SqlxDatabaseRepository;
 use crate::infrastructure::persistence::page_repository::SqlxPageRepository;
 use crate::infrastructure::persistence::property_repository::SqlxPropertyRepository;
 use crate::infrastructure::persistence::property_value_repository::SqlxPropertyValueRepository;
+use crate::infrastructure::persistence::view_repository::SqlxViewRepository;
 use crate::ipc::dto::{
-    DatabaseDto, PageDto, PropertyDto, PropertyValueDto, TableDataDto, TableRowDto,
+    DatabaseDto, PageDto, PropertyDto, PropertyValueDto, TableDataDto, TableRowDto, ViewDto,
 };
 use crate::ipc::error::CommandError;
 
@@ -182,9 +185,22 @@ pub async fn get_table_data(
         })
         .collect();
 
+    // Load or create default view
+    let view_repo = SqlxViewRepository::new(state.db.clone());
+    let view = match view_repo.find_by_database_id(&db_id).await? {
+        Some(v) => v,
+        None => {
+            let v = View::new_default(db_id.clone());
+            view_repo.save(&v).await?;
+            v
+        }
+    };
+
     Ok(TableDataDto {
         database: DatabaseDto::from(database),
         properties: properties.into_iter().map(PropertyDto::from).collect(),
         rows,
+        view: ViewDto::from(&view),
+        groups: None,
     })
 }

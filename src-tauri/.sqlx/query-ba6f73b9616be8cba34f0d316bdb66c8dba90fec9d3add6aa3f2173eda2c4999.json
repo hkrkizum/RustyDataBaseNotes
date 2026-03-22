@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE views SET group_condition = ?, collapsed_groups = ?, updated_at = ? WHERE database_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "ba6f73b9616be8cba34f0d316bdb66c8dba90fec9d3add6aa3f2173eda2c4999"
+}
