@@ -112,6 +112,49 @@ E2E テストはプロジェクトルートの `e2e/` に配置し，WebDriverIO
 各ドメインの境界コンテキスト（Database, Page, Editor, Property, Table, View）ごとに
 テストファイルを分離し，テスト間の独立性を確保する。
 
+### Domain-to-Test-File Mapping <!-- added by checklist-apply: P-01, P-04 -->
+
+| spec.md ドメイン | テストファイル | 含まれるコマンド | 備考 |
+|-----------------|-------------|----------------|------|
+| Database | database_commands_test.rs | create/list/get/update/delete_database (5) | カスケード削除テストを含む |
+| Page | page_commands_test.rs | create/list/get/update/delete_page (5) | |
+| Editor | editor_commands_test.rs | open/close/add/edit/move_up/move_down/remove/save (8) | ステートフルフローテストを含む |
+| Property | property_commands_test.rs | add/list/update_name/update_config/reorder/delete/reset_select_option/set_value/clear_value (9) | |
+| Table | table_commands_test.rs | add_page_to_database/add_existing_page/list_standalone_pages/remove_page_from_database/get_table_data (5) | ドメイン横断操作（page↔database）を含む |
+| View | view_commands_test.rs | get/reset/update_sort/update_filter/update_group/toggle_group_collapsed (6) | |
+
+## Test Design <!-- added by checklist-apply: P-02, P-05, P-06, P-07, P-08 -->
+
+### エラー種別の検証方針
+
+各ドメインテストで検証するエラー variant は [data-model.md](./data-model.md) のエラー種別マッピング表に準拠する:
+
+| ドメイン | 検証対象の主要 variant |
+|---------|---------------------|
+| Database | `titleEmpty`, `databaseNotFound` |
+| Page | `titleEmpty`, `titleTooLong`, `notFound` |
+| Editor（Block） | `contentTooLong`, `blockNotFound`, `cannotMoveUp`（+ セッション未開始） |
+| Property | `propertyNameEmpty`, `duplicatePropertyName` |
+| PropertyValue | `invalidNumber`, `typeMismatch` |
+| View | `viewNotFound`, `invalidSortCondition` |
+
+### テスト実行時間の見積もり
+
+IPC テスト 38 コマンド × DB 作成/破棄（マイグレーション適用含む）で **30-60 秒** を想定する。
+初回実装後に実測値を取得し，CC-003 の SLA 具体化の判断材料とする。
+
+### 並列実行における DB 分離
+
+`cargo-nextest` はデフォルトでテストを並列実行する。`TempDbGuard` が uuid_v7 ベースの
+一時ディレクトリを使用するため，並列実行下でも DB ファイルの衝突は発生しない。
+
+### テスト失敗時の診断情報
+
+`assert!` / `assert_eq!` マクロにはカスタムメッセージを付与し，以下の情報を出力する:
+- テスト対象コマンド名
+- 入力値（引数）
+- 期待値と実際の値
+
 ## Complexity Tracking
 
 > 該当する憲法違反なし。すべての設計判断は Constitution に適合している。
@@ -119,3 +162,9 @@ E2E テストはプロジェクトルートの `e2e/` に配置し，WebDriverIO
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
 | (なし) | — | — |
+
+### Known Risks <!-- added by checklist-apply: P-10 -->
+
+| リスク | 影響 | 緩和策 |
+|--------|------|--------|
+| `AppState` の pub フィールド（`db`, `sessions`）に直接依存 | 構造変更時にテストヘルパーの修正が必要 | `setup_test_state()` に構築ロジックを集約し，変更箇所を 1 箇所に限定する |

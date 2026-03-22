@@ -25,6 +25,8 @@
 - 視覚回帰テスト（スクリーンショット比較等）
 - パフォーマンスベンチマーク（レイテンシ・スループット計測）
 - クロスプラットフォーム検証（Windows / macOS / Linux 間の差異テスト）
+- IPC コマンドの並行呼び出しテスト（テスト間 DB 分離で間接的に安全性を確保する。Constitution V: YAGNI） <!-- added by checklist-apply: G-15 -->
+- 大量レコード（数百件）に対する IPC パフォーマンステスト（パフォーマンスベンチマークと同様に初期スコープ外） <!-- added by checklist-apply: G-16 -->
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -43,9 +45,9 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** テストが実行可能な環境がある, **When** IPC テストスイートを実行する, **Then** 全ドメイン（Database, Page, Property, Editor, Table, View）の CRUD 操作が正しい結果を返す
-2. **Given** 存在しないリソースの ID を渡す, **When** 取得・更新・削除コマンドを呼び出す, **Then** 適切なエラー種別とメッセージが返される
-3. **Given** 不正な入力（空文字列，不正な型）を渡す, **When** コマンドを呼び出す, **Then** バリデーションエラーが返され，データベースの状態は変化しない
+1. **Given** テストが実行可能な環境がある, **When** IPC テストスイートを実行する, **Then** 全ドメイン（Database, Page, Property, Editor, Table, View）の CRUD 操作が正しい結果を返す。「正しい結果」とは返却 DTO の各フィールドが入力値および [data-model.md](./data-model.md) の「IPC 境界で検証する項目」と一致することを指す <!-- refined by checklist-apply: G-01, G-10 -->
+2. **Given** 存在しないリソースの ID を渡す, **When** 取得・更新・削除・追加コマンドを呼び出す, **Then** [data-model.md](./data-model.md) のエラー種別マッピングに準拠したエラー種別（kind）とメッセージが返される <!-- refined by checklist-apply: G-09, G-14 -->
+3. **Given** 不正な入力（空文字列，不正な型）を渡す, **When** コマンドを呼び出す, **Then** [data-model.md](./data-model.md) のエラー種別マッピングに従ったバリデーションエラーが返され，データベースの状態は変化しない <!-- refined by checklist-apply: G-08 -->
 
 ---
 
@@ -62,9 +64,15 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** データベースに関連ページが存在する, **When** データベースを削除する, **Then** 関連データの整合性が保たれる（カスケード削除またはエラー返却）
+1. **Given** データベースに関連ページが存在する, **When** データベースを削除する, **Then** カスケード削除により databases→pages→blocks，databases→properties→property_values，databases→views の 3 系統の関連データが整合的に削除される。カスケード削除テストは Database ドメインテストに含める <!-- refined by checklist-apply: G-13 -->
 2. **Given** エディタセッションが開かれていない, **When** ブロック操作コマンドを呼び出す, **Then** セッション未開始エラーが返される
-3. **Given** ビューにソート・フィルタ・グループ条件が設定されている, **When** 参照先のプロパティが削除される, **Then** ビュー操作がエラーにならず，適切に処理される
+3. **Given** ビューにソート・フィルタ・グループ条件が設定されている, **When** 参照先のプロパティが削除される, **Then** 該当する条件はビューから自動除外され，ビュー操作はエラーを返さない <!-- refined by checklist-apply: G-11 -->
+4. **Given** 存在しないページ ID を指定する, **When** ページの更新・削除コマンドを呼び出す, **Then** notFound エラーが返される <!-- added by checklist-apply: G-02 -->
+5. **Given** データベースに同名のプロパティが存在する, **When** 同名でプロパティを追加する, **Then** duplicatePropertyName エラーが返される <!-- added by checklist-apply: G-02 -->
+6. **Given** 存在しない database_id を指定する, **When** add_page_to_database を呼び出す, **Then** databaseNotFound エラーが返される <!-- added by checklist-apply: G-02 -->
+7. **Given** エディタセッションが既に開かれている, **When** 同じページを再度 open する, **Then** 既存セッションが返されるか，適切なエラーが返される <!-- added by checklist-apply: G-12 -->
+8. **Given** エディタセッションを close した後, **When** ブロック操作コマンドを呼び出す, **Then** セッション未開始エラーが返される <!-- added by checklist-apply: G-12 -->
+9. **Given** エディタを open し，ブロックを追加・編集・移動・削除して save し close する, **When** 一連のフローを IPC テストとして実行する, **Then** 各操作が期待どおりの EditorStateDto を返し，save 後のデータが永続化される <!-- added by checklist-apply: G-04 -->
 
 ---
 
@@ -89,19 +97,19 @@
 
 ### Edge Cases
 
-- IPC コマンドの並行呼び出し時にデータ競合が発生しないこと
-- 大量のレコード（数百件）が存在するデータベースに対する IPC コマンドが正常に動作すること
 - E2E テストがアプリケーションのクラッシュ後に適切にクリーンアップされること
 - テスト間でデータベース状態が分離され，テスト順序に依存しないこと
+- コマンド固有の境界値（`reorder_properties` に空配列，`toggle_group_collapsed` に存在しないグループ名等）は P2 スコープで段階的にテストを追加する <!-- refined by checklist-apply: G-17 -->
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: IPC テストスイートは，全 6 ドメイン（Database, Page, Property, Editor, Table, View）の全コマンドハンドラに対して正常系テストを提供しなければならない（MUST）
-- **FR-002**: IPC テストはハンドラ関数を直接呼び出し，テスト用 `SqlitePool` を渡す統合テストとして実装する（MUST）。Tauri ランタイムは不要とし，モックによるテストとしてはならない（MUST NOT）
-- **FR-003**: 各 IPC テストはテストごとに一時 SQLite ファイルを作成し，マイグレーションを適用した上でテスト後に削除することで，テスト間のデータベース状態を完全に分離しなければならない（MUST）。テスト実行順序に依存してはならない（MUST NOT）
-- **FR-004**: IPC テストはエラーレスポンスの種別（kind）とメッセージの妥当性を検証しなければならない（MUST）
+- **FR-001**: IPC テストスイートは，全 6 ドメイン（Database, Page, Property, Editor, Table, View）の全コマンドハンドラに対して正常系テストを提供しなければならない（MUST）。正常系テストは CRUD 操作種別ごとに以下の基本パターンを検証する: 作成→ID を含む DTO 返却，一覧→全件返却，取得→ID 一致確認，更新→変更フィールド反映確認，削除→対象リソースの不在確認 <!-- refined by checklist-apply: G-01 -->
+- **FR-002**: IPC テストはハンドラ関数を直接呼び出し，テスト用 `SqlitePool` を渡す統合テストとして実装する（MUST）。Tauri ランタイムは不要とし，モックによるテストとしてはならない（MUST NOT）。本仕様における「モック」とは実データベースを使用しないスタブ・フェイク実装を指し，テスト用一時 SQLite ファイルはモックに該当しない <!-- refined by checklist-apply: G-07 -->
+- **FR-003**: 各 IPC テストはテストごとに一時 SQLite ファイルを作成し，マイグレーションを適用した上でテスト後に削除（パニック時を含む）することで，テスト間のデータベース状態を完全に分離しなければならない（MUST）。テスト実行順序に依存してはならない（MUST NOT） <!-- refined by checklist-apply: P-03 -->
+- **FR-004**: IPC テストはエラーレスポンスの種別（kind）とメッセージの妥当性を検証しなければならない（MUST）。検証対象のエラー種別は [data-model.md](./data-model.md) のエラー種別マッピング表に準拠する <!-- refined by checklist-apply: G-08, G-09 -->
+- **FR-009**: IPC テストの正常系は，返却 DTO の各フィールドが [data-model.md](./data-model.md) の「IPC 境界で検証する項目」に定義された変換仕様と一致することを検証しなければならない（MUST） <!-- added by checklist-apply: G-03 -->
 - **FR-005**: E2E テストは少なくとも主要ワークフロー（ページ操作，エディタ操作，データベース操作，ビュー操作）をカバーしなければならない（MUST）
 - **FR-006**: E2E テストは `tauri-driver` + WebDriverIO を使用し，デバッグビルドの Tauri デスクトップアプリ全体（WebView + IPC + バックエンド）を対象として実際の UI を通じて操作を検証しなければならない（MUST）
 - **FR-007**: IPC テストは既存の品質ゲート（`cargo make qa`）に統合されなければならない（MUST）。E2E テストは独立タスク（`cargo make e2e`）として提供し，マージ前または手動で実行する（MUST）
@@ -117,8 +125,8 @@
 
 - **CC-001 Data Integrity**: IPC テスト用データベースは各テストごとに一時 SQLite ファイルとして作成・マイグレーション適用され，テスト後に削除される。E2E テストではスイート開始時に一時 DB を作成し，各シナリオ前にデータリセットする。いずれも本番データに影響を与えてはならない
 - **CC-002 Privacy**: テストはローカル環境内で完結し，外部サービスへの通信を行わない。テストデータに個人情報を含まない
-- **CC-003 Performance**: IPC テストスイート全体は妥当な時間内（目安: 数分以内）に完了すること。E2E テストは個別シナリオごとに独立して実行可能であること
-- **CC-004 Boundary Types**: IPC テストは CommandError 型とフロントエンド側のエラーハンドリングの整合性を検証する。DTO の型安全性をテストで担保する
+- **CC-003 Performance**: IPC テストスイート全体は妥当な時間内（目安: 数分以内）に完了すること。初回実装後に実測値を取得し，必要に応じて具体的な SLA を設定する。E2E テストは個別シナリオごとに独立して実行可能であること <!-- refined by checklist-apply: G-05 -->
+- **CC-004 Boundary Types**: IPC テストは CommandError 型とフロントエンド側のエラーハンドリングの整合性を検証する。DTO の型安全性は正常系テストで返却 DTO の全フィールドを検証することで担保する（FR-009 参照） <!-- refined by checklist-apply: G-18 -->
 - **CC-005 Testability**: IPC テストは既存の `cargo make test` で実行可能であること。E2E テストは独立タスク `cargo make e2e` として `Makefile.toml` に追加し，`qa` パイプラインとは分離すること
 
 ## Success Criteria *(mandatory)*
@@ -126,6 +134,12 @@
 ### Measurable Outcomes
 
 - **SC-001**: 全 38 の IPC コマンドに対して少なくとも正常系テストが存在し，全テストがパスする
-- **SC-002**: IPC テストのカバレッジにより，コマンドハンドラ層の不具合が本番到達前にテストで検出される
+- **SC-002**: 全 38 コマンドに正常系テストが存在し，各ドメインの主要エラーパス（存在しないリソース，バリデーション違反，セッション未開始等）に対して異常系テストが存在する <!-- refined by checklist-apply: G-06 -->
 - **SC-003**: 主要ワークフロー（ページ操作，エディタ操作，データベース操作，ビュー操作）に対する E2E テストが存在し，全テストがパスする
 - **SC-004**: IPC テストが `cargo make qa` の品質ゲートに組み込まれ，E2E テストが `cargo make e2e` で独立実行可能である
+
+## Dependencies & Assumptions <!-- added by checklist-apply: G-19, G-21, P-09 -->
+
+- IPC テストは `database::init_pool()` 関数に依存する。この関数はマイグレーション適用（`sqlx::migrate!()`）と外部キー有効化（`PRAGMA foreign_keys = ON`）を含む
+- IPC テストは `AppState` の公開フィールド（`pub db`, `pub sessions`）を直接構築してテストに使用する。`AppState` の構造変更時にはテストヘルパーの修正が必要となる
+- テスト対象のコマンドハンドラから内部ロジック関数を抽出する前提であるが，公開 API（IPC コマンドのシグネチャ）は変更しない
