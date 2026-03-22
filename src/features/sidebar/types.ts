@@ -23,4 +23,5 @@ export interface SidebarTreeNode {
 export interface LastOpenedItem {
   id: string;
   type: "page" | "database";
+  title: string;
 }

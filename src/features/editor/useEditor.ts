@@ -13,7 +13,6 @@ function errorMessage(err: unknown): string {
 export function useEditor() {
   const [editorState, setEditorState] = useState<EditorState | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
 
   const openEditor = useCallback(async (pageId: string) => {
     setLoading(true);
@@ -24,15 +23,6 @@ export function useEditor() {
       toast.error(errorMessage(err));
     } finally {
       setLoading(false);
-    }
-  }, []);
-
-  const closeEditor = useCallback(async (pageId: string) => {
-    try {
-      await invoke("close_editor", { pageId });
-      setEditorState(null);
-    } catch (err) {
-      toast.error(errorMessage(err));
     }
   }, []);
 
@@ -99,28 +89,14 @@ export function useEditor() {
     }
   }, []);
 
-  const saveEditor = useCallback(async (pageId: string) => {
-    try {
-      const state = await invoke<EditorState>("save_editor", { pageId });
-      setEditorState(state);
-      toast.success("保存しました");
-    } catch (err) {
-      toast.error(errorMessage(err));
-    }
-  }, []);
-
   return {
     editorState,
     loading,
-    showUnsavedConfirm,
-    setShowUnsavedConfirm,
     openEditor,
-    closeEditor,
     addBlock,
     editBlockContent,
     moveBlockUp,
     moveBlockDown,
     removeBlock,
-    saveEditor,
   };
 }

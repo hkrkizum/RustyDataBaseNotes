@@ -75,10 +75,12 @@ function buildTree(items: SidebarItem[]): SidebarTreeNode[] {
  * Hook for sidebar data management: fetches items, builds tree, manages
  * expand/collapse state and active item tracking.
  */
-export function useSidebar() {
+export function useSidebar(initialActiveItemId?: string | null) {
   const [items, setItems] = useState<SidebarItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [activeItemId, setActiveItemId] = useState<string | null>(
+    initialActiveItemId ?? null,
+  );
   const [expandedState, setExpandedState] = useState<ExpandedState>(() =>
     readFromStorage<ExpandedState>(EXPANDED_KEY, {}),
   );

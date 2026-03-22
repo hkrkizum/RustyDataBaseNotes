@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -13,12 +13,14 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarCreateButton } from "./SidebarCreateButton";
 import { SidebarTree } from "./SidebarTree";
-import type { SidebarTreeNode } from "./types";
+import type { SidebarItem, SidebarTreeNode } from "./types";
 import { useSidebar as useSidebarData } from "./useSidebar";
 
 interface AppSidebarProps {
+  initialActiveItemId?: string | null;
   onPageClick: (pageId: string, pageTitle: string) => void;
   onDatabaseClick: (databaseId: string, databaseTitle: string) => void;
+  onItemsLoaded?: (items: SidebarItem[]) => void;
 }
 
 function errorMessage(err: unknown): string {
@@ -28,8 +30,14 @@ function errorMessage(err: unknown): string {
   return String(err);
 }
 
-export function AppSidebar({ onPageClick, onDatabaseClick }: AppSidebarProps) {
+export function AppSidebar({
+  initialActiveItemId,
+  onPageClick,
+  onDatabaseClick,
+  onItemsLoaded,
+}: AppSidebarProps) {
   const {
+    items,
     tree,
     loading,
     activeItemId,
@@ -38,9 +46,18 @@ export function AppSidebar({ onPageClick, onDatabaseClick }: AppSidebarProps) {
     toggleExpanded,
     refreshItems,
     setItems,
-  } = useSidebarData();
+  } = useSidebarData(initialActiveItemId);
 
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
+  const itemsLoadedRef = useRef(false);
+
+  // Notify parent when items finish loading (runs once)
+  useEffect(() => {
+    if (!loading && !itemsLoadedRef.current) {
+      itemsLoadedRef.current = true;
+      onItemsLoaded?.(items);
+    }
+  }, [loading, items, onItemsLoaded]);
 
   const handleItemClick = useCallback(
     (node: SidebarTreeNode) => {
