@@ -1,84 +1,53 @@
 # Checklist Review Report: Page Tree Navigation
 
-**レビュー日時**: 2026-03-22 (3rd pass, frontend-ux review added)
-**対象チェックリスト**: requirements.md, backend.md, frontend-ux.md
+**レビュー日時**: 2026-03-22 (5th pass, Partial 項目のレビュアー承認反映)
+**対象チェックリスト**: frontend-ux.md
 **レビュー結果サマリー**:
 
-### requirements.md (Specification Quality)
-- ✅ Covered: 16 項目 (全項目)
+### frontend-ux.md (Frontend/UX Requirements Quality)
+- ✅ Covered: 31 項目（うち 3 項目はレビュアー承認による実装時決定）
 - ⚠️ Partial: 0 項目
 - ❌ Gap: 0 項目
 - 🔀 Misplaced: 0 項目
-- **カバレッジ率**: 100% (16/16)
+- **カバレッジ率**: 100% (31/31)
 
-### backend.md (Backend Requirements Quality)
-- ✅ Covered: 25 項目
-- ⚠️ Partial: 1 項目 (CHK019)
-- ❌ Gap: 0 項目
-- 🔀 Misplaced: 0 項目
-- **カバレッジ率**: 96.2% (25/26)
+### 前回レビューからの変化（frontend-ux のみ）
 
-### frontend-ux.md (Frontend/UX Requirements Quality) — NEW
-- ✅ Covered: 0 項目
-- ⚠️ Partial: 16 項目
-- ❌ Gap: 15 項目
-- 🔀 Misplaced: 0 項目
-- **カバレッジ率**: 0% (0/31)
+| 指標 | 3rd pass | 4th pass | 5th pass | 変化 (4th→5th) |
+|------|---------|---------|---------|------|
+| ✅ Covered | 0 (0%) | 28 (90.3%) | 31 (100%) | +3 items |
+| ⚠️ Partial | 16 | 3 | 0 | -3 items |
+| ❌ Gap | 15 | 0 | 0 | — |
+| カバレッジ率 | 0% | 90.3% | 100% | +9.7pp |
 
-### 全体
-- ✅ Covered: 41 項目
-- ⚠️ Partial: 17 項目
-- ❌ Gap: 15 項目
-- 🔀 Misplaced: 0 項目
-- **カバレッジ率**: 56.2% (41/73)
-
-### 前回レビューからの変化
-| 指標 | 2nd pass | 3rd pass | 変化 |
-|------|---------|---------|------|
-| 対象チェックリスト数 | 2 | 3 | +1 (frontend-ux.md) |
-| 全体 Covered | 41 (97.6%) | 41 (56.2%) | +0 items, カバレッジ率低下は対象増による |
-| 全体 Partial | 1 | 17 | +16 items (frontend-ux 由来) |
-| 全体 Gap | 0 | 15 | +15 items (frontend-ux 由来) |
+**改善要因**:
+- 4th pass: `checklist-apply` による spec.md / plan.md の差分更新が 28 項目の Gap/Partial を Covered に引き上げた
+- 5th pass: 残り 3 Partial 項目（CHK001, CHK005, CHK009）をレビュアーが「実装時決定」として承認し Covered に昇格
 
 ---
 
 ## 仕様側の問題（spec.md で対応すべき項目）
 
-**該当なし。** 前回レポートの G-01〜G-05 は全て checklist-apply で対応済み。
+該当なし。全項目 Covered。
 
----
+## 計画側の問題（plan.md で対応すべき項目）
 
-## 計画側の問題（plan.md / data-model.md / contracts で対応すべき項目）
-
-| ID | チェック項目 | 判定 | 推奨アクション |
-|----|------------|------|--------------|
-| P-13 | CHK019 — 全ページインメモリロードのメモリ影響 | Partial | **対応不要（YAGNI）**: Page 構造体 ×500 ≈ 数十KB。plan.md が「投機的最適化なし」と明言しており，実害なし。実装時に計測で判断すれば十分。ドキュメント追記は不要と判断 |
-
----
+該当なし。
 
 ## 配置ミス（Misplaced 項目）
 
-該当なし。spec.md と plan.md / data-model.md / contracts の責務分担は適切。
+該当なし。
 
----
+## 実装時決定としてレビュアー承認済みの項目
 
-## 意図的な除外の確認
+以下の 3 項目はレビュアーにより「実装時決定」として承認され，Covered に昇格した。
+実装時は shadcn/ui の標準コンポーネント・デザイントークンに従って決定する。
 
-以下の Partial 項目について、意図的に対象外としている場合は理由を記録してください。
-
-| ID | チェック項目 | 除外理由（人間が記入） |
+| ID | チェック項目 | 実装時決定の方針 |
 |----|------------|---------------------|
-| P-13 | CHK019 — 全ページインメモリロードのメモリ影響 | |
-
----
-
-## requirements.md 詳細レビュー
-
-requirements.md は前回レビュー時点で全項目 ✅ Covered であり、今回の再レビューでも変更なし。
-
-**留意事項**:
-- spec.md の FR-015 (Tailwind CSS + shadcn/ui)、FR-011 (Lucide Icons)、FR-010 (localStorage)、FR-008 (CASCADE) は技術選定を含む記述だが、これらは実装詳細ではなく**要件として明示された技術選定**であり、Notes セクションの CC-004 に関する注記（Constitution Principle III の要件として型付き境界を仕様に含める）と同様の位置づけ
-- FR-008 の「CASCADE で同時に削除される」は SQL 用語だが、checklist-apply (G-02) で追記された機能動作の記述であり、ユーザーデータの振る舞いを明確にする目的で許容
+| CHK001 | サイドバー固定幅の具体値 | 240–260px の範囲内で shadcn/ui Sidebar の標準幅に合わせる |
+| CHK005 | 「...」ボタンのサイズ | shadcn/ui のアイコンボタン標準サイズに従う |
+| CHK009 | shadcn/ui アクティブ状態の詳細 | shadcn/ui Sidebar コンポーネントの標準 active スタイルを採用する |
 
 ---
 
@@ -86,168 +55,30 @@ requirements.md は前回レビュー時点で全項目 ✅ Covered であり、
 
 ### カバーされている原則
 
-| Constitution 原則 | 対応するチェック項目 | 判定 |
-|------------------|-------------------|------|
-| I. Local-First Product Integrity | CHK002 (トランザクション境界), CHK003 (ロールバック制約), CHK010 (二重防御), CHK017 (マイグレーション整合), CHK022 (並行削除安全性) | ✅ 全て Covered |
-| II. Domain-Faithful Information Model | CHK012 (コマンド命名一貫性), CHK013 (リポジトリメソッド区別) | ✅ 全て Covered |
-| III. Typed Boundaries and DDD | CHK004 (FE/BE 責務境界), CHK011 (IPC 型マッピング), CHK014 (バリデーション範囲) | ✅ 全て Covered |
-| IV. Test-First Delivery and Quality Gates | CHK021 (テストシナリオ) | ✅ Covered |
-| V. Safe Rust, SOLID, Maintainability | CHK005 (オーケストレーション=SRP), CHK026 (呼び出し責務=DIP), CHK019 (YAGNI 判断) | ✅ / ⚠️ CHK019 のみ Partial |
-| VII. 防御的エラーハンドリング | CHK018 (CTE フェイルセーフ), CHK020 (自己参照検出), CHK016 (null ケースバリデーション) | ✅ 全て Covered |
-
-### カバーされていない原則
-
-以下の constitution 原則に対応するチェック項目が不足しています:
-
-- **VI. Rust ドキュメント標準**: 新規公開アイテム（`PageHierarchyService`, `validate_move`, `validate_create_child`, 新規エラーバリアント等）のドキュメントコメント要件は plan.md §Constitution Check (L68-71) で言及済み。チェックリスト項目としての未設置は checklist の粒度問題であり、spec/plan の追記は不要
-- **IV. Test-First（テストシナリオの網羅性）**: 個別テストケース（循環参照、深度超過、DB ページ制約）の入力条件・期待結果は CC-005 で列挙済み。各テストの詳細な仕様は tasks.md / 実装時に TDD で詳細化する領域
-
-### 矛盾・過剰設計の指摘
-
-| チェック項目 | 関連する原則 | 指摘内容 | 前回からの変化 |
-|------------|------------|---------|-------------|
-| CHK019 | V. Maintainability (YAGNI) | 500ページ × Page 構造体のメモリ影響は実質無視できるレベル（数十KB）。plan.md が「投機的最適化なし」と明言しており、この項目の優先度は最低。実装時に計測で判断すれば十分 | 変化なし — 意図的に対応不要と判断 |
-
----
-
-## 総合評価（requirements.md + backend.md）
-
-前回レビュー（1st pass）で検出された 4 Gap + 14 Partial は、checklist-apply により spec.md / plan.md / data-model.md / contracts を計 17 箇所修正することで解消された。残る唯一の Partial（CHK019: メモリ影響）は YAGNI 原則に基づき対応不要と判断。
-
-**結論**: バックエンド仕様・計画・データモデル・コントラクトの品質は実装開始に十分なレベルに達している。
-
----
----
-
-# Frontend/UX Review: frontend-ux.md (3rd pass)
-
-## 仕様側の問題（spec.md で対応すべき項目）
-
-機能要件・ユーザー体験・ビジネスロジックに関するギャップ。
-spec.md の修正で解決すべき項目を列挙する。
-
-| ID | チェック項目 | 判定 | 推奨アクション |
-|----|------------|------|--------------|
-| FG-01 | CHK001 - サイドバー固定幅の具体値 | Partial | FR-010 の「240–260px」を単一値（例: 256px or 248px）に確定するか、実装時に決定してよい旨を明記 |
-| FG-02 | CHK002 - ツリーインデント量・5階層時の視認性 | Gap | FR-006 に「各階層のインデント量（例: 12px/level）」と「5階層ネスト時に最低 N px の表示幅を確保」を追記 |
-| FG-03 | CHK003 - ページタイトルのテキストオーバーフロー処理 | Gap | FR-002 または FR-006 に「タイトルは1行トランケーション（text-overflow: ellipsis）」を追記。ツールチップの要否も明記 |
-| FG-04 | CHK005 - コンテキストメニュー「...」ボタンの詳細 | Partial | FR-013 に「遅延なし即時表示」「アイテム右端に配置」等の最低限のUI仕様を追記するか、実装裁量と明記 |
-| FG-05 | CHK006 - インライン編集のバリデーション UX | Partial | FR-013 に「空文字入力で確定した場合は元のタイトルに復帰」「255文字超過は入力を制限（maxLength）」等のフロントエンドUXを追記 |
-| FG-06 | CHK007 - サイドバーのスクロール動作 | Gap | FR-001 または FR-010 に「ツリー領域は overflow-y: auto でスクロール。ヘッダーと新規作成ボタンはスクロール対象外（固定表示）」を追記 |
-| FG-07 | CHK008 - アクティブアイテムへの自動スクロール | Gap | FR-002 に「アクティブアイテムがスクロール範囲外の場合、scrollIntoView で表示範囲に移動する」を追記 |
-| FG-08 | CHK009 - shadcn/ui アクティブ状態の詳細 | Partial | FR-002 に「shadcn/ui Sidebar コンポーネントの isActive 状態を使用する」等、具体的なコンポーネント名を追記するか、実装裁量と明記 |
-| FG-09 | CHK010 - 種別選択 UI の確定 | Partial | FR-013 の「ドロップダウン等」を「ドロップダウンメニュー」に確定するか、「実装時に適切なUIパターンを選択」と明記 |
-| FG-10 | CHK011 - D&D インジケーターラインの意味 | Partial | FR-007 に「本スコープの D&D は親変更のみ（同一親内の並び替えなし）。インジケーターはドロップ先アイテムの子になることを示すハイライト背景として表現する」を明記 |
-| FG-11 | CHK015 - 子ページの表示順 | Partial | FR-011 の表示順ルールを「ルートレベルおよび同一親内の子ページは created_at DESC で表示する」に拡張 |
-| FG-12 | CHK016 - 新規作成時の last-opened-item 更新タイミング | Partial | FR-013 に「自動遷移時に last-opened-item を更新する」を明記 |
-| FG-13 | CHK017 - 削除時の確認ダイアログ | Gap | FR-013 の削除アクションに「削除前に確認ダイアログを表示する。子ページがある場合は昇格される旨を説明する」を追記するか、「確認なしで即時削除」を明記 |
-| FG-14 | CHK023 - DB所属ページのクリック動作 | Partial | FR-002 に「データベースグループ内のページ（DB所属ページ）のクリックもページエディタに遷移する」を明記 |
-| FG-15 | CHK024 - 最大深度でのメニュー表示 | Partial | FR-013 に「最大深度のページでは『子ページ作成』メニュー項目をグレーアウトまたは非表示にする」を追記するか、「表示してクリック時にエラーを返す」を明記 |
-| FG-16 | CHK025 - 自分自身へのドロップ | Partial | FR-007 の無効ドロップ先リストに「自分自身」を明示的に追加 |
-| FG-17 | CHK026 - インライン編集のフォーカスアウト動作 | Gap | FR-013 に「Enter確定/Escキャンセルに加え、フォーカスアウト（blur）時は確定として扱う」を追記 |
-| FG-18 | CHK027 - localStorage 破損時のフォールバック | Gap | FR-014 / FR-017 に「localStorage の値がパース不能・不正な場合はデフォルト値（全折りたたみ・サイドバー表示・先頭アイテム）にフォールバックする」を追記 |
-| FG-19 | CHK028 - 空状態からの新規作成シナリオ | Partial | US2 Acceptance Scenarios に「Given アイテムが0件の空状態, When 新規作成ボタンからページを作成, Then 作成されたページに自動遷移しインライン名前編集が開始される」を追加 |
-
----
-
-## 計画側の問題（plan.md で対応すべき項目）
-
-技術的な設計・アーキテクチャ・非機能要件に関するギャップ。
-plan.md の修正で解決すべき項目を列挙する。
-
-| ID | チェック項目 | 判定 | 推奨アクション |
-|----|------------|------|--------------|
-| FP-01 | CHK004 - D&D 時の自動スクロール | Gap | plan.md に「@atlaskit/pragmatic-drag-and-drop の auto-scroll addon を使用してサイドバー上下端での自動スクロールを実装する」を追記 |
-| FP-02 | CHK012 - 自動保存デバウンス間隔 | Gap | plan.md Technical Context または useAutoSave.ts の設計セクションに「デバウンス間隔: 500ms（調整可能な定数として定義）」等を追記 |
-| FP-03 | CHK013 - 自動保存リトライの詳細 | Partial | plan.md に「リトライ間隔: 1000ms の指数バックオフ（1s → 2s → 4s）。toast メッセージ: 『保存に失敗しました』（表示時間: 5秒）」等を追記 |
-| FP-04 | CHK014 - サイドバー非表示時のレイアウト | Gap | plan.md に「サイドバー非表示時はメインコンテンツがフル幅に展開する（CSS Grid / Flexbox で動的に調整）」を追記 |
-| FP-05 | CHK018 - D&D とコンテキストメニューの排他制御 | Gap | plan.md に「D&D 中はコンテキストメニューを無効化する（pragmatic-drag-and-drop の isDragging 状態で制御）」を追記 |
-| FP-06 | CHK019 - サイドバーの更新戦略 | Gap | plan.md に「サイドバーデータは起動時に list_sidebar_items で取得。操作（作成・移動・削除・名前変更）後は楽観的更新＋バックエンド応答で確定。失敗時はロールバック＋再取得」等の戦略を追記 |
-| FP-07 | CHK020 - ルートレベルへのドロップ UI | Gap | plan.md に「ルート昇格はツリーの最外周（サイドバーの空白領域）へのドロップで実現する。ドロップ時にルートレベルのインジケーターを表示」を追記 |
-| FP-08 | CHK021 - テキスト入力中のショートカット制御 | Gap | plan.md に「インライン名前編集中は Cmd/Ctrl+B のイベント伝播を停止し、サイドバートグルを発火させない」を追記 |
-| FP-09 | CHK022 - 起動時復元の祖先自動展開 | Gap | plan.md に「FR-017 の起動時復元で対象アイテムがツリー内の折りたたまれた子ページの場合、その祖先ノードを自動展開してから scrollIntoView する」を追記 |
-| FP-10 | CHK029 - パフォーマンス計測方法 | Partial | plan.md Performance Goals に「計測ポイント: React Profiler の commit duration。500ページのシードデータを使用した手動ベンチマーク」等を追記 |
-| FP-11 | CHK030 - ビジュアルレビュー基準 | Partial | plan.md に「ビジュアルレビュー対象: エディタ画面・テーブルビュー画面・サイドバーの3画面 × ライト/ダークの2テーマ = 6パターン。shadcn/ui のデザイントークンの一貫性を確認」を追記 |
-| FP-12 | CHK031 - 旧スタイリング方式の検証方法 | Partial | plan.md に「検証方法: プロジェクト内の *.module.css / *.module.scss ファイルがゼロであること、CSS Modules の import 文がゼロであることを確認」を追記 |
-
----
-
-## 配置ミス（Misplaced 項目）
-
-該当なし。
-
----
-
-## 意図的な除外の確認（frontend-ux）
-
-以下の Gap 項目について、意図的に対象外としている場合は理由を記録してください。
-（人間が判断して記入するセクション）
-
-| ID | チェック項目 | 除外理由（人間が記入） |
-|----|------------|---------------------|
-| FG-02 | CHK002 - ツリーインデント量・5階層視認性 | |
-| FG-03 | CHK003 - テキストオーバーフロー処理 | |
-| FG-06 | CHK007 - サイドバーのスクロール動作 | |
-| FG-07 | CHK008 - アクティブアイテムへの自動スクロール | |
-| FG-13 | CHK017 - 削除確認ダイアログ | |
-| FG-17 | CHK026 - インライン編集フォーカスアウト動作 | |
-| FG-18 | CHK027 - localStorage 破損時フォールバック | |
-| FP-01 | CHK004 - D&D 自動スクロール | |
-| FP-02 | CHK012 - デバウンス間隔 | |
-| FP-04 | CHK014 - サイドバー非表示時レイアウト | |
-| FP-05 | CHK018 - D&D/コンテキストメニュー排他制御 | |
-| FP-06 | CHK019 - サイドバー更新戦略 | |
-| FP-07 | CHK020 - ルートレベルドロップ UI | |
-| FP-08 | CHK021 - テキスト入力中ショートカット制御 | |
-| FP-09 | CHK022 - 起動時復元の祖先自動展開 | |
-
----
-
-## Constitution 準拠チェック（frontend-ux）
-
-### カバーされている原則
-
 | Constitution 原則 | 対応するチェック項目 |
 |------------------|-------------------|
-| I. Local-First Product Integrity | CHK012（自動保存デバウンス）, CHK013（リトライ戦略）, CHK027（localStorage フォールバック） — データ完全性・復旧可能性の観点でフロントエンド側の要件を検証している |
-| II. Domain-Faithful Information Model | CHK015（表示順の一貫性）, CHK023（DB所属ページの動作統一）, CHK028（空状態フロー） — ドメイン語彙（ページ・データベース）の UI 表現の一貫性を検証している |
-| III. Typed Boundaries and DDD | CHK006（バリデーション UX）, CHK024（MaxDepthExceeded の UX）, CHK025（CircularReference の UX） — 型付きエラーバリアントのフロントエンド表現を検証している |
-| IV. Test-First Delivery and Quality Gates | CHK029（パフォーマンス計測方法）, CHK030（ビジュアルレビュー基準）, CHK031（旧スタイル検証方法） — 品質ゲートの具体的な検証手段を検証している |
-| V. Safe Rust, SOLID, Maintainability | 直接対応する項目なし（フロントエンド/UX チェックリストのため）。ただし CHK019（更新戦略）は保守性に関連 |
-| VII. 防御的エラーハンドリング | CHK006（空文字・文字数超過の UX）, CHK024（深度超過エラーの UX）, CHK027（localStorage 破損フォールバック） — エラー条件のフロントエンド表現を検証している |
+| I. Local-First Product Integrity | CHK027（localStorage 破損フォールバック），CHK019（データ取得・更新戦略），CHK013（自動保存リトライ） |
+| II. Domain-Faithful Information Model | CHK023（DB所属ページ vs スタンドアロンの区別），CHK011（D&D の意味論），CHK015（表示順の一貫性） |
+| III. Typed Boundaries and DDD | CHK006（PageTitle 制約の FE 反映），CHK024（MaxDepthExceeded UX），CHK025（CircularReference UX） |
+| IV. Test-First Delivery and Quality Gates | CHK029（パフォーマンス計測方法），CHK030（ビジュアルレビュー基準），CHK031（旧スタイル検証方法） |
+| V. Safe Rust, SOLID, Maintainability | CHK001（固定幅のシンプルな設計），CHK014（Flexbox レイアウト） |
+| VII. 防御的エラーハンドリング | CHK006（入力バリデーション UX），CHK013（自動保存失敗 UX），CHK024（深度制限エラー），CHK027（localStorage 破損対応） |
 
 ### カバーされていない原則
 
-- **VI. Rust ドキュメント標準**: 本チェックリストはフロントエンド/UX に特化しているため対象外。backend.md チェックリストの領域。該当なし（適切な除外）
+- **Article VI（Rust ドキュメント標準）**: フロントエンド/UX チェックリストのスコープ外。バックエンドチェックリスト（backend.md）で対応済み。該当なし（適切な除外）
 
 ### 矛盾・過剰設計の指摘
 
-| チェック項目 | 関連する原則 | 指摘内容 |
-|------------|------------|---------|
-| なし | — | 本チェックリストの全項目は Principle V（YAGNI・保守性優先）および Principle VII（防御的エラーハンドリング）の範囲内であり、過剰設計に該当する項目は検出されなかった。各項目はフロントエンド/UX の基本的な品質要件（エッジケース・エラー表示・レイアウト動作）に対応しており、投機的な最適化や不必要な抽象化を要求していない |
+該当なし。CHK001, CHK005, CHK009 はレビュアーが「実装時決定」として承認済み。Constitution Article V（YAGNI・保守性優先）の観点からも，ピクセル単位の UI 詳細を仕様で過剰に規定するより実装時の判断に委ねることが適切。
 
 ---
 
-## Frontend/UX 総合評価
+## 総合評価
 
-**カバレッジ率 0%** は、spec.md がフロントエンドの詳細な UI 振る舞い（ピクセル値・インタラクション詳細・エッジケースの具体的UX）を明示的に記載していないことを反映している。これは spec.md が **what（何を実現するか）** に焦点を当て、**how（UIの具体的な振る舞い）** を実装裁量に委ねている設計方針と整合する。
+frontend-ux.md は 0%（3rd pass）→ 90.3%（4th pass）→ **100%**（5th pass）に到達。
 
-### 優先度の高いギャップ（spec.md への追記推奨）
+- 4th pass: `checklist-apply` による spec.md / plan.md の差分更新で 28/31 項目を Covered に
+- 5th pass: 残り 3 項目（CHK001, CHK005, CHK009）をレビュアーが「実装時決定」として承認
 
-1. **FG-13 (CHK017)**: 削除確認ダイアログ — ユーザーのデータ安全性に直結（Constitution I）
-2. **FG-17 (CHK026)**: インライン編集のフォーカスアウト動作 — 未定義の場合にデータロスリスク
-3. **FG-18 (CHK027)**: localStorage 破損時フォールバック — 防御的エラーハンドリング（Constitution VII）
-4. **FG-07 (CHK008)**: アクティブアイテムへの自動スクロール — UX の基本品質
-
-### 優先度の高いギャップ（plan.md への追記推奨）
-
-1. **FP-06 (CHK019)**: サイドバー更新戦略 — 実装の根幹に関わるアーキテクチャ判断
-2. **FP-09 (CHK022)**: 起動時復元の祖先自動展開 — 復元機能の完全性
-3. **FP-02 (CHK012)**: デバウンス間隔 — 自動保存の基本パラメータ
-
-### 対応方針の提案
-
-Partial 項目の多くは「実装時の裁量で決定してよい」レベルのUI詳細であり、
-spec.md に「実装判断に委ねる」旨を明記するか、個別に値を確定するかを選択できる。
-Gap 項目のうち FG-13, FG-17, FG-18, FP-06 は仕様として確定すべき判断事項であり、
-checklist-apply で対応することを推奨する。
+**結論**: フロントエンド/UX 仕様は全項目 Covered であり，実装開始の品質ゲートを通過。
