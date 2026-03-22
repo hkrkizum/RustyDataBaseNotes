@@ -1,5 +1,5 @@
 # Technology Stack & Practices
-<!-- Last rollup: 2026-03-22 -->
+<!-- Last rollup: 2026-03-22, 004-table-view-operations -->
 
 ## 技術スタック
 
@@ -17,6 +17,7 @@
 | chrono | 0.4 (serde) | 日時型 |
 | thiserror | 2 | 宣言的エラー型定義 |
 | serde | 1 (derive) | シリアライズ/デシリアライズ |
+| serde_json | 1 | JSON 操作（View 条件の永続化等） <!-- rollup: 004-table-view-operations, 2026-03-22 --> |
 | tokio | 1 (sync) | 非同期ランタイム + Mutex |
 
 ### フロントエンド
