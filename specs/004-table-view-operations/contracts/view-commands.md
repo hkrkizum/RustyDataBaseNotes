@@ -79,7 +79,7 @@ interface ViewDto {
 **Command**: `update_sort_conditions`
 **Args**: `{ databaseId: string, conditions: SortConditionDto[] }`
 **Returns**: `ViewDto`
-**Errors**: `invalidSortCondition`, `tooManySortConditions`, `propertyNotFound`, `viewNotFound`
+**Errors**: `invalidSortCondition`, `tooManySortConditions`, `duplicateSortProperty`, `propertyNotFound`, `viewNotFound`
 
 ```typescript
 interface SortConditionDto {

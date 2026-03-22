@@ -41,7 +41,7 @@ tested, and reviewed independently.
 - [ ] T003 [P] Implement ViewError enum with all variants (ViewNotFound, InvalidSortCondition, TooManySortConditions, InvalidFilterOperator, InvalidFilterValue, TooManyFilterConditions, PropertyNotFound, NoGroupCondition, DuplicateSortProperty) using thiserror in `src-tauri/src/domain/view/error.rs`
 - [ ] T004 [P] Implement View entity (ViewId, ViewName, ViewType, SortCondition, SortDirection, FilterCondition, FilterOperator, FilterValue, GroupCondition) with validation rules (name 1–100 chars, sort max 5, filter max 20, no duplicate sort property_id) and `#[cfg(test)]` unit tests in `src-tauri/src/domain/view/entity.rs`
 - [ ] T005 Define ViewRepository trait (find_by_database_id, save, update_sort_conditions, update_filter_conditions, update_group_condition, update_collapsed_groups, reset, remove_property_references) in `src-tauri/src/domain/view/repository.rs`
-- [ ] T006 Implement SqlxViewRepository with JSON serialization/deserialization for conditions columns and `#[cfg(test)]` CRUD tests in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [ ] T006 Implement SqlxViewRepository with JSON serialization/deserialization for conditions columns and `#[cfg(test)]` CRUD tests (including FR-014: verify view is cascade-deleted when parent database is deleted) in `src-tauri/src/infrastructure/persistence/view_repository.rs`
 - [ ] T007 [P] Add ViewDto, SortConditionDto, FilterConditionDto, GroupConditionDto, GroupInfoDto with `#[serde(rename_all = "camelCase")]` to `src-tauri/src/ipc/dto.rs` and extend TableDataDto with `view: ViewDto` and `groups: Option<Vec<GroupInfoDto>>` fields
 - [ ] T008 [P] Add ViewError → CommandError kind mappings (viewNotFound, invalidSortCondition, tooManySortConditions, invalidFilterOperator, invalidFilterValue, tooManyFilterConditions, propertyNotFound, noGroupCondition, duplicateSortProperty) to `src-tauri/src/ipc/error.rs`
 - [ ] T009 [P] Add TypeScript types (ViewDto, SortConditionDto, FilterConditionDto, GroupConditionDto, GroupInfoDto, FilterOperatorDto, FilterValueDto) and extend TableDataDto with view and groups fields in `src/features/database/types.ts`
@@ -98,6 +98,7 @@ tested, and reviewed independently.
 - [ ] T028 [P] [US2] Create FilterPanel component with condition list, add-condition button, and active filter count in `src/features/database/FilterPanel.tsx`
 - [ ] T029 [US2] Add updateFilterConditions IPC invocation and filter state management to `src/features/database/useTableData.ts`
 - [ ] T030 [US2] Extend TableView.tsx with filter toolbar button, active filter indicator, and empty-state message with "すべてのフィルタを解除" button (FR-010) in `src/features/database/TableView.tsx`
+- [ ] T030a [US2] Write test verifying FR-011: add a new page while filter is active, confirm it does NOT appear in get_table_data results when it fails filter conditions, and DOES appear after clearing all filters in `src-tauri/src/ipc/view_commands.rs`
 
 **Checkpoint**: User Stories 1 and 2 both work independently — sort and filter can be applied together (filter→sort pipeline).
 
@@ -111,7 +112,7 @@ tested, and reviewed independently.
 
 ### Tests for User Story 5
 
-- [ ] T031 [P] [US5] Write failing tests for full round-trip persistence: set sort (2 conditions) + filter (3 conditions), reload view, verify all conditions restored in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [ ] T031 [P] [US5] Write failing tests for full round-trip persistence: set sort (2 conditions) + filter (3 conditions) + group_condition + collapsed_groups (2 groups), reload view, verify all conditions restored in `src-tauri/src/infrastructure/persistence/view_repository.rs`
 - [ ] T032 [P] [US5] Write failing tests for remove_property_references: property deletion removes sort/filter/group conditions referencing that property_id, property type change removes incompatible filter operators, select option deletion removes referencing filter conditions in `src-tauri/src/infrastructure/persistence/view_repository.rs`
 - [ ] T033 [P] [US5] Write failing tests for JSON deserialization fallback: corrupt sort_conditions JSON returns default empty view instead of error (FR-015) in `src-tauri/src/infrastructure/persistence/view_repository.rs`
 
