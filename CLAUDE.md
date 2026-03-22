@@ -30,10 +30,11 @@
 `.githooks/` にフックを管理。`pre-commit` で `check-all`，`pre-merge-commit`（main マージ時）で `qa` を実行。
 
 ## Recent Changes
+- 005-page-tree-nav: Added Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3
 - 004-table-view-operations: Added Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3 + Tauri 2, React 19, sqlx 0.8 (SQLite), uuid 1 (v7), chrono 0.4, thiserror 2, serde 1, serde_json 1, Sonner (toast), Biome (lint/format)
 - 003-database-properties: Added Rust 2024 (edition = "2024")，TypeScript ~5.8.3 + Tauri 2，React 19，sqlx 0.8 (SQLite)，uuid 1 (v7)，chrono 0.4，thiserror 2，serde 1，Sonner (toast)，Biome (lint/format)
-- 002-block-editor: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
 
 ## Active Technologies
-- Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3 + Tauri 2, React 19, sqlx 0.8 (SQLite), uuid 1 (v7), chrono 0.4, thiserror 2, serde 1, serde_json 1, Sonner (toast), Biome (lint/format) (004-table-view-operations)
-- SQLite (WAL mode), `{appDataDir}/rustydatabasenotes.db`, sqlx::migrate!() によるコンパイル時マイグレーション埋め込み。新規マイグレーションで `views` テーブルを追加。既存テーブル（pages, blocks, databases, properties, property_values）は変更なし (004-table-view-operations)
+- Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3 + Tauri 2, React 19, sqlx 0.8 (SQLite), uuid 1 (v7), chrono 0.4, thiserror 2, serde 1, serde_json 1, Sonner (toast), Biome (lint/format) (005-page-tree-nav)
+- 新規追加予定: Tailwind CSS v4 + shadcn/ui, @atlaskit/pragmatic-drag-and-drop, lucide-react (005-page-tree-nav)
+- SQLite (WAL mode), `{appDataDir}/rustydatabasenotes.db`, sqlx::migrate!() によるコンパイル時マイグレーション埋め込み。新規マイグレーション 0007 で `pages` テーブルに `parent_id TEXT` (自己参照 FK) と `sort_order INTEGER DEFAULT 0` を追加 (005-page-tree-nav)
