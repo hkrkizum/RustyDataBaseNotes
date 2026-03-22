@@ -89,6 +89,21 @@ impl Drop for TempDbGuard {
 
 ### モジュール: `e2e/helpers/app.ts`
 
+#### 環境変数の伝搬経路
+
+E2E テストの DB 分離は `RDBN_DB_PATH` 環境変数に依存する。伝搬経路は以下のとおり:
+
+```text
+Makefile.toml (e2e タスク)
+  ├─ export RDBN_DB_PATH=/tmp/rdbn_e2e_<uuid>/test.db
+  ├─ tauri-driver (env 継承) → Tauri アプリプロセス (env 継承)
+  │   └─ init_pool() が RDBN_DB_PATH を読み取り，指定パスで DB を初期化
+  └─ pnpm wdio (env 継承)
+      └─ clearDatabase() が process.env.RDBN_DB_PATH を読み取り，DB を直接操作
+```
+
+Makefile タスクが `RDBN_DB_PATH` を export することで，tauri-driver・アプリ・WebDriverIO の 3 プロセスが同一の一時 DB パスを共有する。
+
 #### WebDriverIO Configuration
 
 ```typescript

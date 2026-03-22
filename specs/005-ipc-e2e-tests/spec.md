@@ -115,7 +115,7 @@
 - **FR-009**: IPC テストの正常系は，返却 DTO の各フィールドが [data-model.md](./data-model.md) の「IPC 境界で検証する項目」に定義された変換仕様と一致することを検証しなければならない（MUST） <!-- added by checklist-apply: G-03 -->
 - **FR-005**: E2E テストは少なくとも主要ワークフロー（ページ操作，エディタ操作，データベース操作，ビュー操作）をカバーしなければならない（MUST）
 - **FR-006**: E2E テストは `tauri-driver` + WebDriverIO を使用し，デバッグビルドの Tauri デスクトップアプリ全体（WebView + IPC + バックエンド）を対象として実際の UI を通じて操作を検証しなければならない（MUST）
-- **FR-007**: IPC テストは既存の品質ゲート（`cargo make qa`）に統合されなければならない（MUST）。E2E テストは独立タスク（`cargo make e2e`）として提供し，マージ前または手動で実行する（MUST）
+- **FR-007**: IPC テストは既存の品質ゲート（`cargo make qa`）に統合されなければならない（MUST）。E2E テストは独立タスク（`cargo make e2e`）として提供し，マージ前または手動で実行する（MUST）。E2E テストは実行コストが高いため pre-merge-commit フック（`.githooks/`）には含めない
 - **FR-008**: テスト実行結果は成功・失敗を明確に報告し，失敗時には原因特定に十分な情報を出力しなければならない（MUST）。E2E テスト失敗時は WebDriverIO の標準レポーター（spec reporter）出力を診断情報とする。スクリーンショット自動取得・DOM スナップショットは初期スコープ外とする <!-- refined by checklist-apply: G-03 -->
 - **FR-010**: アプリケーションは環境変数 `RDBN_DB_PATH` が設定されている場合，そのパスを SQLite データベースファイルとして使用しなければならない（MUST）。E2E テストのデータベース分離に使用する <!-- added by checklist-apply: G-05 -->
 
@@ -131,7 +131,7 @@
 - **CC-002 Privacy**: テストはローカル環境内で完結し，外部サービスへの通信を行わない。テストデータに個人情報を含まない
 - **CC-003 Performance**: IPC テストスイート全体は妥当な時間内（目安: 数分以内）に完了すること。初回実装後に実測値を取得し，必要に応じて具体的な SLA を設定する。E2E テストは個別シナリオごとに独立して実行可能であること。E2E テストスイート全体の実行時間目標は初回実装後に実測値を取得して設定する（IPC テストと同方針） <!-- refined by checklist-apply: G-05, G-10 -->
 - **CC-004 Boundary Types**: IPC テストは CommandError 型とフロントエンド側のエラーハンドリングの整合性を検証する。DTO の型安全性は正常系テストで返却 DTO の全フィールドを検証することで担保する（FR-009 参照） <!-- refined by checklist-apply: G-18 -->
-- **CC-005 Testability**: IPC テストは既存の `cargo make test` で実行可能であること。E2E テストは独立タスク `cargo make e2e` として `Makefile.toml` に追加し，`qa` パイプラインとは分離すること。E2E テストは実行コストが高いため pre-merge-commit フック（`.githooks/`）には含めない。マージ前に手動で `cargo make e2e` を実行する <!-- refined by checklist-apply: G-06 -->
+- **CC-005 Testability**: IPC テストは既存の `cargo make test` で実行可能であること（FR-007 参照）。E2E テストのパイプライン分離方針は FR-007 に定義する <!-- refined by checklist-apply: G-06 -->
 
 ## Success Criteria *(mandatory)*
 

@@ -49,7 +49,7 @@ and add app-level E2E support. MUST complete before any user story work.
 
 - [ ] T010 Implement `TempDbGuard` struct and `setup_test_state()` function in `src-tauri/src/ipc/tests/helpers.rs` per R-002 pattern and contracts/test-helpers.md
 - [ ] T011 [P] Add `RDBN_DB_PATH` environment variable support in app database initialization (`src-tauri/src/`) for E2E database isolation per FR-010
-- [ ] T012 [P] Add `cargo make e2e` task to `Makefile.toml` per R-006 pattern (build → tauri-driver start → wdio run → tauri-driver stop → cleanup)
+- [ ] T012 [P] Add `cargo make e2e` task to `Makefile.toml` per R-006 pattern (RDBN_DB_PATH 一時ファイル作成・環境変数 export → build → tauri-driver start → wdio run → tauri-driver stop → 一時 DB 削除)。R-006 パターンに RDBN_DB_PATH セットアップを追加すること
 - [ ] T012a [P] Verify `flake.nix` devshell includes E2E runtime dependencies: `python3`（better-sqlite3 ネイティブビルド用），`xvfb-run`（WSLg 無効環境での headless E2E 実行用，`xorg.xvfb` パッケージ）。不足があれば `flake.nix` の `projectPackagesFor` に追加する
 
 **Checkpoint**: All 38 inner functions extracted, test helpers compile, `cargo make check` passes

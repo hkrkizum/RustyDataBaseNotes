@@ -21,7 +21,7 @@ E2E テストを追加する。IPC テストはハンドラの内部ロジック
 **Performance Goals**: IPC テストスイート全体 < 数分。E2E テストはシナリオ単位で独立実行可能
 **Constraints**: オフライン完結，パニック禁止（テストコード除外），テスト間 DB 完全分離
 **Scale/Scope**: 38 IPC コマンド × 正常系 + 異常系テスト，4 E2E ワークフロー
-**E2E Environment**: WSLg 有効環境では直接実行。WSLg 無効時は `xvfb-run cargo make e2e` で代替（[quickstart.md](./quickstart.md) 参照）。E2E テスト環境は Nix devshell（flake.nix）により再現される。WebKitGTK は flake.nix devShell で管理（Constitution Technical Standards 参照）。tauri-driver は `cargo install` で最新互換バージョンを使用する <!-- added by checklist-apply: P-10, P-12, P-13 -->
+**E2E Environment**: WSLg 有効環境では直接実行。WSLg 無効時は `xvfb-run cargo make e2e` で代替（[quickstart.md](./quickstart.md) 参照）。E2E テスト環境は Nix devshell（flake.nix）により再現される。WebKitGTK は flake.nix devShell で管理（Constitution Technical Standards 参照）。tauri-driver は `cargo install tauri-driver` でインストールする（Nix devshell への統合は将来検討） <!-- added by checklist-apply: P-10, P-12, P-13 -->
 
 ## Constitution Check
 
