@@ -30,7 +30,7 @@ tested, and reviewed independently.
 - [ ] T002 Configure path alias `@/*` → `./src/*` in `tsconfig.json` (baseUrl + paths) and `vite.config.ts` (resolve.alias)
 - [ ] T003 Initialize shadcn/ui: `pnpm dlx shadcn@latest init`, verify `components.json` and `src/lib/utils.ts` (cn() helper) are generated
 - [ ] T004 Install shadcn/ui components: `pnpm dlx shadcn@latest add sidebar collapsible button input dropdown-menu context-menu tooltip scroll-area` → files generated in `src/components/ui/`
-- [ ] T005 [P] Install D&D libraries: `pnpm add @atlaskit/pragmatic-drag-and-drop @atlaskit/pragmatic-drag-and-drop-hitbox @atlaskit/pragmatic-drag-and-drop-react-drop-indicator`
+- [ ] T005 [P] Install D&D libraries: `pnpm add @atlaskit/pragmatic-drag-and-drop @atlaskit/pragmatic-drag-and-drop-hitbox @atlaskit/pragmatic-drag-and-drop-react-drop-indicator @atlaskit/pragmatic-drag-and-drop-auto-scroll`
 - [ ] T006 [P] Install icon library: `pnpm add lucide-react`
 - [ ] T007 Replace CSS entry point: update `src/index.css` with `@import "tailwindcss"` and `@custom-variant dark (&:where(.dark, .dark *))`, remove legacy directives if any
 
@@ -153,7 +153,7 @@ tested, and reviewed independently.
 
 **Purpose**: Performance verification, documentation, and final quality assurance across all user stories
 
-- [ ] T060 Verify performance targets with 500-page seed data: sidebar initial render ≤200ms, expand/collapse ≤50ms, sidebar click → screen transition ≤100ms, `list_sidebar_items` backend query total ≤50ms — measure with React Profiler commit duration and manual timing
+- [ ] T060 Verify performance targets with 500-page seed data: sidebar initial render ≤200ms, expand/collapse ≤50ms, sidebar click → screen transition ≤100ms, `list_sidebar_items` backend query total ≤50ms, hierarchy operations (create child / move / delete) ≤500ms (CC-003) — measure with React Profiler commit duration and manual timing
 - [ ] T061 [P] Verify zero CSS Modules remain: confirm zero `*.module.css` files and zero CSS Modules `import` statements in entire `src/` directory via grep
 - [ ] T062 [P] Add `///` documentation to all new public Rust items: IPC commands (`list_sidebar_items`, `create_child_page`, `move_page`), `PageHierarchyService` methods, new `PageError` variants, new `PageRepository` trait methods — include `# Errors` sections; verify `cargo doc --no-deps` passes cleanly
 - [ ] T063 [P] Verify `save_editor` and `open_editor` in `src-tauri/src/ipc/editor_commands.rs` no longer serialize `is_dirty` in `EditorStateDto` response
