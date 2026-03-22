@@ -37,6 +37,7 @@ jobs:
     env:
       QA_CHECK_ONLY: "1"
       RUST_WORKSPACE: "src-tauri"
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - uses: actions/checkout@v4
 
