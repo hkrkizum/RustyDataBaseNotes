@@ -49,7 +49,6 @@ impl From<Page> for PageDto {
 }
 
 /// Data transfer object for sidebar items (pages and databases).
-#[allow(dead_code)] // Used in Phase 4 (US2: list_sidebar_items command)
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SidebarItemDto {
@@ -68,7 +67,6 @@ pub struct SidebarItemDto {
 }
 
 /// The type of a sidebar item.
-#[allow(dead_code)] // Used in Phase 4 (US2: list_sidebar_items command)
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SidebarItemType {
