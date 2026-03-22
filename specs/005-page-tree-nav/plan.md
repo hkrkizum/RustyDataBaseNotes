@@ -24,7 +24,7 @@
 **Testing**: `cargo make qa`（fmt → clippy → nextest → doc-test → doc-check → lint-ts → ts-check → vitest）
 **Target Platform**: Desktop (Linux/WSL2 primary, Windows/macOS secondary)
 **Project Type**: desktop-app (Tauri 2)
-**Performance Goals**: サイドバー初回レンダリング ≤200ms @500ページ，ツリー展開/折りたたみ ≤50ms，サイドバークリック→画面遷移 ≤100ms
+**Performance Goals**: サイドバー初回レンダリング ≤200ms @500ページ，ツリー展開/折りたたみ ≤50ms，サイドバークリック→画面遷移 ≤100ms，`list_sidebar_items` バックエンドクエリ合計 ≤50ms @500ページ <!-- added by checklist-apply: P-11 -->
 **Constraints**: 完全オフライン動作，外部ネットワーク通信禁止，アプリケーションコードでのパニック禁止
 **Scale/Scope**: 500+ ページ，最大5階層ネスト，数十データベース
 
@@ -140,6 +140,12 @@ src-tauri/
 └── migrations/
     └── 0007_add_page_hierarchy.sql  # parent_id, sort_order 追加
 ```
+
+<!-- refined by checklist-apply: P-06 -->
+**isDirty 削除のフロントエンド影響箇所**:
+- `src/features/editor/` 配下で `isDirty` を参照するコンポーネント・フック
+- `UnsavedConfirmModal`（廃止対象）
+- `save_editor` / `open_editor` 呼び出し元の `isDirty` 参照箇所
 
 **Structure Decision**: ページ階層ロジックは `domain/page/hierarchy.rs` に集約し，
 既存の `entity.rs` は Page 構造体の拡張に留める。サイドバーは `features/sidebar/` として

@@ -108,12 +108,20 @@ pub const MAX_DEPTH: usize = 5;
 /// database page restriction) without depending on infrastructure.
 pub struct PageHierarchyService;
 
+/// **オーケストレーション**: IPC コマンドハンドラが `PageRepository` 経由で必要なページセットを
+/// ロードし，`PageHierarchyService` の各メソッドに `&[Page]` として渡す責務を持つ。
+/// `PageHierarchyService` 自身はリポジトリに依存せず，純粋なドメインロジックのみを担う。 <!-- added by checklist-apply: P-12 -->
+
 impl PageHierarchyService {
     /// Validate that moving `page_id` under `new_parent_id` is safe.
     ///
+    /// 自己参照チェック（`page_id == new_parent_id`）を最初に実行し，
+    /// `ancestors_of_target` による祖先チェーンに依存しない明示的な検出を行う。 <!-- refined by checklist-apply: P-09 -->
+    ///
     /// # Errors
     ///
-    /// - [`PageError::CircularReference`] if `new_parent_id` is a descendant of `page_id`
+    /// - [`PageError::CircularReference`] if `new_parent_id` is a descendant of `page_id`,
+    ///   or if `page_id == new_parent_id` (self-reference)
     /// - [`PageError::MaxDepthExceeded`] if the resulting depth exceeds [`MAX_DEPTH`]
     /// - [`PageError::DatabasePageCannotNest`] if either page is a database page
     pub fn validate_move(
@@ -207,6 +215,8 @@ pub trait PageRepository {
     async fn update_title(&self, id: &PageId, title: &PageTitle) -> Result<Page, Self::Error>;
     async fn delete(&self, id: &PageId) -> Result<(), Self::Error>;
     async fn set_database_id(&self, page_id: &PageId, database_id: Option<&DatabaseId>) -> Result<(), Self::Error>;
+    /// Find all standalone pages (database_id IS NULL).
+    /// **ユースケース**: 既存の全スタンドアロンページ取得用（管理・一覧表示）。 <!-- refined by checklist-apply: P-05 -->
     async fn find_standalone_pages(&self) -> Result<Vec<Page>, Self::Error>;
     async fn find_by_database_id(&self, database_id: &DatabaseId) -> Result<Vec<Page>, Self::Error>;
 
@@ -222,12 +232,16 @@ pub trait PageRepository {
     async fn find_children(&self, parent_id: &PageId) -> Result<Vec<Page>, Self::Error>;
 
     /// Find root-level standalone pages (parent_id IS NULL, database_id IS NULL).
+    /// **ユースケース**: サイドバーのルートレベル表示用。`find_standalone_pages` とは異なり，子ページは含まない。 <!-- refined by checklist-apply: P-05 -->
     async fn find_root_pages(&self) -> Result<Vec<Page>, Self::Error>;
 
     /// Get ancestor chain from page to root using recursive CTE.
     async fn find_ancestors(&self, page_id: &PageId) -> Result<Vec<Page>, Self::Error>;
 
     /// Bulk update parent_id for multiple pages (used in parent deletion).
+    ///
+    /// **制約**: `delete_page_with_promotion` のトランザクション内でのみ呼び出すこと。
+    /// 単体で呼び出した場合の部分失敗に対するロールバック保証はない。 <!-- added by checklist-apply: P-02 -->
     async fn bulk_update_parent_id(
         &self,
         page_ids: &[PageId],
@@ -253,6 +267,8 @@ WITH RECURSIVE ancestors AS (
 SELECT id, parent_id, depth FROM ancestors;
 ```
 
+**フェイルセーフ動作**: `depth < 10` の安全上限に到達した場合，CTE はそれ以上の再帰を停止し，不完全な祖先チェーンを返す。アプリケーション層では，返却された祖先数と `MAX_DEPTH` を比較し，期待値を超える場合はデータ異常（循環参照によるデータ破損等）として `PageError::CircularReference` を返す。これにより，DB レベルのデータ破損が発生しても無限再帰を防ぎ，ユーザーに明確なエラーを返す。 <!-- added by checklist-apply: P-08 -->
+
 ---
 
 ## IPC DTOs
@@ -269,7 +285,7 @@ pub struct PageDto {
     pub title: String,
     pub database_id: Option<String>,
     pub parent_id: Option<String>,     // 新規
-    pub sort_order: i64,               // 新規
+    pub sort_order: i64,               // 新規（TypeScript 側: `sortOrder: number`） <!-- refined by checklist-apply: P-04 -->
     pub created_at: String,
     pub updated_at: String,
 }

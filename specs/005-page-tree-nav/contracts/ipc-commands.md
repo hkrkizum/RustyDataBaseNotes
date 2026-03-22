@@ -48,12 +48,12 @@ Output: PageDto
 **動作**:
 1. `parentId` のページを取得（`NotFound` チェック）
 2. 親が DB 所属ページでないことを確認（`DatabasePageCannotNest`）
-3. 親の深度をチェック（`MaxDepthExceeded` if depth >= MAX_DEPTH）
+3. `PageHierarchyService::depth()` で親の深度を計算し，`validate_create_child()` で深度上限を検証（`MaxDepthExceeded` if depth >= MAX_DEPTH） <!-- refined by checklist-apply: P-03 -->
 4. 新規ページを `parent_id = parentId` で作成
 5. `PageDto` を返す
 
 **エラー**:
-- `PageError::NotFound` — 親ページが存在しない
+- `PageError::NotFound` — 親ページが存在しない（処理中に並行して削除された場合，FK 制約違反を `NotFound` に変換） <!-- refined by checklist-apply: P-10 -->
 - `PageError::DatabasePageCannotNest` — 親が DB 所属ページ
 - `PageError::MaxDepthExceeded` — 深度上限超過
 - `PageError::TitleEmpty` / `PageError::TitleTooLong` — タイトルバリデーション
@@ -80,8 +80,11 @@ Output: PageDto
    b. 新しい親が DB 所属でないことを確認
    c. 循環参照チェック: `newParentId` の祖先に `pageId` が含まれないことを確認
    d. 深度チェック: 移動後の最大深度が MAX_DEPTH 以内
+   `newParentId` が `null` の場合: 手順2（DB ページチェック）のみ適用し，`parent_id` を `NULL` に更新（ルートに昇格）。循環参照チェック・深度チェックはスキップする <!-- added by checklist-apply: P-07 -->
 4. `parent_id` を更新
 5. 更新後の `PageDto` を返す
+
+**トランザクション**: 手順1-4は単一トランザクション内で実行する（validate → update のアトミック性保証）。 <!-- added by checklist-apply: P-01 -->
 
 **エラー**:
 - `PageError::NotFound` — ページ/親ページが存在しない
