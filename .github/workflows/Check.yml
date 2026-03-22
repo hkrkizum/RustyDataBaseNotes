@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────────────────────────
+# Check — コード品質ゲート (QA + カバレッジ)
+# ─────────────────────────────────────────────────────────────────
+# トリガー:
+#   - PR 作成・更新 (ドキュメントのみの変更は除外)
+#   - Release.yml からの再利用呼び出し (workflow_call)
+#   - 手動実行 (workflow_dispatch)
+#
+# ランナー: ubuntu-latest (7 GB RAM / 4 vCPU)
+#   - flake.nix の devShell で全依存 (WebKitGTK, Rust ツール, pnpm 等) を統一管理
+#
+# 実行内容:
+#   1. cargo make qa (QA_CHECK_ONLY=1):
+#      sqlx-prepare (dev.db リセット + .sqlx/ 再生成) → qa-rs → qa-ts
+#   2. cargo llvm-cov nextest: Rust テストをカバレッジ付きで再実行
+# ─────────────────────────────────────────────────────────────────
+name: Check
+on:
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - "docs/**"
+      - "specs/**"
+      - "steering/**"
+      - ".specify/**"
+      - ".claude/**"
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: nix develop --command bash -eo pipefail {0}
+    env:
+      QA_CHECK_ONLY: "1"
+      RUST_WORKSPACE: "src-tauri"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Cache Rust toolchain and build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            src-tauri/target
+          key: rust-${{ runner.os }}-${{ hashFiles('src-tauri/rust-toolchain.toml', 'src-tauri/Cargo.lock') }}
+          restore-keys: |
+            rust-${{ runner.os }}-
+
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: QA
+        run: cargo make qa
+
+      - name: Rust coverage
+        run: >
+          cargo llvm-cov nextest
+          --workspace --all-targets
+          --build-jobs 4
+          --codecov --output-path codecov.json
+        working-directory: ${{ github.workspace }}/${{ env.RUST_WORKSPACE }}
+
+      - name: Upload coverage to Codecov
+        if: github.event_name != 'workflow_call'
+        uses: codecov/codecov-action@v5
+        with:
+          files: src-tauri/codecov.json
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
