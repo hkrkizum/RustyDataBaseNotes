@@ -4,7 +4,7 @@ default_to_workspace = false
 [env]
 # TEST_BUILD_JOBS: limits COMPILATION parallelism (OOM prevention).
 # Applies to: test-rs, test-rs-std, coverage — NOT doc-test (lightweight, no OOM risk).
-# Default: 8. Override: `TEST_BUILD_JOBS=2 cargo make test` or set in OS/shell profile.
+# Default: 8. Override: `TEST_BUILD_JOBS=2 cargo make test-rs` or set in OS/shell profile.
 # NOTE: env_files (.env.local) values are NOT available for ${} expansion in args —
 #       only [env] section vars and OS env vars work with cargo-make interpolation.
 RUST_WORKSPACE = { value = "src-tauri", condition = { env_not_set = ["RUST_WORKSPACE"] } }
@@ -45,7 +45,7 @@ script = [
 ]
 
 [tasks.check-all]
-description = "Static checks only (no tests): fmt-check → clippy → lint-ts → ts-check"
+description = "Static checks only (no tests)"
 run_task = { name = ["fmt-rs", "fmt-ts", "clippy", "lint-ts", "ts-check"], fork = true }
 [tasks.check-all.env]
 QA_CHECK_ONLY = "1"
@@ -120,35 +120,23 @@ command = "pnpm"
 args = ["vitest", "run", "--passWithNoTests"]
 
 [tasks.test-rs]
-description = "Run tests with cargo-nextest (build parallelism limited to avoid OOM)"
+description = "Run Rust tests (TEST_FILTER=pattern to filter)"
 install_crate = { crate_name = "cargo-nextest", binary = "cargo", test_arg = [
   "nextest", "--help",
 ] }
-command = "cargo"
-args = [
-  "nextest", "run", "--workspace",
-  "--build-jobs", "${TEST_BUILD_JOBS}",
-  "--status-level", "fail",
-  "--final-status-level", "skip",
-  "--no-tests=pass",
-]
 cwd = "${RUST_WORKSPACE}"
-
-[tasks.test-rs-filter]
-description = "Run specific tests by name pattern: TEST_FILTER=pattern cargo make test-rs-filter"
-install_crate = { crate_name = "cargo-nextest", binary = "cargo", test_arg = [
-  "nextest", "--help",
-] }
-command = "cargo"
-args = [
-  "nextest", "run", "--workspace",
-  "--build-jobs", "${TEST_BUILD_JOBS}",
-  "--status-level", "fail",
-  "--final-status-level", "skip",
-  "--no-tests=pass",
-  "-E", "test(/${TEST_FILTER}/)",
-]
-cwd = "${RUST_WORKSPACE}"
+script = ['''
+FILTER_ARGS=""
+if [ -n "${TEST_FILTER:-}" ]; then
+  FILTER_ARGS="-E test(/${TEST_FILTER}/)"
+fi
+cargo nextest run --workspace \
+  --build-jobs "${TEST_BUILD_JOBS}" \
+  --status-level fail \
+  --final-status-level skip \
+  --no-tests=pass \
+  $FILTER_ARGS
+''']
 
 [tasks.test-rs-std]
 description = "Run tests with standard cargo test (no nextest)"

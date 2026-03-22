@@ -13,21 +13,28 @@
 | タスク | 内容 |
 |--------|------|
 | `serve` | Tauri 開発サーバー（HMR） |
-| `check` | `cargo check --workspace`（高速コンパイルチェック） |
 | `fmt` | Rust + TypeScript を一括フォーマット |
-| `check-all` | テスト抜き静的チェック（fmt-check → clippy → lint-ts → ts-check） |
+| `check-all` | テスト抜き静的チェック（fmt → clippy → lint-ts → ts-check） |
 | `qa` | フル QA（`sqlx-prepare` → Rust QA → TypeScript QA を順次実行） |
-| `test` | Rust テスト（cargo-nextest） |
-| `test-filter` | `TEST_FILTER=<pattern> cargo make test-filter` で絞り込み |
+| `test-rs` | Rust テスト（`TEST_FILTER=<pattern>` で絞り込み可） |
 | `test-ts` | TypeScript テスト（Vitest） |
 | `sqlx-prepare` | dev.db リセット＋ `.sqlx/` キャッシュ再生成 |
 | `dev-db-reset` | 開発用 SQLite DB を削除（再起動で再作成） |
 
 サブタスク・カバレッジ等の全タスクは `Makefile.toml` を参照。
 
+### 環境変数
+
+| 変数 | デフォルト | 用途 |
+|------|-----------|------|
+| `RUST_WORKSPACE` | `src-tauri` | Rust ワークスペースパス |
+| `TEST_BUILD_JOBS` | `8` | テストビルド並列度（OOM 防止） |
+| `QA_CHECK_ONLY` | 未設定 | `1` で fmt を check-only に切替 |
+| `TEST_FILTER` | 未設定 | `test-rs` のテスト名フィルタ |
+
 ### Git Hooks
 
-`.githooks/` にフックを管理。`pre-commit` で `check-all`，`pre-merge-commit`（main マージ時）で `qa` を実行。
+`.githooks/` にフックを管理。`pre-commit` で `check-all`，`pre-merge-commit`（main マージ時）で `QA_CHECK_ONLY=1 qa` を実行。
 
 ## Recent Changes
 - 005-page-tree-nav: Added Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3
