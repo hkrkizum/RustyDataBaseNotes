@@ -30,10 +30,10 @@
 `.githooks/` にフックを管理。`pre-commit` で `check-all`，`pre-merge-commit`（main マージ時）で `qa` を実行。
 
 ## Recent Changes
+- 004-table-view-operations: Added Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3 + Tauri 2, React 19, sqlx 0.8 (SQLite), uuid 1 (v7), chrono 0.4, thiserror 2, serde 1, serde_json 1, Sonner (toast), Biome (lint/format)
 - 003-database-properties: Added Rust 2024 (edition = "2024")，TypeScript ~5.8.3 + Tauri 2，React 19，sqlx 0.8 (SQLite)，uuid 1 (v7)，chrono 0.4，thiserror 2，serde 1，Sonner (toast)，Biome (lint/format)
 - 002-block-editor: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
-- 001-page-persistence: Added Rust 2024 edition (toolchain 1.94.0), TypeScript ~5.8.3
 
 ## Active Technologies
-- Rust 2024 (edition = "2024")，TypeScript ~5.8.3 + Tauri 2，React 19，sqlx 0.8 (SQLite)，uuid 1 (v7)，chrono 0.4，thiserror 2，serde 1，Sonner (toast)，Biome (lint/format) (003-database-properties)
-- SQLite (WAL mode)，`{appDataDir}/rustydatabasenotes.db`，sqlx::migrate!() によるコンパイル時マイグレーション埋め込み。新規マイグレーションで `databases`，`properties`，`property_values` テーブルを追加。既存テーブル (`pages`，`blocks`) は変更なし（`pages` に `database_id` 外部キーを追加） (003-database-properties)
+- Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3 + Tauri 2, React 19, sqlx 0.8 (SQLite), uuid 1 (v7), chrono 0.4, thiserror 2, serde 1, serde_json 1, Sonner (toast), Biome (lint/format) (004-table-view-operations)
+- SQLite (WAL mode), `{appDataDir}/rustydatabasenotes.db`, sqlx::migrate!() によるコンパイル時マイグレーション埋め込み。新規マイグレーションで `views` テーブルを追加。既存テーブル（pages, blocks, databases, properties, property_values）は変更なし (004-table-view-operations)

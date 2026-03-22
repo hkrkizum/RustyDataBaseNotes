@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE views SET sort_conditions = ?, updated_at = ? WHERE database_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "aadff8f8f1fecc64b4c2c165a0e86286c87c75dfad20e54c708206ca8b2e8431"
+}

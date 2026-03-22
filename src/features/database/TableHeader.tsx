@@ -2,7 +2,13 @@ import { useCallback, useState } from "react";
 import { AddPropertyModal } from "./AddPropertyModal";
 import { PropertyConfigPanel } from "./PropertyConfigPanel";
 import styles from "./TableHeader.module.css";
-import type { PropertyConfigDto, PropertyDto, PropertyTypeDto } from "./types";
+import type {
+  PropertyConfigDto,
+  PropertyDto,
+  PropertyTypeDto,
+  SortConditionDto,
+  ViewDto,
+} from "./types";
 
 const TYPE_LABELS: Record<string, string> = {
   text: "テキスト",
@@ -14,6 +20,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 interface TableHeaderProps {
   properties: PropertyDto[];
+  view: ViewDto | null;
   onAddProperty: (
     name: string,
     propertyType: PropertyTypeDto,
@@ -32,15 +39,18 @@ interface TableHeaderProps {
     propertyId: string,
     optionId: string,
   ) => Promise<boolean>;
+  onSortClick: (conditions: SortConditionDto[]) => void;
 }
 
 export function TableHeader({
   properties,
+  view,
   onAddProperty,
   onUpdatePropertyName,
   onUpdatePropertyConfig,
   onDeleteProperty,
   onResetSelectOption,
+  onSortClick,
 }: TableHeaderProps) {
   const [showModal, setShowModal] = useState(false);
   const [editingProperty, setEditingProperty] = useState<PropertyDto | null>(
@@ -59,6 +69,36 @@ export function TableHeader({
     setEditingProperty(prop);
   }, []);
 
+  const handleSortClick = useCallback(
+    (e: React.MouseEvent, prop: PropertyDto) => {
+      e.stopPropagation();
+      const currentSort = view?.sortConditions?.find(
+        (s) => s.propertyId === prop.id,
+      );
+
+      if (!currentSort) {
+        // none → ascending
+        onSortClick([{ propertyId: prop.id, direction: "ascending" }]);
+      } else if (currentSort.direction === "ascending") {
+        // ascending → descending
+        onSortClick([{ propertyId: prop.id, direction: "descending" }]);
+      } else {
+        // descending → none
+        onSortClick([]);
+      }
+    },
+    [view, onSortClick],
+  );
+
+  const getSortIndicator = useCallback(
+    (propId: string): string => {
+      const sort = view?.sortConditions?.find((s) => s.propertyId === propId);
+      if (!sort) return "";
+      return sort.direction === "ascending" ? " ▲" : " ▼";
+    },
+    [view],
+  );
+
   const handleCloseConfig = useCallback(() => {
     setEditingProperty(null);
   }, []);
@@ -72,7 +112,20 @@ export function TableHeader({
           className={styles.headerCell}
           onClick={() => handleHeaderClick(prop)}
         >
-          {prop.name}
+          {/* biome-ignore lint/a11y/useSemanticElements: nested sort trigger */}
+          <span
+            role="button"
+            tabIndex={0}
+            className={styles.sortArea}
+            onClick={(e) => handleSortClick(e, prop)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter")
+                handleSortClick(e as unknown as React.MouseEvent, prop);
+            }}
+          >
+            {prop.name}
+            {getSortIndicator(prop.id)}
+          </span>
           <span className={styles.typeHint}>
             {TYPE_LABELS[prop.propertyType] ?? prop.propertyType}
           </span>

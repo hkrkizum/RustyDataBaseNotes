@@ -4,12 +4,16 @@ import { toast } from "sonner";
 import type { Page } from "../pages/types";
 import type {
   CommandError,
+  FilterConditionDto,
+  GroupConditionDto,
   PropertyConfigDto,
   PropertyDto,
   PropertyTypeDto,
   PropertyValueDto,
   PropertyValueInputDto,
+  SortConditionDto,
   TableDataDto,
+  ViewDto,
 } from "./types";
 
 function errorMessage(err: unknown): string {
@@ -263,6 +267,86 @@ export function useTableData(databaseId: string) {
     [],
   );
 
+  const updateSortConditions = useCallback(
+    async (conditions: SortConditionDto[]): Promise<ViewDto | null> => {
+      try {
+        const result = await invoke<ViewDto>("update_sort_conditions", {
+          databaseId,
+          conditions,
+        });
+        // Reload table data to get re-sorted rows
+        await loadTableData();
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [databaseId, loadTableData],
+  );
+
+  const updateFilterConditions = useCallback(
+    async (conditions: FilterConditionDto[]): Promise<ViewDto | null> => {
+      try {
+        const result = await invoke<ViewDto>("update_filter_conditions", {
+          databaseId,
+          conditions,
+        });
+        await loadTableData();
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [databaseId, loadTableData],
+  );
+
+  const updateGroupCondition = useCallback(
+    async (condition: GroupConditionDto | null): Promise<ViewDto | null> => {
+      try {
+        const result = await invoke<ViewDto>("update_group_condition", {
+          databaseId,
+          condition,
+        });
+        await loadTableData();
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [databaseId, loadTableData],
+  );
+
+  const toggleGroupCollapsed = useCallback(
+    async (groupValue: string | null): Promise<ViewDto | null> => {
+      try {
+        const result = await invoke<ViewDto>("toggle_group_collapsed", {
+          databaseId,
+          groupValue,
+        });
+        await loadTableData();
+        return result;
+      } catch (err) {
+        toast.error(errorMessage(err));
+        return null;
+      }
+    },
+    [databaseId, loadTableData],
+  );
+
+  const resetView = useCallback(async (): Promise<ViewDto | null> => {
+    try {
+      const result = await invoke<ViewDto>("reset_view", { databaseId });
+      await loadTableData();
+      return result;
+    } catch (err) {
+      toast.error(errorMessage(err));
+      return null;
+    }
+  }, [databaseId, loadTableData]);
+
   const removePageFromDatabase = useCallback(
     async (pageId: string): Promise<boolean> => {
       try {
@@ -327,5 +411,10 @@ export function useTableData(databaseId: string) {
     setPropertyValue,
     clearPropertyValue,
     removePageFromDatabase,
+    updateSortConditions,
+    updateFilterConditions,
+    updateGroupCondition,
+    toggleGroupCollapsed,
+    resetView,
   };
 }

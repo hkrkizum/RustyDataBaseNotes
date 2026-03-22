@@ -8,3 +8,5 @@ pub mod editor;
 pub mod page;
 /// Property domain entity and value objects.
 pub mod property;
+/// View domain entity and value objects.
+pub mod view;

@@ -1,0 +1,74 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id, database_id, name, view_type, sort_conditions, filter_conditions, group_condition, collapsed_groups, created_at, updated_at FROM views",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "database_id",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "name",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "view_type",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "sort_conditions",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "filter_conditions",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "group_condition",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "collapsed_groups",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 9,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fa188adb6b2bf0ffc24bc6065535d1e4b2e0cac387ef91f9664b2dc7bfec2317"
+}

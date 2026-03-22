@@ -1,0 +1,36 @@
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f8f8;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.groupHeader:hover {
+  background: #f0f0f0;
+}
+
+.toggle {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.label {
+  font-weight: 600;
+  color: #333;
+}
+
+.count {
+  font-size: 0.75rem;
+  color: #999;
+  background: #eee;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+}

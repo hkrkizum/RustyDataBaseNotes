@@ -305,13 +305,23 @@ pub async fn reorder_properties(
     Ok(updated.into_iter().map(PropertyDto::from).collect())
 }
 
-/// Deletes a property by its ID.
+/// Deletes a property by its ID and removes references from view conditions.
 #[tauri::command]
 pub async fn delete_property(state: State<'_, AppState>, id: String) -> Result<(), CommandError> {
     let prop_id: crate::domain::property::entity::PropertyId =
         id.parse().map_err(|_| PropertyError::NotFound {
             id: crate::domain::property::entity::PropertyId::new(),
         })?;
+
+    // Remove property references from view conditions before deleting
+    let view_repo = crate::infrastructure::persistence::view_repository::SqlxViewRepository::new(
+        state.db.clone(),
+    );
+    crate::domain::view::repository::ViewRepository::remove_property_references(
+        &view_repo, &prop_id,
+    )
+    .await?;
+
     let repo = SqlxPropertyRepository::new(state.db.clone());
     repo.delete(&prop_id).await?;
     Ok(())

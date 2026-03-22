@@ -6,7 +6,10 @@ use tauri::State;
 use crate::AppState;
 use crate::domain::database::entity::{Database, DatabaseId, DatabaseTitle};
 use crate::domain::database::repository::DatabaseRepository;
+use crate::domain::view::entity::View;
+use crate::domain::view::repository::ViewRepository;
 use crate::infrastructure::persistence::database_repository::SqlxDatabaseRepository;
+use crate::infrastructure::persistence::view_repository::SqlxViewRepository;
 use crate::ipc::dto::DatabaseDto;
 use crate::ipc::error::CommandError;
 
@@ -20,6 +23,12 @@ pub async fn create_database(
     let database = Database::new(title);
     let repo = SqlxDatabaseRepository::new(state.db.clone());
     repo.create(&database).await?;
+
+    // Auto-create default view for the new database
+    let view = View::new_default(database.id().clone());
+    let view_repo = SqlxViewRepository::new(state.db.clone());
+    view_repo.save(&view).await?;
+
     Ok(DatabaseDto::from(database))
 }
 

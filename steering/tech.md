@@ -1,5 +1,5 @@
 # Technology Stack & Practices
-<!-- Last rollup: 2026-03-22 -->
+<!-- Last rollup: 2026-03-22, 004-table-view-operations -->
 
 ## 技術スタック
 
@@ -17,6 +17,7 @@
 | chrono | 0.4 (serde) | 日時型 |
 | thiserror | 2 | 宣言的エラー型定義 |
 | serde | 1 (derive) | シリアライズ/デシリアライズ |
+| serde_json | 1 | JSON 操作（View 条件の永続化等） <!-- rollup: 004-table-view-operations, 2026-03-22 --> |
 | tokio | 1 (sync) | 非同期ランタイム + Mutex |
 
 ### フロントエンド
@@ -61,6 +62,25 @@
 - **インフラ層**: in-memory SQLite 統合テスト
 - **フロントエンド**: Vitest + @testing-library/react
 - **品質ゲート**: `cargo make qa`
+- **カバレッジ**: `cargo make coverage`（Rust: cargo-llvm-cov, TS: Vitest v8）
+
+### コードカバレッジ（2026-03-22, branch: 004-table-view-operations）
+
+**Rust** — 235 tests, line coverage **75.68%**
+
+| レイヤー | Line Coverage | 備考 |
+|---------|--------------|------|
+| domain/ | ~95% | entity, filter, sort, group, editor session |
+| infrastructure/persistence/ | ~85% | in-memory SQLite 統合テスト |
+| ipc/ | 0% | Tauri コマンドハンドラ（E2E テスト未実装） |
+| lib.rs / main.rs | 0% | アプリエントリーポイント |
+
+**TypeScript** — 15 tests, line coverage **1.71%**
+
+| ファイル | Line Coverage | 備考 |
+|---------|--------------|------|
+| filterUtils.ts | 84.21% | ユニットテスト済 |
+| React コンポーネント群 | 0% | E2E / integration test 未実装 |
 
 ## Clippy Lint 設定
 

@@ -24,6 +24,10 @@
   background-color: #f0f0f0;
 }
 
+.sortArea {
+  cursor: pointer;
+}
+
 .typeHint {
   font-weight: 400;
   color: #999;

@@ -32,6 +32,10 @@ use crate::ipc::table_commands::{
     add_existing_page_to_database, add_page_to_database, get_table_data, list_standalone_pages,
     remove_page_from_database,
 };
+use crate::ipc::view_commands::{
+    get_view, reset_view, toggle_group_collapsed, update_filter_conditions, update_group_condition,
+    update_sort_conditions,
+};
 
 /// Application-wide shared state managed by Tauri.
 pub struct AppState {
@@ -84,6 +88,12 @@ pub fn run() {
             list_standalone_pages,
             get_table_data,
             remove_page_from_database,
+            get_view,
+            reset_view,
+            update_sort_conditions,
+            update_filter_conditions,
+            update_group_condition,
+            toggle_group_collapsed,
         ])
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?;
