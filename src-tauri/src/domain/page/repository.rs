@@ -39,4 +39,33 @@ pub trait PageRepository {
     /// `created_at` descending.
     async fn find_by_database_id(&self, database_id: &DatabaseId)
     -> Result<Vec<Page>, Self::Error>;
+
+    /// Updates the `parent_id` of a page (move / reparent operation).
+    async fn update_parent_id(
+        &self,
+        page_id: &PageId,
+        parent_id: Option<&PageId>,
+    ) -> Result<Page, Self::Error>;
+
+    /// Returns all direct children of the given parent page.
+    async fn find_children(&self, parent_id: &PageId) -> Result<Vec<Page>, Self::Error>;
+
+    /// Returns root-level standalone pages (`parent_id IS NULL` and
+    /// `database_id IS NULL`), ordered by `created_at` descending.
+    async fn find_root_pages(&self) -> Result<Vec<Page>, Self::Error>;
+
+    /// Returns the ancestor chain from the given page to the root
+    /// using a recursive CTE, with a safety limit of 10 levels.
+    async fn find_ancestors(&self, page_id: &PageId) -> Result<Vec<Page>, Self::Error>;
+
+    /// Bulk-updates the `parent_id` for multiple pages in a single
+    /// statement.
+    ///
+    /// Intended for use inside a transaction during parent deletion
+    /// (child promotion).
+    async fn bulk_update_parent_id(
+        &self,
+        page_ids: &[PageId],
+        new_parent_id: Option<&PageId>,
+    ) -> Result<(), Self::Error>;
 }

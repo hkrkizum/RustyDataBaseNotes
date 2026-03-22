@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id, title, database_id, created_at, updated_at FROM pages WHERE id = ?",
+  "query": "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages WHERE parent_id = ? ORDER BY created_at DESC",
   "describe": {
     "columns": [
       {
@@ -19,13 +19,23 @@
         "type_info": "Text"
       },
       {
-        "name": "created_at",
+        "name": "parent_id",
         "ordinal": 3,
         "type_info": "Text"
       },
       {
-        "name": "updated_at",
+        "name": "sort_order",
         "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 6,
         "type_info": "Text"
       }
     ],
@@ -36,9 +46,11 @@
       false,
       false,
       true,
+      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "2cfe5fe0ff62f00651dd43d9e208ac143e3ebbcb6ade8e3f45c0077261cd2724"
+  "hash": "729f13d71de1590e199f80e425b18390b8137f76128d9a09e2f5849255c5eaa8"
 }

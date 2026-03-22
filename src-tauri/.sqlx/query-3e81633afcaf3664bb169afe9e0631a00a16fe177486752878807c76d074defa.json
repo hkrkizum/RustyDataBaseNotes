@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            WITH RECURSIVE ancestors AS (\n                SELECT id, parent_id, 1 AS depth\n                FROM pages\n                WHERE id = ?1\n                UNION ALL\n                SELECT p.id, p.parent_id, a.depth + 1\n                FROM pages p\n                INNER JOIN ancestors a ON p.id = a.parent_id\n                WHERE a.depth < 10\n            )\n            SELECT p.id, p.title, p.database_id, p.parent_id, p.sort_order,\n                   p.created_at, p.updated_at\n            FROM ancestors a\n            INNER JOIN pages p ON a.id = p.id\n            WHERE a.id != ?1\n            ORDER BY a.depth ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "database_id",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "parent_id",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "sort_order",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 6,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "3e81633afcaf3664bb169afe9e0631a00a16fe177486752878807c76d074defa"
+}

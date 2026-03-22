@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT id, title, database_id, created_at, updated_at FROM pages WHERE database_id IS NULL ORDER BY created_at DESC",
+  "query": "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages WHERE id = ?",
   "describe": {
     "columns": [
       {
@@ -19,26 +19,38 @@
         "type_info": "Text"
       },
       {
-        "name": "created_at",
+        "name": "parent_id",
         "ordinal": 3,
         "type_info": "Text"
       },
       {
-        "name": "updated_at",
+        "name": "sort_order",
         "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 6,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       false,
       false,
       true,
+      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "e780dc6cdce12468c178c7798aa44e4b58467547cff64b0445d0e02530c35f17"
+  "hash": "8e8c0913965fe3100d11533808cd66955efc203331f88ee700a5af66770663db"
 }
