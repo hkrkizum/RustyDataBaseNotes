@@ -61,6 +61,25 @@
 - **インフラ層**: in-memory SQLite 統合テスト
 - **フロントエンド**: Vitest + @testing-library/react
 - **品質ゲート**: `cargo make qa`
+- **カバレッジ**: `cargo make coverage`（Rust: cargo-llvm-cov, TS: Vitest v8）
+
+### コードカバレッジ（2026-03-22, branch: 004-table-view-operations）
+
+**Rust** — 235 tests, line coverage **75.68%**
+
+| レイヤー | Line Coverage | 備考 |
+|---------|--------------|------|
+| domain/ | ~95% | entity, filter, sort, group, editor session |
+| infrastructure/persistence/ | ~85% | in-memory SQLite 統合テスト |
+| ipc/ | 0% | Tauri コマンドハンドラ（E2E テスト未実装） |
+| lib.rs / main.rs | 0% | アプリエントリーポイント |
+
+**TypeScript** — 15 tests, line coverage **1.71%**
+
+| ファイル | Line Coverage | 備考 |
+|---------|--------------|------|
+| filterUtils.ts | 84.21% | ユニットテスト済 |
+| React コンポーネント群 | 0% | E2E / integration test 未実装 |
 
 ## Clippy Lint 設定
 
