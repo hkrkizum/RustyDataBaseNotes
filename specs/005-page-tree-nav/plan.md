@@ -165,11 +165,36 @@ shadcn/ui の標準的なプロジェクト構成に従う。
 バックエンド応答で確定する。バックエンドがエラーを返した場合はローカル状態をロールバックし
 `list_sidebar_items` で再取得する。
 
-### 自動保存パラメータ <!-- FP-02, FP-03 -->
+### 自動保存設計 <!-- FP-02, FP-03, refined by checklist-apply: P-01〜P-11 -->
+
+保存タイミングの制御はフロントエンド（`useAutoSave`）が担う。バックエンドは `save_editor` コマンドを受動的に実行するのみ。 <!-- added by checklist-apply: P-03 -->
+
+`useAutoSave` はエディタ専用のフックとする。既存のプロパティ自動保存（`features/database/` 内で `update_property_value` を直接呼び出す方式）は現行のまま独立して動作する。 <!-- added by checklist-apply: P-01, P-04 -->
+
+#### パラメータ
 
 - **デバウンス間隔**: 500ms（`useAutoSave.ts` 内で調整可能な定数として定義）
 - **リトライ戦略**: サイレントリトライ最大3回，間隔は指数バックオフ（1s → 2s → 4s）
 - **Toast メッセージ**（全リトライ失敗時）: 「保存に失敗しました」（表示時間: 5秒，自動消去）
+
+#### useAutoSave の責務 <!-- added by checklist-apply: P-02 -->
+
+1. **デバウンスタイマー管理**: エディタコンテンツ変更時に `scheduleSave` を呼び出し，500ms 後に `save_editor` を実行
+2. **リトライ**: 保存失敗時に指数バックオフで最大3回再試行。リトライは常に最新のエディタ状態を保存する（古いスナップショットではない） <!-- added by checklist-apply: P-06 -->
+3. **エラー種別判定**: 一時的エラー（DB ロック等）はリトライ対象。永続的エラー（`PageError::NotFound` 等，ページ削除済み）は即座に toast で通知しリトライしない <!-- added by checklist-apply: P-08 -->
+4. **Toast 通知**: 全リトライ失敗時に toast.warning を表示。継続的に保存が失敗する場合（次の変更でもリトライが全失敗），変更のたびに toast を表示する <!-- added by checklist-apply: P-11 -->
+5. **アンマウント時フラッシュ**: `useEffect` cleanup でデバウンスタイマーをキャンセルし，即時フラッシュ保存を実行する（ベストエフォート） <!-- added by checklist-apply: P-10 -->
+
+#### ページ遷移時の動作 <!-- added by checklist-apply: P-05, P-07 -->
+
+- ページ遷移時に `useAutoSave` のクリーンアップが発火し，前ページの pending save をフラッシュする。新ページでは新しい `useAutoSave` インスタンスが初期化される。並行 save は発生しない
+- リトライ中にユーザーがページを遷移する場合，進行中のリトライをキャンセルし遷移を許可する。未保存の変更が失われる可能性がある場合は遷移前に toast で警告する
+
+#### テスト修正方針 <!-- added by checklist-apply: P-09 -->
+
+- バックエンドの `EditorSession` テスト: `is_dirty()` / `mark_saved()` メソッドは残存するため，既存テストはそのまま維持
+- フロントエンドテスト: `useAutoSave` のデバウンス・リトライ・アンマウントフラッシュを Vitest で検証
+- 既存の手動保存テスト（保存ボタンクリック・Ctrl+S・UnsavedConfirmModal 関連）は移行後に削除
 
 ### ドラッグ＆ドロップ詳細 <!-- FP-01, FP-05, FP-07 -->
 
