@@ -118,3 +118,37 @@ export const config: WebdriverIO.Config = {
 | `clearDatabase()` | 全テーブルの行を DELETE（シナリオ前リセット） |
 | `waitForApp()` | アプリのメインウィンドウが表示されるまで待機 |
 | `findByTestId(id)` | `data-testid` 属性でエレメントを検索 |
+
+#### `clearDatabase()` 実装方針
+
+`better-sqlite3`（Node.js ネイティブ SQLite ドライバー）で `RDBN_DB_PATH` に直接接続し，
+FK 制約の逆順で全テーブルの行を DELETE する。WebDriverIO テストプロセス（Node.js）から
+アプリとは独立して DB ファイルを操作する。
+
+```typescript
+import Database from 'better-sqlite3';
+
+export function clearDatabase(): void {
+  const dbPath = process.env.RDBN_DB_PATH;
+  if (!dbPath) throw new Error('RDBN_DB_PATH is not set');
+
+  const db = new Database(dbPath);
+  db.pragma('foreign_keys = OFF');
+  db.transaction(() => {
+    // FK 依存の逆順で DELETE
+    db.exec('DELETE FROM property_values');
+    db.exec('DELETE FROM blocks');
+    db.exec('DELETE FROM views');
+    db.exec('DELETE FROM properties');
+    db.exec('DELETE FROM pages');
+    db.exec('DELETE FROM databases');
+  })();
+  db.pragma('foreign_keys = ON');
+  db.close();
+}
+```
+
+**設計判断**:
+- `foreign_keys = OFF` をトランザクション内で一時的に無効化し，DELETE 順序の厳密性を緩和する。トランザクション完了後に再有効化する
+- 各シナリオの `beforeEach` で呼び出す。アプリプロセスと同一 DB ファイルを共有するが，WAL モードにより同時アクセスが安全に動作する
+- `better-sqlite3` は同期 API であり，WebDriverIO の mocha フック（`beforeEach`）内で簡潔に使用できる
