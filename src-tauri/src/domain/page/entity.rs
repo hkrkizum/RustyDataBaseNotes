@@ -115,7 +115,7 @@ impl Page {
     /// # Examples
     ///
     /// ```no_run
-    /// # use rusty_database_notes::domain::page::entity::{Page, PageTitle};
+    /// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageTitle};
     /// let title = PageTitle::try_from("My Page".to_owned())?;
     /// let page = Page::new(title);
     /// assert!(page.parent_id().is_none());
@@ -140,7 +140,7 @@ impl Page {
     /// # Examples
     ///
     /// ```no_run
-    /// # use rusty_database_notes::domain::page::entity::{Page, PageId, PageTitle};
+    /// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageId, PageTitle};
     /// let parent_id = PageId::new();
     /// let title = PageTitle::try_from("Child Page".to_owned())?;
     /// let child = Page::new_child(title, parent_id.clone());

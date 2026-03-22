@@ -3,7 +3,7 @@ default_to_workspace = false
 
 [env]
 # TEST_BUILD_JOBS: limits COMPILATION parallelism (OOM prevention).
-# Applies to: test-rs, test-rs-std, coverage — NOT doc-test (lightweight, no OOM risk).
+# Applies to: test-rs, test-rs-std, coverage, doc-test.
 # Default: 8. Override: `TEST_BUILD_JOBS=2 cargo make test-rs` or set in OS/shell profile.
 # NOTE: env_files (.env.local) values are NOT available for ${} expansion in args —
 #       only [env] section vars and OS env vars work with cargo-make interpolation.
@@ -242,7 +242,7 @@ cwd = "${RUST_WORKSPACE}"
 [tasks.doc-test]
 description = "Run documentation tests"
 command = "cargo"
-args = ["test", "--doc", "--workspace"]
+args = ["test", "--doc", "--workspace", "--jobs", "${TEST_BUILD_JOBS}"]
 cwd = "${RUST_WORKSPACE}"
 
 [tasks.doc-check]
