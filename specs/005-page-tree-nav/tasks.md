@@ -26,13 +26,13 @@ tested, and reviewed independently.
 
 **Purpose**: Install dependencies and configure build tooling for Tailwind CSS v4, shadcn/ui, D&D, and icons
 
-- [ ] T001 Install Tailwind CSS v4 and Vite plugin: `pnpm add tailwindcss @tailwindcss/vite`, add `tailwindcss()` plugin to `vite.config.ts`
-- [ ] T002 Configure path alias `@/*` → `./src/*` in `tsconfig.json` (baseUrl + paths) and `vite.config.ts` (resolve.alias)
-- [ ] T003 Initialize shadcn/ui: `pnpm dlx shadcn@latest init`, verify `components.json` and `src/lib/utils.ts` (cn() helper) are generated
-- [ ] T004 Install shadcn/ui components: `pnpm dlx shadcn@latest add sidebar collapsible button input dropdown-menu context-menu tooltip scroll-area` → files generated in `src/components/ui/`
-- [ ] T005 [P] Install D&D libraries: `pnpm add @atlaskit/pragmatic-drag-and-drop @atlaskit/pragmatic-drag-and-drop-hitbox @atlaskit/pragmatic-drag-and-drop-react-drop-indicator @atlaskit/pragmatic-drag-and-drop-auto-scroll`
-- [ ] T006 [P] Install icon library: `pnpm add lucide-react`
-- [ ] T007 Replace CSS entry point: update `src/index.css` with `@import "tailwindcss"` and `@custom-variant dark (&:where(.dark, .dark *))`, remove legacy directives if any
+- [x] T001 Install Tailwind CSS v4 and Vite plugin: `pnpm add tailwindcss @tailwindcss/vite`, add `tailwindcss()` plugin to `vite.config.ts`
+- [x] T002 Configure path alias `@/*` → `./src/*` in `tsconfig.json` (baseUrl + paths) and `vite.config.ts` (resolve.alias)
+- [x] T003 Initialize shadcn/ui: `pnpm dlx shadcn@latest init`, verify `components.json` and `src/lib/utils.ts` (cn() helper) are generated
+- [x] T004 Install shadcn/ui components: `pnpm dlx shadcn@latest add sidebar collapsible button input dropdown-menu context-menu tooltip scroll-area` → files generated in `src/components/ui/`
+- [x] T005 [P] Install D&D libraries: `pnpm add @atlaskit/pragmatic-drag-and-drop @atlaskit/pragmatic-drag-and-drop-hitbox @atlaskit/pragmatic-drag-and-drop-react-drop-indicator @atlaskit/pragmatic-drag-and-drop-auto-scroll`
+- [x] T006 [P] Install icon library: `pnpm add lucide-react`
+- [x] T007 Replace CSS entry point: update `src/index.css` with `@import "tailwindcss"` and `@custom-variant dark (&:where(.dark, .dark *))`, remove legacy directives if any
 
 **Checkpoint**: `pnpm install` succeeds, `cargo make serve` starts without errors
 

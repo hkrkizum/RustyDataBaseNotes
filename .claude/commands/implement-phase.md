@@ -11,13 +11,15 @@ description: >
 
 ## MUST（必ず守ること）
 
+- **constitution.md を Phase 実行前に必ず読み込み**、全タスクの実装で遵守する
+  （テスト方針、コーディング規約、アーキテクチャ原則、品質基準）
 - tasks.md を解析し、**1 Phase だけ**実行して停止する
 - Phase 完了時にコミットコマンドと `/clear` 指示を提示する
 - tasks.md のチェックボックス `[x]` を完了タスクごとに更新する
 - Phase 間の**依存関係**（`Depends on Phase:` / `Blocked by:` 等）を尊重し、
   依存先 Phase が未完了なら実行しない
 - Phase 内の `Depends on:` タスク依存も尊重する
-- テストが constitution で要求されているなら Phase 完了前に実行する
+- constitution のテスト方針に従い Phase 完了前にテストを実行する
 - Phase 内タスクが 10 超の場合、分割を提案する
 
 ## MUST NOT（絶対にしないこと）
@@ -27,6 +29,7 @@ description: >
 - tasks.md のチェックボックス以外の spec 成果物を変更しない
 - Phase の順序を依存関係に反して入れ替えない
 - 完了済み Phase のコード詳細をコンテキストに読み込まない
+- constitution.md の原則に反するコードを生成しない
 
 ---
 
