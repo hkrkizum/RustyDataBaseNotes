@@ -3,11 +3,16 @@ default_to_workspace = false
 
 [env]
 # TEST_BUILD_JOBS: limits COMPILATION parallelism (OOM prevention).
-# Applies to: test, test-std, coverage — NOT doc-test (lightweight, no OOM risk).
-# Default: 2. Override: `TEST_BUILD_JOBS=8 cargo make test` or set in OS/shell profile.
+# Applies to: test-rs, test-rs-std, coverage — NOT doc-test (lightweight, no OOM risk).
+# Default: 8. Override: `TEST_BUILD_JOBS=2 cargo make test` or set in OS/shell profile.
 # NOTE: env_files (.env.local) values are NOT available for ${} expansion in args —
 #       only [env] section vars and OS env vars work with cargo-make interpolation.
+RUST_WORKSPACE = { value = "src-tauri", condition = { env_not_set = ["RUST_WORKSPACE"] } }
 TEST_BUILD_JOBS = { value = "8", condition = { env_not_set = ["TEST_BUILD_JOBS"] } }
+
+# QA_CHECK_ONLY: when set to "1", fmt-rs/fmt-ts run in check-only mode (no writes).
+# Used by: check-all (always), pre-merge-commit hook.
+# Default: unset (= write mode). Override: `QA_CHECK_ONLY=1 cargo make qa`
 
 # ─────────────────────────────────────────────
 # Build
@@ -17,16 +22,10 @@ description = "Production build of the Tauri desktop app"
 command = "cargo"
 args = ["tauri", "build"]
 
-[tasks.check]
-description = "Fast workspace compilation check (no codegen)"
-command = "cargo"
-args = ["check", "--workspace", "--all-targets"]
-cwd = "src-tauri"
-
 [tasks.clean]
 description = "Remove build artifacts (Rust target + frontend dist)"
 script = [
-  "cargo clean --manifest-path src-tauri/Cargo.toml",
+  "cargo clean --manifest-path ${RUST_WORKSPACE}/Cargo.toml",
   "rm -rf dist",
 ]
 
@@ -39,7 +38,7 @@ run_task = { name = ["sqlx-prepare", "qa-rs", "qa-ts"], fork = true }
 
 [tasks.sqlx-prepare]
 description = "Reset dev.db from migrations and regenerate .sqlx/ query cache"
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 script = [
   "cargo sqlx database reset -y",
   "cargo sqlx prepare --workspace",
@@ -47,11 +46,13 @@ script = [
 
 [tasks.check-all]
 description = "Static checks only (no tests): fmt-check → clippy → lint-ts → ts-check"
-run_task = { name = ["fmt-rs-check", "fmt-ts-check", "clippy", "lint-ts", "ts-check"], fork = true }
+run_task = { name = ["fmt-rs", "fmt-ts", "clippy", "lint-ts", "ts-check"], fork = true }
+[tasks.check-all.env]
+QA_CHECK_ONLY = "1"
 
 [tasks.qa-rs]
 description = "Rust quality gate: fmt → clippy → test → doc-test → doc-check"
-run_task = { name = ["fmt-rs", "clippy", "test", "doc-test", "doc-check"], fork = true }
+run_task = { name = ["fmt-rs", "clippy", "test-rs", "doc-test", "doc-check"], fork = true }
 
 [tasks.qa-ts]
 description = "TypeScript quality gate: fmt → lint → type-check → test"
@@ -60,31 +61,33 @@ run_task = { name = ["fmt-ts", "lint-ts", "ts-check", "test-ts"], fork = true }
 # ─────────────────────────────────────────────
 # Formatting
 # ─────────────────────────────────────────────
+# QA_CHECK_ONLY=1 → check-only (no file modification)
+# unset / other   → write (auto-format files)
+
 [tasks.fmt]
 description = "Format all code (Rust + TypeScript)"
 run_task = { name = ["fmt-rs", "fmt-ts"], fork = true }
 
 [tasks.fmt-rs]
-description = "Format all Rust workspace crates"
-command = "cargo"
-args = ["fmt", "--all", "${@}"]
-cwd = "src-tauri"
-
-[tasks.fmt-rs-check]
-description = "Check Rust formatting without modifying files"
-command = "cargo"
-args = ["fmt", "--all", "--check", "${@}"]
-cwd = "src-tauri"
+description = "Format Rust (check-only when QA_CHECK_ONLY=1)"
+cwd = "${RUST_WORKSPACE}"
+script = ['''
+if [ "${QA_CHECK_ONLY:-}" = "1" ]; then
+  cargo fmt --all --check
+else
+  cargo fmt --all
+fi
+''']
 
 [tasks.fmt-ts]
-description = "Format TypeScript/frontend code with Biome"
-command = "pnpm"
-args = ["biome", "format", "--write", "."]
-
-[tasks.fmt-ts-check]
-description = "Check TypeScript/frontend formatting (no modification)"
-command = "pnpm"
-args = ["biome", "check", "--linter-enabled=false", "."]
+description = "Format TypeScript (check-only when QA_CHECK_ONLY=1)"
+script = ['''
+if [ "${QA_CHECK_ONLY:-}" = "1" ]; then
+  pnpm biome check --linter-enabled=false .
+else
+  pnpm biome format --write .
+fi
+''']
 
 # ─────────────────────────────────────────────
 # Linting
@@ -93,7 +96,7 @@ args = ["biome", "check", "--linter-enabled=false", "."]
 description = "Lint all Rust workspace crates (warnings = errors)"
 command = "cargo"
 args = ["clippy", "--workspace", "--all-targets", "--", "-Dwarnings"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.lint-ts]
 description = "Lint TypeScript/frontend code with Biome"
@@ -116,7 +119,7 @@ description = "Run TypeScript/frontend tests with Vitest"
 command = "pnpm"
 args = ["vitest", "run", "--passWithNoTests"]
 
-[tasks.test]
+[tasks.test-rs]
 description = "Run tests with cargo-nextest (build parallelism limited to avoid OOM)"
 install_crate = { crate_name = "cargo-nextest", binary = "cargo", test_arg = [
   "nextest", "--help",
@@ -129,10 +132,10 @@ args = [
   "--final-status-level", "skip",
   "--no-tests=pass",
 ]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
-[tasks.test-filter]
-description = "Run specific tests by name pattern: TEST_FILTER=pattern cargo make test-filter"
+[tasks.test-rs-filter]
+description = "Run specific tests by name pattern: TEST_FILTER=pattern cargo make test-rs-filter"
 install_crate = { crate_name = "cargo-nextest", binary = "cargo", test_arg = [
   "nextest", "--help",
 ] }
@@ -145,13 +148,13 @@ args = [
   "--no-tests=pass",
   "-E", "test(/${TEST_FILTER}/)",
 ]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
-[tasks.test-std]
+[tasks.test-rs-std]
 description = "Run tests with standard cargo test (no nextest)"
 command = "cargo"
 args = ["test", "--workspace", "--jobs", "${TEST_BUILD_JOBS}"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
 # ─────────────────────────────────────────────
 # Coverage
@@ -167,7 +170,7 @@ install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
 ] }
 command = "cargo"
 args = ["llvm-cov", "--workspace", "--all-targets"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.coverage-rs-html]
 description = "Rust code coverage with HTML report (opens in browser)"
@@ -176,7 +179,7 @@ install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
 ] }
 command = "cargo"
 args = ["llvm-cov", "--workspace", "--all-targets", "--html", "--open"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.coverage-rs-lcov]
 description = "Rust code coverage in LCOV format (for CI integration)"
@@ -185,7 +188,7 @@ install_crate = { crate_name = "cargo-llvm-cov", binary = "cargo", test_arg = [
 ] }
 command = "cargo"
 args = ["llvm-cov", "--workspace", "--all-targets", "--lcov", "--output-path", "target/llvm-cov/lcov.info"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.coverage-ts]
 description = "TypeScript code coverage via Vitest"
@@ -199,19 +202,19 @@ args = ["vitest", "run", "--coverage", "--passWithNoTests"]
 description = "Build and open rustdoc for workspace crates (no deps)"
 command = "cargo"
 args = ["doc", "--no-deps", "--open"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.doc-test]
 description = "Run documentation tests"
 command = "cargo"
 args = ["test", "--doc", "--workspace"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 
 [tasks.doc-check]
 description = "Verify rustdoc builds without warnings (Principle VI compliance)"
 command = "cargo"
 args = ["doc", "--no-deps", "--workspace"]
-cwd = "src-tauri"
+cwd = "${RUST_WORKSPACE}"
 [tasks.doc-check.env]
 RUSTDOCFLAGS = "-D warnings"
 
@@ -236,7 +239,7 @@ script = ["git config core.hooksPath .githooks"]
 [tasks.dev-db-reset]
 description = "Delete development SQLite database and restart fresh"
 script = [
-  "rm -f src-tauri/dev.db src-tauri/dev.db-wal src-tauri/dev.db-shm",
+  "rm -f ${RUST_WORKSPACE}/dev.db ${RUST_WORKSPACE}/dev.db-wal ${RUST_WORKSPACE}/dev.db-shm",
   "rm -rf \"${XDG_DATA_HOME:-$HOME/.local/share}/com.vscode.rustydatabasenotes\"",
   "echo 'Development database reset. Restart the app to re-initialize.'",
 ]
