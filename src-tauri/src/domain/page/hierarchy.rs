@@ -13,8 +13,8 @@ pub const MAX_DEPTH: usize = 5;
 /// # Examples
 ///
 /// ```no_run
-/// # use rusty_database_notes::domain::page::hierarchy::PageHierarchyService;
-/// # use rusty_database_notes::domain::page::entity::{Page, PageId, PageTitle};
+/// # use rustydatabasenotes_lib::domain::page::hierarchy::PageHierarchyService;
+/// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageId, PageTitle};
 /// let parent_title = PageTitle::try_from("Parent".to_owned())?;
 /// let parent = Page::new(parent_title);
 /// let depth = PageHierarchyService::depth(parent.id(), &[parent.clone()]);
@@ -129,8 +129,8 @@ impl PageHierarchyService {
     /// # Examples
     ///
     /// ```no_run
-    /// # use rusty_database_notes::domain::page::hierarchy::PageHierarchyService;
-    /// # use rusty_database_notes::domain::page::entity::{Page, PageId, PageTitle};
+    /// # use rustydatabasenotes_lib::domain::page::hierarchy::PageHierarchyService;
+    /// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageId, PageTitle};
     /// let root = Page::new(PageTitle::try_from("Root".to_owned())?);
     /// let child = Page::new_child(
     ///     PageTitle::try_from("Child".to_owned())?,
@@ -165,8 +165,8 @@ impl PageHierarchyService {
     /// # Examples
     ///
     /// ```no_run
-    /// # use rusty_database_notes::domain::page::hierarchy::PageHierarchyService;
-    /// # use rusty_database_notes::domain::page::entity::{Page, PageId, PageTitle};
+    /// # use rustydatabasenotes_lib::domain::page::hierarchy::PageHierarchyService;
+    /// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageId, PageTitle};
     /// let root = Page::new(PageTitle::try_from("Root".to_owned())?);
     /// assert_eq!(PageHierarchyService::depth(root.id(), &[root.clone()]), 1);
     /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -183,8 +183,8 @@ impl PageHierarchyService {
     /// # Examples
     ///
     /// ```no_run
-    /// # use rusty_database_notes::domain::page::hierarchy::PageHierarchyService;
-    /// # use rusty_database_notes::domain::page::entity::{Page, PageId, PageTitle};
+    /// # use rustydatabasenotes_lib::domain::page::hierarchy::PageHierarchyService;
+    /// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageId, PageTitle};
     /// let root = Page::new(PageTitle::try_from("Root".to_owned())?);
     /// assert_eq!(
     ///     PageHierarchyService::max_descendant_depth(root.id(), &[root.clone()]),
