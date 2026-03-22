@@ -96,12 +96,22 @@ export function FilterConditionRow({
 
   const handleOperatorChange = useCallback(
     (operator: FilterOperatorDto) => {
+      let newValue: FilterValueDto | null = null;
+      if (!NO_VALUE_OPERATORS.includes(operator)) {
+        // Keep existing value only if its type matches the property type
+        const existingValue = condition.value;
+        const typeMatches =
+          existingValue &&
+          ((propType === "text" && existingValue.type === "text") ||
+            (propType === "number" && existingValue.type === "number") ||
+            (propType === "date" && existingValue.type === "date") ||
+            (propType === "select" && existingValue.type === "selectOption"));
+        newValue = typeMatches ? existingValue : getDefaultValue(propType);
+      }
       onChange(index, {
         ...condition,
         operator,
-        value: NO_VALUE_OPERATORS.includes(operator)
-          ? null
-          : (condition.value ?? getDefaultValue(propType)),
+        value: newValue,
       });
     },
     [condition, propType, index, onChange],
@@ -149,21 +159,36 @@ export function FilterConditionRow({
           </option>
         ))}
       </select>
-      {showValueInput && (
-        <input
-          className={styles.valueInput}
-          type={
-            propType === "number"
-              ? "number"
-              : propType === "date"
-                ? "datetime-local"
-                : "text"
-          }
-          value={getDisplayValue(condition.value)}
-          onChange={(e) => handleValueChange(e.target.value)}
-          placeholder="値"
-        />
-      )}
+      {showValueInput &&
+        (propType === "select" ? (
+          <select
+            className={styles.select}
+            value={getDisplayValue(condition.value)}
+            onChange={(e) => handleValueChange(e.target.value)}
+          >
+            <option value="">（選択してください）</option>
+            {selectedProp?.config?.type === "Select" &&
+              selectedProp.config.options.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.value}
+                </option>
+              ))}
+          </select>
+        ) : (
+          <input
+            className={styles.valueInput}
+            type={
+              propType === "number"
+                ? "number"
+                : propType === "date"
+                  ? "datetime-local"
+                  : "text"
+            }
+            value={getDisplayValue(condition.value)}
+            onChange={(e) => handleValueChange(e.target.value)}
+            placeholder="値"
+          />
+        ))}
       <button
         type="button"
         className={styles.deleteBtn}

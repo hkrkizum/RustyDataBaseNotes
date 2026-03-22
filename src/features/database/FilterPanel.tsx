@@ -1,7 +1,25 @@
 import { useCallback, useState } from "react";
 import { FilterConditionRow } from "./FilterConditionRow";
 import styles from "./FilterPanel.module.css";
-import type { FilterConditionDto, PropertyDto } from "./types";
+import type {
+  FilterConditionDto,
+  FilterValueDto,
+  PropertyDto,
+  PropertyTypeDto,
+} from "./types";
+
+function getDefaultValue(propType: PropertyTypeDto): FilterValueDto {
+  switch (propType) {
+    case "number":
+      return { type: "number", value: 0 };
+    case "date":
+      return { type: "date", value: new Date().toISOString() };
+    case "select":
+      return { type: "selectOption", value: "" };
+    default:
+      return { type: "text", value: "" };
+  }
+}
 
 interface FilterPanelProps {
   properties: PropertyDto[];
@@ -35,7 +53,7 @@ export function FilterPanel({
       {
         propertyId: defaultProp.id,
         operator: defaultOp as FilterConditionDto["operator"],
-        value: needsValue ? { type: "text", value: "" } : null,
+        value: needsValue ? getDefaultValue(defaultProp.propertyType) : null,
       },
     ]);
   }, [properties]);
