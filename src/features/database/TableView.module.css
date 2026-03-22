@@ -121,6 +121,21 @@
   white-space: nowrap;
 }
 
+.clearFilterBtn {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #4a9eff;
+  border-radius: 4px;
+  background: none;
+  color: #4a9eff;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.clearFilterBtn:hover {
+  background: #f0f7ff;
+}
+
 .emptyState {
   text-align: center;
   padding: 3rem;

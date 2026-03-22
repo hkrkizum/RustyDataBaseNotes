@@ -197,7 +197,7 @@ pub async fn get_table_data(
         }
     };
 
-    // 7. Build property info map for sort/filter/group
+    // 7. Build property info map and row value data for filter/sort/group
     let property_info: HashMap<String, SortPropertyInfo> = properties
         .iter()
         .map(|p| {
@@ -211,10 +211,47 @@ pub async fn get_table_data(
         })
         .collect();
 
-    // 8. Apply sort if conditions exist
+    let property_types: HashMap<String, crate::domain::property::entity::PropertyType> = properties
+        .iter()
+        .map(|p| (p.id().to_string(), p.property_type()))
+        .collect();
+
+    let row_values: Vec<HashMap<String, RowPropertyValue>> = rows
+        .iter()
+        .map(|row| {
+            row.values
+                .iter()
+                .map(|(prop_id, pv_dto)| {
+                    (
+                        prop_id.clone(),
+                        RowPropertyValue {
+                            text_value: pv_dto.text_value.clone(),
+                            number_value: pv_dto.number_value,
+                            date_value: pv_dto.date_value.as_ref().and_then(|d| d.parse().ok()),
+                            boolean_value: pv_dto.boolean_value,
+                        },
+                    )
+                })
+                .collect()
+        })
+        .collect();
+
+    // 8. Apply filter → sort pipeline
+    // Filter first
+    if !view.filter_conditions().is_empty() {
+        let matching = crate::domain::view::filter::apply_filters(
+            &row_values,
+            view.filter_conditions(),
+            &property_types,
+        );
+        let original = rows;
+        rows = matching.into_iter().map(|i| original[i].clone()).collect();
+    }
+
+    // Sort (on filtered rows)
     if !view.sort_conditions().is_empty() {
-        // Build sortable row data from DTOs
-        let sort_row_values: Vec<HashMap<String, RowPropertyValue>> = rows
+        // Rebuild row values for filtered rows
+        let filtered_row_values: Vec<HashMap<String, RowPropertyValue>> = rows
             .iter()
             .map(|row| {
                 row.values
@@ -235,12 +272,11 @@ pub async fn get_table_data(
             .collect();
 
         let sorted_indices = crate::domain::view::sort::compute_sort_order(
-            &sort_row_values,
+            &filtered_row_values,
             view.sort_conditions(),
             &property_info,
         );
 
-        // Reorder rows by sorted indices
         let original = rows;
         rows = sorted_indices
             .into_iter()

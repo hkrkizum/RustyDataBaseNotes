@@ -3,11 +3,13 @@ import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Page } from "../pages/types";
 import { AddPageModal } from "./AddPageModal";
+import { FilterPanel } from "./FilterPanel";
 import { TableHeader } from "./TableHeader";
 import { TableRow } from "./TableRow";
 import styles from "./TableView.module.css";
 import type {
   DatabaseDto,
+  FilterConditionDto,
   PropertyValueInputDto,
   SortConditionDto,
 } from "./types";
@@ -56,6 +58,7 @@ export function TableView({
     clearPropertyValue,
     removePageFromDatabase,
     updateSortConditions,
+    updateFilterConditions,
     resetView,
   } = useTableData(database.id);
 
@@ -187,6 +190,15 @@ export function TableView({
     [loadTableData],
   );
 
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+
+  const handleFilterApply = useCallback(
+    async (conditions: FilterConditionDto[]) => {
+      await updateFilterConditions(conditions);
+    },
+    [updateFilterConditions],
+  );
+
   const handleSortClick = useCallback(
     async (conditions: SortConditionDto[]) => {
       await updateSortConditions(conditions);
@@ -267,11 +279,15 @@ export function TableView({
         >
           既存ページを追加
         </button>
+        <button
+          type="button"
+          className={styles.existingBtn}
+          onClick={() => setShowFilterPanel((v) => !v)}
+        >
+          フィルタ{filterCount > 0 ? ` (${filterCount})` : ""}
+        </button>
         {sortCount > 0 && (
           <span className={styles.toolbarBadge}>ソート: {sortCount}件</span>
-        )}
-        {filterCount > 0 && (
-          <span className={styles.toolbarBadge}>フィルタ: {filterCount}件</span>
         )}
         {(sortCount > 0 || filterCount > 0 || view?.groupCondition) && (
           <button
@@ -283,6 +299,15 @@ export function TableView({
           </button>
         )}
       </div>
+
+      {showFilterPanel && (
+        <FilterPanel
+          properties={properties}
+          conditions={view?.filterConditions ?? []}
+          onApply={handleFilterApply}
+          onClose={() => setShowFilterPanel(false)}
+        />
+      )}
 
       {loading ? (
         <div className={styles.emptyState}>
@@ -313,7 +338,20 @@ export function TableView({
             </div>
             {rows.length === 0 ? (
               <div className={styles.emptyRow}>
-                <p>ページがありません</p>
+                <p>
+                  {filterCount > 0
+                    ? "条件に一致するページがありません"
+                    : "ページがありません"}
+                </p>
+                {filterCount > 0 && (
+                  <button
+                    type="button"
+                    className={styles.clearFilterBtn}
+                    onClick={() => void updateFilterConditions([])}
+                  >
+                    すべてのフィルタを解除
+                  </button>
+                )}
               </div>
             ) : (
               rows.map((row) => (

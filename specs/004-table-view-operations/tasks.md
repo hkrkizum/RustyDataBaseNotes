@@ -86,19 +86,19 @@ tested, and reviewed independently.
 
 ### Tests for User Story 2
 
-- [ ] T022 [P] [US2] Write failing tests for filter logic covering all 5 property types with all valid operators (Text: Equals/NotEquals/Contains/NotContains case-insensitive, Number: comparisons with f64 equality, Date: Equals minute-granularity/Before exclusive/After inclusive, Select: Is/IsNot including null in IsNot, Checkbox: IsChecked/IsUnchecked), IsEmpty/IsNotEmpty (null-only, not zero/empty-string), and multiple conditions AND in `src-tauri/src/domain/view/filter.rs`
-- [ ] T023 [P] [US2] Write failing test for update_filter_conditions IPC command covering valid conditions, operator-type mismatch error, value-type mismatch error, max 20 limit, and property existence check in `src-tauri/src/ipc/view_commands.rs`
+- [X] T022 [P] [US2] Write failing tests for filter logic covering all 5 property types with all valid operators (Text: Equals/NotEquals/Contains/NotContains case-insensitive, Number: comparisons with f64 equality, Date: Equals minute-granularity/Before exclusive/After inclusive, Select: Is/IsNot including null in IsNot, Checkbox: IsChecked/IsUnchecked), IsEmpty/IsNotEmpty (null-only, not zero/empty-string), and multiple conditions AND in `src-tauri/src/domain/view/filter.rs`
+- [X] T023 [P] [US2] Write failing test for update_filter_conditions IPC command covering valid conditions, operator-type mismatch error, value-type mismatch error, max 20 limit, and property existence check in `src-tauri/src/ipc/view_commands.rs`
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Implement apply_filters function taking rows and `&[FilterCondition]` with operator-type validation, case-insensitive text matching, date granularity handling, and AND combination in `src-tauri/src/domain/view/filter.rs`
-- [ ] T025 [US2] Implement update_filter_conditions IPC command with validation (max 20, operator-type compatibility per data-model.md table, value-type check) in `src-tauri/src/ipc/view_commands.rs` and register in `src-tauri/src/lib.rs`
-- [ ] T026 [US2] Extend get_table_data to apply filter conditions before sort in `src-tauri/src/ipc/table_commands.rs`
-- [ ] T027 [P] [US2] Create FilterConditionRow component with property dropdown, type-aware operator dropdown (only showing valid operators per FR-004), value input (text/number/date/select picker), and delete button in `src/features/database/FilterConditionRow.tsx`
-- [ ] T028 [P] [US2] Create FilterPanel component with condition list, add-condition button, and active filter count in `src/features/database/FilterPanel.tsx`
-- [ ] T029 [US2] Add updateFilterConditions IPC invocation and filter state management to `src/features/database/useTableData.ts`
-- [ ] T030 [US2] Extend TableView.tsx with filter toolbar button, active filter indicator, and empty-state message with "すべてのフィルタを解除" button (FR-010) in `src/features/database/TableView.tsx`
-- [ ] T030a [US2] Write test verifying FR-011: add a new page while filter is active, confirm it does NOT appear in get_table_data results when it fails filter conditions, and DOES appear after clearing all filters in `src-tauri/src/ipc/view_commands.rs`
+- [X] T024 [US2] Implement apply_filters function taking rows and `&[FilterCondition]` with operator-type validation, case-insensitive text matching, date granularity handling, and AND combination in `src-tauri/src/domain/view/filter.rs`
+- [X] T025 [US2] Implement update_filter_conditions IPC command with validation (max 20, operator-type compatibility per data-model.md table, value-type check) in `src-tauri/src/ipc/view_commands.rs` and register in `src-tauri/src/lib.rs`
+- [X] T026 [US2] Extend get_table_data to apply filter conditions before sort in `src-tauri/src/ipc/table_commands.rs`
+- [X] T027 [P] [US2] Create FilterConditionRow component with property dropdown, type-aware operator dropdown (only showing valid operators per FR-004), value input (text/number/date/select picker), and delete button in `src/features/database/FilterConditionRow.tsx`
+- [X] T028 [P] [US2] Create FilterPanel component with condition list, add-condition button, and active filter count in `src/features/database/FilterPanel.tsx`
+- [X] T029 [US2] Add updateFilterConditions IPC invocation and filter state management to `src/features/database/useTableData.ts`
+- [X] T030 [US2] Extend TableView.tsx with filter toolbar button, active filter indicator, and empty-state message with "すべてのフィルタを解除" button (FR-010) in `src/features/database/TableView.tsx`
+- [X] T030a [US2] Write test verifying FR-011: add a new page while filter is active, confirm it does NOT appear in get_table_data results when it fails filter conditions, and DOES appear after clearing all filters in `src-tauri/src/ipc/view_commands.rs`
 
 **Checkpoint**: User Stories 1 and 2 both work independently — sort and filter can be applied together (filter→sort pipeline).
 
