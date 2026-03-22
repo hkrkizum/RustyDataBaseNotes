@@ -177,10 +177,10 @@ tested, and reviewed independently.
 
 **Purpose**: Work that spans multiple user stories
 
-- [ ] T052 [P] Add `///` documentation (summary + Examples + Errors sections) to all public items in `src-tauri/src/domain/view/` module files and verify `cargo doc --no-deps` passes
-- [ ] T053 [P] Add accessibility attributes: aria-sort on sortable column headers in `src/features/database/TableHeader.tsx`, aria-expanded on group headers in `src/features/database/GroupHeader.tsx`, keyboard navigation (Tab/Enter/Escape) on all panel components
-- [ ] T054 [P] Verify CC-003 performance targets (500ms for 100 pages × 10 properties, 2s for 1,000 pages) for sort, filter, and grouping operations with test data
-- [ ] T055 Run full QA: `cargo make qa` (sqlx-prepare → fmt-check → clippy → lint-ts → ts-check → test → test-ts)
+- [X] T052 [P] Add `///` documentation (summary + Examples + Errors sections) to all public items in `src-tauri/src/domain/view/` module files and verify `cargo doc --no-deps` passes
+- [X] T053 [P] Add accessibility attributes: aria-sort on sortable column headers in `src/features/database/TableHeader.tsx`, aria-expanded on group headers in `src/features/database/GroupHeader.tsx`, keyboard navigation (Tab/Enter/Escape) on all panel components
+- [X] T054 [P] Verify CC-003 performance targets (500ms for 100 pages × 10 properties, 2s for 1,000 pages) for sort, filter, and grouping operations with test data
+- [X] T055 Run full QA: `cargo make qa` (sqlx-prepare → fmt-check → clippy → lint-ts → ts-check → test → test-ts)
 
 ---
 
