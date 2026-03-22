@@ -22,7 +22,8 @@ use crate::ipc::editor_commands::{
     remove_block, save_editor,
 };
 use crate::ipc::page_commands::{
-    create_page, delete_page, get_page, list_pages, list_sidebar_items, update_page_title,
+    create_child_page, create_page, delete_page, get_page, list_pages, list_sidebar_items,
+    move_page, update_page_title,
 };
 use crate::ipc::property_commands::{
     add_property, clear_property_value, delete_property, list_properties, reorder_properties,
@@ -66,6 +67,8 @@ pub fn run() {
             get_page,
             update_page_title,
             delete_page,
+            create_child_page,
+            move_page,
             list_sidebar_items,
             open_editor,
             close_editor,
