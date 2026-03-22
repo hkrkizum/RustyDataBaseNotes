@@ -6,7 +6,11 @@ import { AddPageModal } from "./AddPageModal";
 import { TableHeader } from "./TableHeader";
 import { TableRow } from "./TableRow";
 import styles from "./TableView.module.css";
-import type { DatabaseDto, PropertyValueInputDto } from "./types";
+import type {
+  DatabaseDto,
+  PropertyValueInputDto,
+  SortConditionDto,
+} from "./types";
 import { useTableData } from "./useTableData";
 
 interface TableViewProps {
@@ -51,6 +55,8 @@ export function TableView({
     setPropertyValue,
     clearPropertyValue,
     removePageFromDatabase,
+    updateSortConditions,
+    resetView,
   } = useTableData(database.id);
 
   useEffect(() => {
@@ -181,7 +187,17 @@ export function TableView({
     [loadTableData],
   );
 
+  const handleSortClick = useCallback(
+    async (conditions: SortConditionDto[]) => {
+      await updateSortConditions(conditions);
+    },
+    [updateSortConditions],
+  );
+
   const rows = tableData?.rows ?? [];
+  const view = tableData?.view ?? null;
+  const sortCount = view?.sortConditions?.length ?? 0;
+  const filterCount = view?.filterConditions?.length ?? 0;
 
   return (
     <div className={styles.container}>
@@ -251,6 +267,21 @@ export function TableView({
         >
           既存ページを追加
         </button>
+        {sortCount > 0 && (
+          <span className={styles.toolbarBadge}>ソート: {sortCount}件</span>
+        )}
+        {filterCount > 0 && (
+          <span className={styles.toolbarBadge}>フィルタ: {filterCount}件</span>
+        )}
+        {(sortCount > 0 || filterCount > 0 || view?.groupCondition) && (
+          <button
+            type="button"
+            className={styles.existingBtn}
+            onClick={() => void resetView()}
+          >
+            設定をリセット
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -271,11 +302,13 @@ export function TableView({
               <div className={styles.titleHeader}>タイトル</div>
               <TableHeader
                 properties={properties}
+                view={view}
                 onAddProperty={handleAddProperty}
                 onUpdatePropertyName={updatePropertyName}
                 onUpdatePropertyConfig={updatePropertyConfig}
                 onDeleteProperty={deleteProperty}
                 onResetSelectOption={resetSelectOption}
+                onSortClick={handleSortClick}
               />
             </div>
             {rows.length === 0 ? (

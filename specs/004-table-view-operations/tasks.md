@@ -62,17 +62,17 @@ tested, and reviewed independently.
 
 ### Tests for User Story 1
 
-- [ ] T014 [P] [US1] Write failing tests for sort logic covering Text (Unicode order), Number (f64 total_cmp), Date (date/datetime comparison), Select (position order), Checkbox (false < true), null positioning (ascending=末尾, descending=先頭), empty string=null treatment, and stable sort in `src-tauri/src/domain/view/sort.rs`
-- [ ] T015 [P] [US1] Write failing test for update_sort_conditions IPC command covering single condition, validation errors (property not found, duplicate property), and empty conditions (clear sort) in `src-tauri/src/ipc/view_commands.rs`
+- [X] T014 [P] [US1] Write failing tests for sort logic covering Text (Unicode order), Number (f64 total_cmp), Date (date/datetime comparison), Select (position order), Checkbox (false < true), null positioning (ascending=末尾, descending=先頭), empty string=null treatment, and stable sort in `src-tauri/src/domain/view/sort.rs`
+- [X] T015 [P] [US1] Write failing test for update_sort_conditions IPC command covering single condition, validation errors (property not found, duplicate property), and empty conditions (clear sort) in `src-tauri/src/ipc/view_commands.rs`
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Implement apply_sort function taking `&mut Vec<row data>` and `&[SortCondition]` with property-type-aware comparison, null handling, and stable sort guarantee (`sort_by` is stable in Rust) in `src-tauri/src/domain/view/sort.rs`
-- [ ] T017 [US1] Implement update_sort_conditions IPC command with validation (max 5, no duplicate property_id, property existence check) in `src-tauri/src/ipc/view_commands.rs` and register in `src-tauri/src/lib.rs`
-- [ ] T018 [US1] Extend get_table_data to load default view, apply sort conditions to rows using apply_sort, and include ViewDto in response in `src-tauri/src/ipc/table_commands.rs`
-- [ ] T019 [P] [US1] Add sort direction indicator (▲▼) display and header-click sort cycle handler (none→asc→desc→none) to `src/features/database/TableHeader.tsx`
-- [ ] T020 [P] [US1] Add updateSortConditions IPC invocation, header-click-to-single-sort logic, and view state tracking to `src/features/database/useTableData.ts`
-- [ ] T021 [US1] Add sort toolbar button with active sort count badge to `src/features/database/TableView.tsx`
+- [X] T016 [US1] Implement apply_sort function taking `&mut Vec<row data>` and `&[SortCondition]` with property-type-aware comparison, null handling, and stable sort guarantee (`sort_by` is stable in Rust) in `src-tauri/src/domain/view/sort.rs`
+- [X] T017 [US1] Implement update_sort_conditions IPC command with validation (max 5, no duplicate property_id, property existence check) in `src-tauri/src/ipc/view_commands.rs` and register in `src-tauri/src/lib.rs`
+- [X] T018 [US1] Extend get_table_data to load default view, apply sort conditions to rows using apply_sort, and include ViewDto in response in `src-tauri/src/ipc/table_commands.rs`
+- [X] T019 [P] [US1] Add sort direction indicator (▲▼) display and header-click sort cycle handler (none→asc→desc→none) to `src/features/database/TableHeader.tsx`
+- [X] T020 [P] [US1] Add updateSortConditions IPC invocation, header-click-to-single-sort logic, and view state tracking to `src/features/database/useTableData.ts`
+- [X] T021 [US1] Add sort toolbar button with active sort count badge to `src/features/database/TableView.tsx`
 
 **Checkpoint**: User Story 1 is fully functional — single-column sort works for all property types via header click, with sort indicator.
 

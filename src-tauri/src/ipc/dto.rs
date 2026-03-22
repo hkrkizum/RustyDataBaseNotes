@@ -15,7 +15,7 @@ use crate::domain::view::entity::{
 /// Data transfer object for [`Page`], serialized to the frontend via IPC.
 ///
 /// Field names are converted to camelCase for TypeScript consumption.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PageDto {
     /// UUIDv7 identifier.
@@ -166,7 +166,7 @@ impl From<Property> for PropertyDto {
 }
 
 /// Data transfer object for [`PropertyValue`].
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyValueDto {
     /// UUIDv7 identifier.
@@ -206,7 +206,7 @@ impl From<PropertyValue> for PropertyValueDto {
 }
 
 /// Data transfer object for a table row (page with its property values).
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TableRowDto {
     /// The page data.

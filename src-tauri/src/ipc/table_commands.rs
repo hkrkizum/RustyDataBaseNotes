@@ -14,6 +14,7 @@ use crate::domain::page::repository::PageRepository;
 use crate::domain::property::repository::{PropertyRepository, PropertyValueRepository};
 use crate::domain::view::entity::View;
 use crate::domain::view::repository::ViewRepository;
+use crate::domain::view::sort::{RowPropertyValue, SortPropertyInfo};
 use crate::infrastructure::persistence::database_repository::SqlxDatabaseRepository;
 use crate::infrastructure::persistence::page_repository::SqlxPageRepository;
 use crate::infrastructure::persistence::property_repository::SqlxPropertyRepository;
@@ -173,7 +174,7 @@ pub async fn get_table_data(
     }
 
     // 6. Assemble rows
-    let rows: Vec<TableRowDto> = pages
+    let mut rows: Vec<TableRowDto> = pages
         .into_iter()
         .map(|page| {
             let page_id_str = page.id().to_string();
@@ -196,9 +197,62 @@ pub async fn get_table_data(
         }
     };
 
+    // 7. Build property info map for sort/filter/group
+    let property_info: HashMap<String, SortPropertyInfo> = properties
+        .iter()
+        .map(|p| {
+            (
+                p.id().to_string(),
+                SortPropertyInfo {
+                    property_type: p.property_type(),
+                    config: p.config().cloned(),
+                },
+            )
+        })
+        .collect();
+
+    // 8. Apply sort if conditions exist
+    if !view.sort_conditions().is_empty() {
+        // Build sortable row data from DTOs
+        let sort_row_values: Vec<HashMap<String, RowPropertyValue>> = rows
+            .iter()
+            .map(|row| {
+                row.values
+                    .iter()
+                    .map(|(prop_id, pv_dto)| {
+                        (
+                            prop_id.clone(),
+                            RowPropertyValue {
+                                text_value: pv_dto.text_value.clone(),
+                                number_value: pv_dto.number_value,
+                                date_value: pv_dto.date_value.as_ref().and_then(|d| d.parse().ok()),
+                                boolean_value: pv_dto.boolean_value,
+                            },
+                        )
+                    })
+                    .collect()
+            })
+            .collect();
+
+        let sorted_indices = crate::domain::view::sort::compute_sort_order(
+            &sort_row_values,
+            view.sort_conditions(),
+            &property_info,
+        );
+
+        // Reorder rows by sorted indices
+        let original = rows;
+        rows = sorted_indices
+            .into_iter()
+            .map(|i| original[i].clone())
+            .collect();
+    }
+
+    let property_dtos: Vec<PropertyDto> = properties.into_iter().map(PropertyDto::from).collect();
+
     Ok(TableDataDto {
         database: DatabaseDto::from(database),
-        properties: properties.into_iter().map(PropertyDto::from).collect(),
+        properties: property_dtos,
         rows,
         view: ViewDto::from(&view),
         groups: None,
