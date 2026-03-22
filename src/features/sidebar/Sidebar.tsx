@@ -13,7 +13,6 @@ import {
   SidebarMenu,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { SidebarContextMenu } from "./SidebarContextMenu";
 import { SidebarCreateButton } from "./SidebarCreateButton";
 import { SidebarTree } from "./SidebarTree";
 import type { SidebarItem, SidebarTreeNode } from "./types";
@@ -54,13 +53,6 @@ export function AppSidebar({
 
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [contextMenuNode, setContextMenuNode] =
-    useState<SidebarTreeNode | null>(null);
-  const [contextMenuPos, setContextMenuPos] = useState<{
-    x: number;
-    y: number;
-  }>({ x: 0, y: 0 });
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const itemsLoadedRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -76,9 +68,8 @@ export function AppSidebar({
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // Find the actual scrollable viewport inside ScrollArea
     const viewport = el.querySelector(
-      "[data-radix-scroll-area-viewport]",
+      "[data-slot='scroll-area-viewport']",
     ) as HTMLElement | null;
     if (!viewport) return;
     return autoScrollForElements({
@@ -180,31 +171,6 @@ export function AppSidebar({
     [items, setItems, setExpanded, refreshItems],
   );
 
-  const handleContextMenu = useCallback(
-    (node: SidebarTreeNode, e: React.MouseEvent) => {
-      if (isDragging) {
-        e.preventDefault();
-        return;
-      }
-      e.preventDefault();
-      setContextMenuNode(node);
-      setContextMenuPos({ x: e.clientX, y: e.clientY });
-      setContextMenuOpen(true);
-    },
-    [isDragging],
-  );
-
-  const handleMoreClick = useCallback(
-    (node: SidebarTreeNode, e: React.MouseEvent) => {
-      if (isDragging) return;
-      e.stopPropagation();
-      setContextMenuNode(node);
-      setContextMenuPos({ x: e.clientX, y: e.clientY });
-      setContextMenuOpen(true);
-    },
-    [isDragging],
-  );
-
   const handleChildCreated = useCallback(
     async (page: { id: string; title: string }, parentId: string) => {
       setExpanded(parentId, true);
@@ -231,20 +197,22 @@ export function AppSidebar({
   );
 
   return (
-    <ShadcnSidebar>
+    <ShadcnSidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold">RustyDataBaseNotes</span>
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
+          <span className="truncate text-sm font-semibold group-data-[collapsible=icon]:hidden">
+            RustyDataBaseNotes
+          </span>
+          <div className="flex items-center gap-1 group-data-[collapsible=icon]:hidden">
             <SidebarCreateButton
               onPageCreated={handlePageCreated}
               onDatabaseCreated={handleDatabaseCreated}
             />
-            <SidebarTrigger />
           </div>
+          <SidebarTrigger />
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="group-data-[collapsible=icon]:hidden">
         <ScrollArea ref={scrollRef} className="flex-1">
           <SidebarGroup>
             <SidebarGroupContent>
@@ -265,8 +233,9 @@ export function AppSidebar({
                     onRenameSubmit={handleRenameSubmit}
                     onRenameCancel={handleRenameCancel}
                     onMovePage={handleMovePage}
-                    onContextMenu={handleContextMenu}
-                    onMoreClick={handleMoreClick}
+                    onChildCreated={handleChildCreated}
+                    onRenameStart={handleRenameStart}
+                    onDeleted={handleDeleted}
                   />
                 )}
               </SidebarMenu>
@@ -274,18 +243,6 @@ export function AppSidebar({
           </SidebarGroup>
         </ScrollArea>
       </SidebarContent>
-      {contextMenuNode && (
-        <SidebarContextMenu
-          node={contextMenuNode}
-          isDragging={isDragging}
-          open={contextMenuOpen}
-          position={contextMenuPos}
-          onOpenChange={setContextMenuOpen}
-          onChildCreated={handleChildCreated}
-          onRenameStart={handleRenameStart}
-          onDeleted={handleDeleted}
-        />
-      )}
     </ShadcnSidebar>
   );
 }

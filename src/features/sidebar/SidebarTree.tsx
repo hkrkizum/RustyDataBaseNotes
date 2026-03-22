@@ -21,9 +21,15 @@ interface SidebarTreeProps {
   onRenameSubmit: (id: string, newTitle: string) => void;
   onRenameCancel: () => void;
   onMovePage: (pageId: string, newParentId: string | null) => void;
-  onContextMenu?: (node: SidebarTreeNode, e: React.MouseEvent) => void;
-  onMoreClick?: (node: SidebarTreeNode, e: React.MouseEvent) => void;
+  onChildCreated: (
+    page: { id: string; title: string },
+    parentId: string,
+  ) => void;
+  onRenameStart: (id: string) => void;
+  onDeleted: (id: string) => void;
 }
+
+type SidebarTreeNodesProps = Omit<SidebarTreeProps, "onMovePage">;
 
 function isDragItemData(data: Record<string, unknown>): data is DragItemData {
   return data.type === "sidebar-item";
@@ -39,9 +45,10 @@ function SidebarTreeNodes({
   onItemClick,
   onRenameSubmit,
   onRenameCancel,
-  onContextMenu,
-  onMoreClick,
-}: Omit<SidebarTreeProps, "onMovePage">) {
+  onChildCreated,
+  onRenameStart,
+  onDeleted,
+}: SidebarTreeNodesProps) {
   return (
     <>
       {nodes.map((node) => {
@@ -64,12 +71,9 @@ function SidebarTreeNodes({
                 onToggleExpanded={() => onToggleExpanded(node.id)}
                 onRenameSubmit={(title) => onRenameSubmit(node.id, title)}
                 onRenameCancel={onRenameCancel}
-                onContextMenu={
-                  onContextMenu ? (e) => onContextMenu(node, e) : undefined
-                }
-                onMoreClick={
-                  onMoreClick ? (e) => onMoreClick(node, e) : undefined
-                }
+                onChildCreated={onChildCreated}
+                onRenameStart={onRenameStart}
+                onDeleted={onDeleted}
               />
               <CollapsibleContent>
                 <SidebarMenuSub>
@@ -83,8 +87,9 @@ function SidebarTreeNodes({
                     onItemClick={onItemClick}
                     onRenameSubmit={onRenameSubmit}
                     onRenameCancel={onRenameCancel}
-                    onContextMenu={onContextMenu}
-                    onMoreClick={onMoreClick}
+                    onChildCreated={onChildCreated}
+                    onRenameStart={onRenameStart}
+                    onDeleted={onDeleted}
                   />
                 </SidebarMenuSub>
               </CollapsibleContent>
@@ -105,10 +110,9 @@ function SidebarTreeNodes({
             onToggleExpanded={() => {}}
             onRenameSubmit={(title) => onRenameSubmit(node.id, title)}
             onRenameCancel={onRenameCancel}
-            onContextMenu={
-              onContextMenu ? (e) => onContextMenu(node, e) : undefined
-            }
-            onMoreClick={onMoreClick ? (e) => onMoreClick(node, e) : undefined}
+            onChildCreated={onChildCreated}
+            onRenameStart={onRenameStart}
+            onDeleted={onDeleted}
           />
         );
       })}
@@ -127,8 +131,9 @@ export function SidebarTree({
   onRenameSubmit,
   onRenameCancel,
   onMovePage,
-  onContextMenu,
-  onMoreClick,
+  onChildCreated,
+  onRenameStart,
+  onDeleted,
 }: SidebarTreeProps) {
   const rootDropRef = useRef<HTMLDivElement>(null);
   const [rootDropActive, setRootDropActive] = useState(false);
@@ -155,7 +160,7 @@ export function SidebarTree({
         if (!instruction) return;
 
         const targetPageId = targetData.pageId as string | undefined;
-        const targetParentId = targetData.parentId as string | null | undefined;
+        const targetParentId = (targetData.parentId as string | null) ?? null;
 
         if (!targetPageId) return;
 
@@ -164,12 +169,15 @@ export function SidebarTree({
             onMovePage(source.data.pageId, targetPageId);
             break;
           case "reorder-above":
-          case "reorder-below":
-            // Reparent to target's parent (same-parent reorder is future scope)
-            onMovePage(source.data.pageId, targetParentId ?? null);
+          case "reorder-below": {
+            // Same-parent reorder is out of scope — skip if already siblings
+            const sourceParentId = source.data.parentId ?? null;
+            if (sourceParentId === targetParentId) break;
+            // Cross-parent: reparent to target's parent
+            onMovePage(source.data.pageId, targetParentId);
             break;
+          }
           case "instruction-blocked":
-            // Do nothing — drop was blocked
             break;
         }
       },
@@ -203,8 +211,9 @@ export function SidebarTree({
         onItemClick={onItemClick}
         onRenameSubmit={onRenameSubmit}
         onRenameCancel={onRenameCancel}
-        onContextMenu={onContextMenu}
-        onMoreClick={onMoreClick}
+        onChildCreated={onChildCreated}
+        onRenameStart={onRenameStart}
+        onDeleted={onDeleted}
       />
       <div
         ref={rootDropRef}
