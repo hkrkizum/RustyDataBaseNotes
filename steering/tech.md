@@ -1,5 +1,5 @@
 # Technology Stack & Practices
-<!-- Last rollup: 2026-03-22, 004-table-view-operations -->
+<!-- Last rollup: 2026-03-23, 005-page-tree-nav -->
 
 ## 技術スタック
 
@@ -28,6 +28,12 @@
 | React | 19.1 | UI フレームワーク |
 | @tauri-apps/api | ^2 | Tauri IPC クライアント |
 | Sonner | ^2.0.7 | Toast 通知 |
+| Tailwind CSS | v4 | ユーティリティファーストCSS（CSS Modules を全廃し移行） <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| @tailwindcss/vite | — | Tailwind CSS の Vite プラグイン <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| shadcn/ui | latest | UI コンポーネントライブラリ（Radix UI ベース，コピー方式） <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| @atlaskit/pragmatic-drag-and-drop | — | ツリー D&D（autoScrollForElements 含む） <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| lucide-react | — | アイコン（ページ/DB 区別等） <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| clsx + tailwind-merge | — | cn() ヘルパー（shadcn/ui 標準） <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
 | Vite | ^7.0.4 | ビルドツール・HMR |
 
 ### 開発ツール
@@ -54,6 +60,11 @@
 | 即時保存 | プロパティ値 | セル編集は即時永続化 |
 | 一括保存 | ブロックエディタ | トランザクション内で一括永続化 |
 | CASCADE 削除 | FK 制約 | 親削除→子自動削除 |
+| 自動保存（debounce） | `hooks/useAutoSave` | 500ms debounce + 指数バックオフリトライ（最大3回）。アンマウント時フラッシュ <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| 楽観的更新 | `features/sidebar` | 操作後ローカル即時反映，エラー時ロールバック + 再取得 <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| localStorage 状態永続化 | サイドバー | ツリー展開/折りたたみ，サイドバー表示/非表示，最後に開いたアイテムを localStorage で保持 <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| ドメインサービス | `domain::page::hierarchy` | PageHierarchyService — 純粋ロジック（リポジトリ非依存），IPC がデータをロードして渡す <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
+| Recursive CTE | `page_repository` | 祖先チェーン取得。深度安全上限付き <!-- rollup: 005-page-tree-nav, 2026-03-23 --> |
 
 ## テスト方針
 
