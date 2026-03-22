@@ -19,6 +19,121 @@ impl SqlxPageRepository {
     }
 }
 
+/// Converts raw row fields into a [`Page`] entity.
+///
+/// Centralises the parsing logic shared by all repository queries.
+///
+/// # Errors
+///
+/// Returns [`CommandError`] if any field fails to parse.
+fn row_to_page(
+    id: String,
+    title: String,
+    database_id: Option<String>,
+    parent_id: Option<String>,
+    sort_order: i64,
+    created_at: String,
+    updated_at: String,
+) -> Result<Page, CommandError> {
+    let page_id: PageId = id.parse().map_err(|_| {
+        crate::infrastructure::persistence::error::StorageError::from(sqlx::Error::ColumnDecode {
+            index: "id".to_owned(),
+            source: Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid page id",
+            )),
+        })
+    })?;
+    let title = PageTitle::try_from(title)?;
+    let database_id = database_id
+        .map(|s| s.parse::<DatabaseId>())
+        .transpose()
+        .map_err(|_| {
+            crate::infrastructure::persistence::error::StorageError::from(
+                sqlx::Error::ColumnDecode {
+                    index: "database_id".to_owned(),
+                    source: Box::new(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "invalid database_id",
+                    )),
+                },
+            )
+        })?;
+    let parent_id = parent_id
+        .map(|s| s.parse::<PageId>())
+        .transpose()
+        .map_err(|_| {
+            crate::infrastructure::persistence::error::StorageError::from(
+                sqlx::Error::ColumnDecode {
+                    index: "parent_id".to_owned(),
+                    source: Box::new(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        "invalid parent_id",
+                    )),
+                },
+            )
+        })?;
+    let created_at: DateTime<Utc> = created_at.parse().map_err(|_| {
+        crate::infrastructure::persistence::error::StorageError::from(sqlx::Error::ColumnDecode {
+            index: "created_at".to_owned(),
+            source: Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid created_at timestamp",
+            )),
+        })
+    })?;
+    let updated_at: DateTime<Utc> = updated_at.parse().map_err(|_| {
+        crate::infrastructure::persistence::error::StorageError::from(sqlx::Error::ColumnDecode {
+            index: "updated_at".to_owned(),
+            source: Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid updated_at timestamp",
+            )),
+        })
+    })?;
+    Ok(Page::from_stored(
+        page_id,
+        title,
+        database_id,
+        parent_id,
+        sort_order,
+        created_at,
+        updated_at,
+    ))
+}
+
+/// Converts multiple raw rows into [`Page`] entities.
+fn rows_to_pages<I>(rows: I) -> Result<Vec<Page>, CommandError>
+where
+    I: IntoIterator<
+        Item = (
+            String,
+            String,
+            Option<String>,
+            Option<String>,
+            i64,
+            String,
+            String,
+        ),
+    >,
+{
+    rows.into_iter()
+        .map(
+            |(id, title, database_id, parent_id, sort_order, created_at, updated_at)| {
+                row_to_page(
+                    id,
+                    title,
+                    database_id,
+                    parent_id,
+                    sort_order,
+                    created_at,
+                    updated_at,
+                )
+            },
+        )
+        .collect()
+}
+
 impl PageRepository for SqlxPageRepository {
     type Error = CommandError;
 
@@ -26,14 +141,18 @@ impl PageRepository for SqlxPageRepository {
         let id = page.id().to_string();
         let title = page.title().to_string();
         let database_id = page.database_id().map(|id| id.to_string());
+        let parent_id = page.parent_id().map(|id| id.to_string());
+        let sort_order = page.sort_order();
         let created_at = page.created_at().to_rfc3339();
         let updated_at = page.updated_at().to_rfc3339();
 
         sqlx::query!(
-            "INSERT INTO pages (id, title, database_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO pages (id, title, database_id, parent_id, sort_order, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
             id,
             title,
             database_id,
+            parent_id,
+            sort_order,
             created_at,
             updated_at
         )
@@ -48,7 +167,7 @@ impl PageRepository for SqlxPageRepository {
         let id_str = id.to_string();
 
         let row = sqlx::query!(
-            "SELECT id, title, database_id, created_at, updated_at FROM pages WHERE id = ?",
+            "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages WHERE id = ?",
             id_str
         )
         .fetch_optional(&self.pool)
@@ -56,130 +175,38 @@ impl PageRepository for SqlxPageRepository {
         .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
 
         match row {
-            Some(row) => {
-                let page_id: PageId = row
-                    .id
-                    .parse()
-                    .map_err(|_| PageError::NotFound { id: id.clone() })?;
-                let title = PageTitle::try_from(row.title)?;
-                let database_id = row
-                    .database_id
-                    .map(|s| s.parse::<DatabaseId>())
-                    .transpose()
-                    .map_err(|_| {
-                        crate::infrastructure::persistence::error::StorageError::from(
-                            sqlx::Error::ColumnDecode {
-                                index: "database_id".to_owned(),
-                                source: Box::new(std::io::Error::new(
-                                    std::io::ErrorKind::InvalidData,
-                                    "invalid database_id",
-                                )),
-                            },
-                        )
-                    })?;
-                let created_at: DateTime<Utc> = row.created_at.parse().map_err(|_| {
-                    crate::infrastructure::persistence::error::StorageError::from(
-                        sqlx::Error::ColumnDecode {
-                            index: "created_at".to_owned(),
-                            source: Box::new(std::io::Error::new(
-                                std::io::ErrorKind::InvalidData,
-                                "invalid created_at timestamp",
-                            )),
-                        },
-                    )
-                })?;
-                let updated_at: DateTime<Utc> = row.updated_at.parse().map_err(|_| {
-                    crate::infrastructure::persistence::error::StorageError::from(
-                        sqlx::Error::ColumnDecode {
-                            index: "updated_at".to_owned(),
-                            source: Box::new(std::io::Error::new(
-                                std::io::ErrorKind::InvalidData,
-                                "invalid updated_at timestamp",
-                            )),
-                        },
-                    )
-                })?;
-                Ok(Page::from_stored(
-                    page_id,
-                    title,
-                    database_id,
-                    created_at,
-                    updated_at,
-                ))
-            }
+            Some(row) => row_to_page(
+                row.id,
+                row.title,
+                row.database_id,
+                row.parent_id,
+                row.sort_order,
+                row.created_at,
+                row.updated_at,
+            ),
             None => Err(PageError::NotFound { id: id.clone() }.into()),
         }
     }
 
     async fn find_all(&self) -> Result<Vec<Page>, Self::Error> {
         let rows = sqlx::query!(
-            "SELECT id, title, database_id, created_at, updated_at FROM pages ORDER BY created_at DESC"
+            "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages ORDER BY created_at DESC"
         )
         .fetch_all(&self.pool)
         .await
         .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
 
-        let mut pages = Vec::with_capacity(rows.len());
-        for row in rows {
-            let page_id: PageId = row.id.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "id".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid page id",
-                        )),
-                    },
-                )
-            })?;
-            let title = PageTitle::try_from(row.title)?;
-            let database_id = row
-                .database_id
-                .map(|s| s.parse::<DatabaseId>())
-                .transpose()
-                .map_err(|_| {
-                    crate::infrastructure::persistence::error::StorageError::from(
-                        sqlx::Error::ColumnDecode {
-                            index: "database_id".to_owned(),
-                            source: Box::new(std::io::Error::new(
-                                std::io::ErrorKind::InvalidData,
-                                "invalid database_id",
-                            )),
-                        },
-                    )
-                })?;
-            let created_at: DateTime<Utc> = row.created_at.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "created_at".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid created_at timestamp",
-                        )),
-                    },
-                )
-            })?;
-            let updated_at: DateTime<Utc> = row.updated_at.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "updated_at".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid updated_at timestamp",
-                        )),
-                    },
-                )
-            })?;
-            pages.push(Page::from_stored(
-                page_id,
-                title,
-                database_id,
-                created_at,
-                updated_at,
-            ));
-        }
-
-        Ok(pages)
+        rows_to_pages(rows.into_iter().map(|r| {
+            (
+                r.id,
+                r.title,
+                r.database_id,
+                r.parent_id,
+                r.sort_order,
+                r.created_at,
+                r.updated_at,
+            )
+        }))
     }
 
     async fn update_title(&self, id: &PageId, title: &PageTitle) -> Result<Page, Self::Error> {
@@ -247,73 +274,23 @@ impl PageRepository for SqlxPageRepository {
 
     async fn find_standalone_pages(&self) -> Result<Vec<Page>, Self::Error> {
         let rows = sqlx::query!(
-            "SELECT id, title, database_id, created_at, updated_at FROM pages WHERE database_id IS NULL ORDER BY created_at DESC"
+            "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages WHERE database_id IS NULL ORDER BY created_at DESC"
         )
         .fetch_all(&self.pool)
         .await
         .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
 
-        let mut pages = Vec::with_capacity(rows.len());
-        for row in rows {
-            let page_id: PageId = row.id.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "id".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid page id",
-                        )),
-                    },
-                )
-            })?;
-            let title = PageTitle::try_from(row.title)?;
-            let database_id = row
-                .database_id
-                .map(|s| s.parse::<DatabaseId>())
-                .transpose()
-                .map_err(|_| {
-                    crate::infrastructure::persistence::error::StorageError::from(
-                        sqlx::Error::ColumnDecode {
-                            index: "database_id".to_owned(),
-                            source: Box::new(std::io::Error::new(
-                                std::io::ErrorKind::InvalidData,
-                                "invalid database_id",
-                            )),
-                        },
-                    )
-                })?;
-            let created_at: DateTime<Utc> = row.created_at.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "created_at".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid created_at timestamp",
-                        )),
-                    },
-                )
-            })?;
-            let updated_at: DateTime<Utc> = row.updated_at.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "updated_at".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid updated_at timestamp",
-                        )),
-                    },
-                )
-            })?;
-            pages.push(Page::from_stored(
-                page_id,
-                title,
-                database_id,
-                created_at,
-                updated_at,
-            ));
-        }
-
-        Ok(pages)
+        rows_to_pages(rows.into_iter().map(|r| {
+            (
+                r.id,
+                r.title,
+                r.database_id,
+                r.parent_id,
+                r.sort_order,
+                r.created_at,
+                r.updated_at,
+            )
+        }))
     }
 
     async fn find_by_database_id(
@@ -323,70 +300,167 @@ impl PageRepository for SqlxPageRepository {
         let db_id_str = database_id.to_string();
 
         let rows = sqlx::query!(
-            "SELECT id, title, database_id, created_at, updated_at FROM pages WHERE database_id = ? ORDER BY created_at DESC",
+            "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages WHERE database_id = ? ORDER BY created_at DESC",
             db_id_str
         )
         .fetch_all(&self.pool)
         .await
         .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
 
-        let mut pages = Vec::with_capacity(rows.len());
-        for row in rows {
-            let page_id: PageId = row.id.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "id".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid page id",
-                        )),
-                    },
-                )
-            })?;
-            let title = PageTitle::try_from(row.title)?;
-            let db_id = row
-                .database_id
-                .map(|s| s.parse::<DatabaseId>())
-                .transpose()
-                .map_err(|_| {
-                    crate::infrastructure::persistence::error::StorageError::from(
-                        sqlx::Error::ColumnDecode {
-                            index: "database_id".to_owned(),
-                            source: Box::new(std::io::Error::new(
-                                std::io::ErrorKind::InvalidData,
-                                "invalid database_id",
-                            )),
-                        },
-                    )
-                })?;
-            let created_at: DateTime<Utc> = row.created_at.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "created_at".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid created_at timestamp",
-                        )),
-                    },
-                )
-            })?;
-            let updated_at: DateTime<Utc> = row.updated_at.parse().map_err(|_| {
-                crate::infrastructure::persistence::error::StorageError::from(
-                    sqlx::Error::ColumnDecode {
-                        index: "updated_at".to_owned(),
-                        source: Box::new(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "invalid updated_at timestamp",
-                        )),
-                    },
-                )
-            })?;
-            pages.push(Page::from_stored(
-                page_id, title, db_id, created_at, updated_at,
-            ));
+        rows_to_pages(rows.into_iter().map(|r| {
+            (
+                r.id,
+                r.title,
+                r.database_id,
+                r.parent_id,
+                r.sort_order,
+                r.created_at,
+                r.updated_at,
+            )
+        }))
+    }
+
+    async fn update_parent_id(
+        &self,
+        page_id: &PageId,
+        parent_id: Option<&PageId>,
+    ) -> Result<Page, Self::Error> {
+        let id_str = page_id.to_string();
+        let parent_id_str = parent_id.map(|id| id.to_string());
+        let updated_at = Utc::now().to_rfc3339();
+
+        let result = sqlx::query!(
+            "UPDATE pages SET parent_id = ?, updated_at = ? WHERE id = ?",
+            parent_id_str,
+            updated_at,
+            id_str
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        if result.rows_affected() == 0 {
+            return Err(PageError::NotFound {
+                id: page_id.clone(),
+            }
+            .into());
         }
 
-        Ok(pages)
+        self.find_by_id(page_id).await
+    }
+
+    async fn find_children(&self, parent_id: &PageId) -> Result<Vec<Page>, Self::Error> {
+        let parent_id_str = parent_id.to_string();
+
+        let rows = sqlx::query!(
+            "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages WHERE parent_id = ? ORDER BY created_at DESC",
+            parent_id_str
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        rows_to_pages(rows.into_iter().map(|r| {
+            (
+                r.id,
+                r.title,
+                r.database_id,
+                r.parent_id,
+                r.sort_order,
+                r.created_at,
+                r.updated_at,
+            )
+        }))
+    }
+
+    async fn find_root_pages(&self) -> Result<Vec<Page>, Self::Error> {
+        let rows = sqlx::query!(
+            "SELECT id, title, database_id, parent_id, sort_order, created_at, updated_at FROM pages WHERE parent_id IS NULL AND database_id IS NULL ORDER BY created_at DESC"
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        rows_to_pages(rows.into_iter().map(|r| {
+            (
+                r.id,
+                r.title,
+                r.database_id,
+                r.parent_id,
+                r.sort_order,
+                r.created_at,
+                r.updated_at,
+            )
+        }))
+    }
+
+    async fn find_ancestors(&self, page_id: &PageId) -> Result<Vec<Page>, Self::Error> {
+        let id_str = page_id.to_string();
+
+        let rows = sqlx::query!(
+            r#"
+            WITH RECURSIVE ancestors AS (
+                SELECT id, parent_id, 1 AS depth
+                FROM pages
+                WHERE id = ?1
+                UNION ALL
+                SELECT p.id, p.parent_id, a.depth + 1
+                FROM pages p
+                INNER JOIN ancestors a ON p.id = a.parent_id
+                WHERE a.depth < 10
+            )
+            SELECT p.id, p.title, p.database_id, p.parent_id, p.sort_order,
+                   p.created_at, p.updated_at
+            FROM ancestors a
+            INNER JOIN pages p ON a.id = p.id
+            WHERE a.id != ?1
+            ORDER BY a.depth ASC
+            "#,
+            id_str
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+
+        rows_to_pages(rows.into_iter().map(|r| {
+            (
+                r.id,
+                r.title,
+                r.database_id,
+                r.parent_id,
+                r.sort_order,
+                r.created_at,
+                r.updated_at,
+            )
+        }))
+    }
+
+    async fn bulk_update_parent_id(
+        &self,
+        page_ids: &[PageId],
+        new_parent_id: Option<&PageId>,
+    ) -> Result<(), Self::Error> {
+        if page_ids.is_empty() {
+            return Ok(());
+        }
+
+        let new_parent_id_str = new_parent_id.map(|id| id.to_string());
+        let updated_at = Utc::now().to_rfc3339();
+
+        for page_id in page_ids {
+            let id_str = page_id.to_string();
+            sqlx::query!(
+                "UPDATE pages SET parent_id = ?, updated_at = ? WHERE id = ?",
+                new_parent_id_str,
+                updated_at,
+                id_str
+            )
+            .execute(&self.pool)
+            .await
+            .map_err(crate::infrastructure::persistence::error::StorageError::from)?;
+        }
+
+        Ok(())
     }
 }
 

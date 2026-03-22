@@ -27,4 +27,4 @@ if ! command -v cargo-make &>/dev/null && ! cargo make --version &>/dev/null 2>&
 fi
 
 echo -e "${CYAN}==> [pre-merge-commit] Running full QA before merge into $target_branch...${RESET}"
-cargo make qa
+QA_CHECK_ONLY=1 cargo make qa

@@ -94,23 +94,67 @@ impl fmt::Display for PageTitle {
 }
 
 /// A page entity — the aggregate root for user-created pages.
+///
+/// A page is either "standalone" (`database_id` is `None`) or
+/// "database-owned" (`database_id` is `Some`). Only standalone pages
+/// can participate in the page hierarchy via `parent_id`.
 #[derive(Debug, Clone)]
 pub struct Page {
     id: PageId,
     title: PageTitle,
     database_id: Option<DatabaseId>,
+    parent_id: Option<PageId>,
+    sort_order: i64,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
 }
 
 impl Page {
-    /// Creates a new [`Page`] with a generated UUIDv7 ID and the current timestamp.
+    /// Creates a new standalone root-level [`Page`] with a generated UUIDv7 ID.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageTitle};
+    /// let title = PageTitle::try_from("My Page".to_owned())?;
+    /// let page = Page::new(title);
+    /// assert!(page.parent_id().is_none());
+    /// assert!(page.is_standalone());
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     pub fn new(title: PageTitle) -> Self {
         let now = Utc::now();
         Self {
             id: PageId::new(),
             title,
             database_id: None,
+            parent_id: None,
+            sort_order: 0,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+
+    /// Creates a new standalone [`Page`] as a child of the given parent.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use rustydatabasenotes_lib::domain::page::entity::{Page, PageId, PageTitle};
+    /// let parent_id = PageId::new();
+    /// let title = PageTitle::try_from("Child Page".to_owned())?;
+    /// let child = Page::new_child(title, parent_id.clone());
+    /// assert_eq!(child.parent_id(), Some(&parent_id));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    pub fn new_child(title: PageTitle, parent_id: PageId) -> Self {
+        let now = Utc::now();
+        Self {
+            id: PageId::new(),
+            title,
+            database_id: None,
+            parent_id: Some(parent_id),
+            sort_order: 0,
             created_at: now,
             updated_at: now,
         }
@@ -121,6 +165,8 @@ impl Page {
         id: PageId,
         title: PageTitle,
         database_id: Option<DatabaseId>,
+        parent_id: Option<PageId>,
+        sort_order: i64,
         created_at: DateTime<Utc>,
         updated_at: DateTime<Utc>,
     ) -> Self {
@@ -128,6 +174,8 @@ impl Page {
             id,
             title,
             database_id,
+            parent_id,
+            sort_order,
             created_at,
             updated_at,
         }
@@ -146,6 +194,26 @@ impl Page {
     /// Returns a reference to the optional database ID this page belongs to.
     pub fn database_id(&self) -> Option<&DatabaseId> {
         self.database_id.as_ref()
+    }
+
+    /// Returns a reference to the optional parent page ID.
+    pub fn parent_id(&self) -> Option<&PageId> {
+        self.parent_id.as_ref()
+    }
+
+    /// Returns the sort order value for ordering within the same parent.
+    pub fn sort_order(&self) -> i64 {
+        self.sort_order
+    }
+
+    /// Returns `true` if this page is standalone (not owned by a database).
+    pub fn is_standalone(&self) -> bool {
+        self.database_id.is_none()
+    }
+
+    /// Returns `true` if this page is owned by a database.
+    pub fn is_database_page(&self) -> bool {
+        self.database_id.is_some()
     }
 
     /// Returns the page's creation timestamp.

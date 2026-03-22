@@ -13,7 +13,6 @@ export interface Block {
 export interface EditorState {
   pageId: string;
   blocks: Block[];
-  isDirty: boolean;
 }
 
 /** Extended error kinds including block-related errors. */

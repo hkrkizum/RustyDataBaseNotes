@@ -9,7 +9,6 @@ import { GroupPanel } from "./GroupPanel";
 import { SortPanel } from "./SortPanel";
 import { TableHeader } from "./TableHeader";
 import { TableRow } from "./TableRow";
-import styles from "./TableView.module.css";
 import type {
   DatabaseDto,
   FilterConditionDto,
@@ -243,18 +242,18 @@ export function TableView({
   const hasGroup = view?.groupCondition != null;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
+    <div className="w-full">
+      <div className="flex items-center gap-4 mb-6">
         <button
           type="button"
-          className={styles.backBtn}
+          className="px-3 py-1.5 border border-border rounded cursor-pointer text-sm bg-transparent hover:bg-accent"
           onClick={onNavigateBack}
         >
           &larr; 戻る
         </button>
         {editingTitle ? (
           <input
-            className={styles.titleInput}
+            className="text-2xl font-bold border border-ring rounded px-1.5 py-0.5 outline-none"
             type="text"
             value={dbTitle}
             onChange={(e) => setDbTitle(e.target.value)}
@@ -274,45 +273,48 @@ export function TableView({
         ) : (
           <button
             type="button"
-            className={styles.titleBtn}
+            className="bg-transparent border-none cursor-pointer p-0 font-inherit text-left rounded hover:bg-accent"
             onClick={() => setEditingTitle(true)}
             title="クリックして名前を編集"
           >
-            <h2 className={styles.title}>{dbTitle}</h2>
+            <h2 className="m-0 text-2xl">{dbTitle}</h2>
           </button>
         )}
         <button
           type="button"
-          className={styles.deleteDatabaseBtn}
+          className="ml-auto px-3 py-1.5 border border-border rounded bg-transparent cursor-pointer text-sm text-muted-foreground hover:text-destructive hover:border-destructive"
           onClick={() => setShowDeleteDbConfirm(true)}
           title="データベースを削除"
         >
           削除
         </button>
       </div>
-      <div className={styles.actions}>
-        <form className={styles.form} onSubmit={handleCreatePage}>
+      <div className="flex items-center gap-3 mb-6">
+        <form className="flex gap-2" onSubmit={handleCreatePage}>
           <input
-            className={styles.input}
+            className="px-3 py-1.5 border border-border rounded text-sm w-[200px]"
             type="text"
             placeholder="新しいページ名"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
           />
-          <button type="submit" className={styles.submitBtn}>
+          <button
+            type="submit"
+            className="px-3 py-1.5 border border-border rounded bg-transparent cursor-pointer text-sm hover:bg-accent"
+          >
             追加
           </button>
         </form>
         <button
           type="button"
-          className={styles.existingBtn}
+          className="px-3 py-1.5 border border-border rounded bg-transparent cursor-pointer text-sm hover:bg-accent"
           onClick={() => setShowModal(true)}
         >
           既存ページを追加
         </button>
         <button
           type="button"
-          className={styles.existingBtn}
+          className="px-3 py-1.5 border border-border rounded bg-transparent cursor-pointer text-sm hover:bg-accent"
           onClick={() => {
             setShowSortPanel((v) => !v);
             setShowFilterPanel(false);
@@ -322,7 +324,7 @@ export function TableView({
         </button>
         <button
           type="button"
-          className={styles.existingBtn}
+          className="px-3 py-1.5 border border-border rounded bg-transparent cursor-pointer text-sm hover:bg-accent"
           onClick={() => {
             setShowFilterPanel((v) => !v);
             setShowSortPanel(false);
@@ -332,7 +334,7 @@ export function TableView({
         </button>
         <button
           type="button"
-          className={styles.existingBtn}
+          className="px-3 py-1.5 border border-border rounded bg-transparent cursor-pointer text-sm hover:bg-accent"
           onClick={() => {
             setShowGroupPanel((v) => !v);
             setShowSortPanel(false);
@@ -344,7 +346,7 @@ export function TableView({
         {(sortCount > 0 || filterCount > 0 || hasGroup) && (
           <button
             type="button"
-            className={styles.existingBtn}
+            className="px-3 py-1.5 border border-border rounded bg-transparent cursor-pointer text-sm hover:bg-accent"
             onClick={() => void resetView()}
           >
             設定をリセット
@@ -380,21 +382,23 @@ export function TableView({
       )}
 
       {loading ? (
-        <div className={styles.emptyState}>
+        <div className="text-center p-12 text-muted-foreground">
           <p>読み込み中...</p>
         </div>
       ) : rows.length === 0 && properties.length === 0 ? (
-        <div className={styles.emptyState}>
+        <div className="text-center p-12 text-muted-foreground">
           <p>ページがありません</p>
-          <p className={styles.hint}>
+          <p className="text-sm text-muted-foreground/70">
             ページを追加してテーブルを構築しましょう
           </p>
         </div>
       ) : (
-        <div className={styles.tableWrapper}>
-          <div className={styles.table}>
-            <div className={styles.tableHeaderRow}>
-              <div className={styles.titleHeader}>タイトル</div>
+        <div className="overflow-x-auto border border-border rounded">
+          <div className="min-w-full">
+            <div className="flex items-stretch bg-muted border-b-2 border-border font-semibold text-sm text-muted-foreground">
+              <div className="min-w-[200px] flex-[0_0_200px] px-2.5 py-2 flex items-center border-r border-border">
+                タイトル
+              </div>
               <TableHeader
                 properties={properties}
                 view={view}
@@ -407,7 +411,7 @@ export function TableView({
               />
             </div>
             {rows.length === 0 ? (
-              <div className={styles.emptyRow}>
+              <div className="p-8 text-center text-muted-foreground text-sm">
                 <p>
                   {filterCount > 0
                     ? "条件に一致するページがありません"
@@ -416,7 +420,7 @@ export function TableView({
                 {filterCount > 0 && (
                   <button
                     type="button"
-                    className={styles.clearFilterBtn}
+                    className="mt-2 px-3 py-1 border border-ring rounded bg-transparent text-ring cursor-pointer text-sm hover:bg-ring/10"
                     onClick={() => void updateFilterConditions([])}
                   >
                     すべてのフィルタを解除
@@ -489,7 +493,7 @@ export function TableView({
       {showDeleteDbConfirm && (
         /* biome-ignore lint/a11y/noStaticElementInteractions: confirm overlay */
         <div
-          className={styles.confirmOverlay}
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100]"
           role="presentation"
           onClick={() => setShowDeleteDbConfirm(false)}
           onKeyDown={(e) => {
@@ -499,24 +503,24 @@ export function TableView({
           {/* biome-ignore lint/a11y/noStaticElementInteractions: confirm dialog */}
           {/* biome-ignore lint/a11y/useKeyWithClickEvents: confirm dialog */}
           <div
-            className={styles.confirmDialog}
+            className="bg-card rounded-lg p-6 w-[360px] shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className={styles.confirmMessage}>
+            <p className="m-0 mb-4 text-[0.95rem] leading-relaxed">
               データベース「{dbTitle}
               」を削除しますか？プロパティと値はすべて削除されます。ページ自体は残ります。
             </p>
-            <div className={styles.confirmActions}>
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
-                className={styles.cancelBtn}
+                className="px-4 py-2 border border-border rounded cursor-pointer text-sm bg-transparent hover:bg-accent"
                 onClick={() => setShowDeleteDbConfirm(false)}
               >
                 キャンセル
               </button>
               <button
                 type="button"
-                className={styles.confirmDeleteBtn}
+                className="px-4 py-2 border-none rounded bg-destructive text-white cursor-pointer text-sm hover:bg-destructive/80"
                 onClick={handleDeleteDatabase}
               >
                 削除する

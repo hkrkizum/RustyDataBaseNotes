@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import styles from "./GroupHeader.module.css";
 import type { GroupInfoDto } from "./types";
 
 interface GroupHeaderProps {
@@ -15,13 +14,19 @@ export function GroupHeader({ group, onToggle }: GroupHeaderProps) {
   return (
     <button
       type="button"
-      className={styles.groupHeader}
+      className="flex items-center gap-2 w-full px-2.5 py-1.5 border-none border-b border-border bg-muted cursor-pointer font-inherit text-sm text-left hover:bg-accent"
       onClick={handleClick}
       aria-expanded={!group.isCollapsed}
     >
-      <span className={styles.toggle}>{group.isCollapsed ? "▶" : "▼"}</span>
-      <span className={styles.label}>{group.displayValue}</span>
-      <span className={styles.count}>{group.count}</span>
+      <span className="text-[0.7rem] text-muted-foreground">
+        {group.isCollapsed ? "▶" : "▼"}
+      </span>
+      <span className="font-semibold text-foreground">
+        {group.displayValue}
+      </span>
+      <span className="text-xs text-muted-foreground bg-accent px-1.5 py-0.5 rounded-full">
+        {group.count}
+      </span>
     </button>
   );
 }

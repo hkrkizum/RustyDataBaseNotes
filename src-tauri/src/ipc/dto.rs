@@ -24,6 +24,10 @@ pub struct PageDto {
     pub title: String,
     /// Optional parent database ID.
     pub database_id: Option<String>,
+    /// Optional parent page ID for hierarchy.
+    pub parent_id: Option<String>,
+    /// Sort order within the same parent (default 0).
+    pub sort_order: i64,
     /// ISO 8601 creation timestamp.
     pub created_at: String,
     /// ISO 8601 last-updated timestamp.
@@ -36,10 +40,40 @@ impl From<Page> for PageDto {
             id: page.id().to_string(),
             title: page.title().to_string(),
             database_id: page.database_id().map(|id| id.to_string()),
+            parent_id: page.parent_id().map(|id| id.to_string()),
+            sort_order: page.sort_order(),
             created_at: page.created_at().to_rfc3339(),
             updated_at: page.updated_at().to_rfc3339(),
         }
     }
+}
+
+/// Data transfer object for sidebar items (pages and databases).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SidebarItemDto {
+    /// UUIDv7 identifier.
+    pub id: String,
+    /// Display title.
+    pub title: String,
+    /// Whether this item is a page or a database.
+    pub item_type: SidebarItemType,
+    /// Parent page ID (for standalone pages with a parent).
+    pub parent_id: Option<String>,
+    /// Database ID (for database-owned pages).
+    pub database_id: Option<String>,
+    /// ISO 8601 creation timestamp.
+    pub created_at: String,
+}
+
+/// The type of a sidebar item.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum SidebarItemType {
+    /// A standalone page.
+    Page,
+    /// A database.
+    Database,
 }
 
 /// Data transfer object for a single [`Block`].
@@ -80,7 +114,7 @@ impl From<&Block> for BlockDto {
 
 /// Data transfer object for the editor state returned to the frontend.
 ///
-/// Contains the full block list and dirty state for a page session.
+/// Contains the full block list for a page session.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditorStateDto {
@@ -88,8 +122,6 @@ pub struct EditorStateDto {
     pub page_id: String,
     /// All blocks in position order.
     pub blocks: Vec<BlockDto>,
-    /// Whether the session has unsaved changes.
-    pub is_dirty: bool,
 }
 
 impl EditorStateDto {
@@ -98,7 +130,6 @@ impl EditorStateDto {
         Self {
             page_id: session.page_id().to_string(),
             blocks: session.blocks().iter().map(BlockDto::from).collect(),
-            is_dirty: session.is_dirty(),
         }
     }
 }
