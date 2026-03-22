@@ -17,6 +17,18 @@ export interface SidebarTreeNode {
   databaseId: string | null;
   createdAt: string;
   children: SidebarTreeNode[];
+  /** Depth in the tree (root = 1). Computed during tree building. */
+  depth: number;
+}
+
+/** Data attached to a draggable sidebar item. */
+export interface DragItemData {
+  type: "sidebar-item";
+  pageId: string;
+  parentId: string | null;
+  depth: number;
+  itemType: "page" | "database";
+  [key: string]: unknown;
 }
 
 /** Shape of the last-opened-item stored in localStorage. */

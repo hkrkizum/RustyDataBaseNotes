@@ -1,3 +1,5 @@
+import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +13,7 @@ import {
   SidebarMenu,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SidebarContextMenu } from "./SidebarContextMenu";
 import { SidebarCreateButton } from "./SidebarCreateButton";
 import { SidebarTree } from "./SidebarTree";
 import type { SidebarItem, SidebarTreeNode } from "./types";
@@ -44,12 +47,44 @@ export function AppSidebar({
     setActiveItemId,
     expandedState,
     toggleExpanded,
+    setExpanded,
     refreshItems,
     setItems,
   } = useSidebarData(initialActiveItemId);
 
   const [renamingItemId, setRenamingItemId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [contextMenuNode, setContextMenuNode] =
+    useState<SidebarTreeNode | null>(null);
+  const [contextMenuPos, setContextMenuPos] = useState<{
+    x: number;
+    y: number;
+  }>({ x: 0, y: 0 });
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const itemsLoadedRef = useRef(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Monitor global drag state
+  useEffect(() => {
+    return monitorForElements({
+      onDragStart: () => setIsDragging(true),
+      onDrop: () => setIsDragging(false),
+    });
+  }, []);
+
+  // Auto-scroll for D&D
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Find the actual scrollable viewport inside ScrollArea
+    const viewport = el.querySelector(
+      "[data-radix-scroll-area-viewport]",
+    ) as HTMLElement | null;
+    if (!viewport) return;
+    return autoScrollForElements({
+      element: viewport,
+    });
+  }, []);
 
   // Notify parent when items finish loading (runs once)
   useEffect(() => {
@@ -75,7 +110,6 @@ export function AppSidebar({
     async (id: string, newTitle: string) => {
       setRenamingItemId(null);
 
-      // Determine which IPC to call based on item type
       const item = findItemInTree(tree, id);
       const command =
         item?.itemType === "database"
@@ -84,7 +118,6 @@ export function AppSidebar({
 
       try {
         await invoke(command, { id, title: newTitle });
-        // Optimistic update
         setItems((prev) =>
           prev.map((i) => (i.id === id ? { ...i, title: newTitle } : i)),
         );
@@ -120,6 +153,83 @@ export function AppSidebar({
     [refreshItems, setActiveItemId, onDatabaseClick],
   );
 
+  const handleMovePage = useCallback(
+    async (pageId: string, newParentId: string | null) => {
+      const originalItems = [...items];
+
+      // Optimistic update
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === pageId ? { ...item, parentId: newParentId } : item,
+        ),
+      );
+
+      // Auto-expand the new parent
+      if (newParentId) {
+        setExpanded(newParentId, true);
+      }
+
+      try {
+        await invoke("move_page", { pageId, newParentId });
+      } catch (err) {
+        toast.error(errorMessage(err));
+        setItems(originalItems);
+        await refreshItems();
+      }
+    },
+    [items, setItems, setExpanded, refreshItems],
+  );
+
+  const handleContextMenu = useCallback(
+    (node: SidebarTreeNode, e: React.MouseEvent) => {
+      if (isDragging) {
+        e.preventDefault();
+        return;
+      }
+      e.preventDefault();
+      setContextMenuNode(node);
+      setContextMenuPos({ x: e.clientX, y: e.clientY });
+      setContextMenuOpen(true);
+    },
+    [isDragging],
+  );
+
+  const handleMoreClick = useCallback(
+    (node: SidebarTreeNode, e: React.MouseEvent) => {
+      if (isDragging) return;
+      e.stopPropagation();
+      setContextMenuNode(node);
+      setContextMenuPos({ x: e.clientX, y: e.clientY });
+      setContextMenuOpen(true);
+    },
+    [isDragging],
+  );
+
+  const handleChildCreated = useCallback(
+    async (page: { id: string; title: string }, parentId: string) => {
+      setExpanded(parentId, true);
+      await refreshItems();
+      setActiveItemId(page.id);
+      setRenamingItemId(page.id);
+      onPageClick(page.id, page.title);
+    },
+    [setExpanded, refreshItems, setActiveItemId, onPageClick],
+  );
+
+  const handleRenameStart = useCallback((id: string) => {
+    setRenamingItemId(id);
+  }, []);
+
+  const handleDeleted = useCallback(
+    async (id: string) => {
+      await refreshItems();
+      if (activeItemId === id) {
+        setActiveItemId(null);
+      }
+    },
+    [refreshItems, activeItemId, setActiveItemId],
+  );
+
   return (
     <ShadcnSidebar>
       <SidebarHeader>
@@ -135,7 +245,7 @@ export function AppSidebar({
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <ScrollArea className="flex-1">
+        <ScrollArea ref={scrollRef} className="flex-1">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -149,10 +259,14 @@ export function AppSidebar({
                     activeItemId={activeItemId}
                     expandedState={expandedState}
                     renamingItemId={renamingItemId}
+                    isDragging={isDragging}
                     onToggleExpanded={toggleExpanded}
                     onItemClick={handleItemClick}
                     onRenameSubmit={handleRenameSubmit}
                     onRenameCancel={handleRenameCancel}
+                    onMovePage={handleMovePage}
+                    onContextMenu={handleContextMenu}
+                    onMoreClick={handleMoreClick}
                   />
                 )}
               </SidebarMenu>
@@ -160,6 +274,18 @@ export function AppSidebar({
           </SidebarGroup>
         </ScrollArea>
       </SidebarContent>
+      {contextMenuNode && (
+        <SidebarContextMenu
+          node={contextMenuNode}
+          isDragging={isDragging}
+          open={contextMenuOpen}
+          position={contextMenuPos}
+          onOpenChange={setContextMenuOpen}
+          onChildCreated={handleChildCreated}
+          onRenameStart={handleRenameStart}
+          onDeleted={handleDeleted}
+        />
+      )}
     </ShadcnSidebar>
   );
 }

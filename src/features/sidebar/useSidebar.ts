@@ -28,7 +28,7 @@ function buildTree(items: SidebarItem[]): SidebarTreeNode[] {
 
   // Create nodes
   for (const item of items) {
-    nodeMap.set(item.id, { ...item, children: [] });
+    nodeMap.set(item.id, { ...item, children: [], depth: 1 });
   }
 
   const roots: SidebarTreeNode[] = [];
@@ -53,20 +53,21 @@ function buildTree(items: SidebarItem[]): SidebarTreeNode[] {
     roots.push(node);
   }
 
-  // Sort each level by createdAt DESC
+  // Sort each level by createdAt DESC and assign depth
   const sortDesc = (a: SidebarTreeNode, b: SidebarTreeNode) =>
     b.createdAt.localeCompare(a.createdAt);
 
-  function sortRecursive(nodes: SidebarTreeNode[]) {
+  function sortAndAssignDepth(nodes: SidebarTreeNode[], depth: number) {
     nodes.sort(sortDesc);
     for (const node of nodes) {
+      node.depth = depth;
       if (node.children.length > 0) {
-        sortRecursive(node.children);
+        sortAndAssignDepth(node.children, depth + 1);
       }
     }
   }
 
-  sortRecursive(roots);
+  sortAndAssignDepth(roots, 1);
 
   return roots;
 }
@@ -135,6 +136,41 @@ export function useSidebar(initialActiveItemId?: string | null) {
     }
   }, []);
 
+  // Auto-expand ancestors of the active item on startup
+  useEffect(() => {
+    if (loading || !initialActiveItemId) return;
+
+    // Find all ancestors of the active item and expand them
+    const ancestors = findAncestorIds(items, initialActiveItemId);
+    if (ancestors.length === 0) return;
+
+    setExpandedState((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const ancestorId of ancestors) {
+        if (!next[ancestorId]) {
+          next[ancestorId] = true;
+          changed = true;
+        }
+      }
+      if (!changed) return prev;
+      try {
+        window.localStorage.setItem(EXPANDED_KEY, JSON.stringify(next));
+      } catch {
+        // localStorage unavailable
+      }
+      return next;
+    });
+
+    // Scroll to the active item after expansion
+    requestAnimationFrame(() => {
+      const el = document.querySelector(
+        `[data-sidebar-item-id="${initialActiveItemId}"]`,
+      );
+      el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, [loading, initialActiveItemId, items]);
+
   return {
     items,
     tree,
@@ -147,4 +183,37 @@ export function useSidebar(initialActiveItemId?: string | null) {
     refreshItems,
     setItems,
   };
+}
+
+/**
+ * Walk the flat items list to find all ancestor IDs of a given item,
+ * from the immediate parent up to the root.
+ */
+function findAncestorIds(items: SidebarItem[], itemId: string): string[] {
+  const ancestors: string[] = [];
+  const itemMap = new Map<string, SidebarItem>();
+  for (const item of items) {
+    itemMap.set(item.id, item);
+  }
+
+  let currentId = itemId;
+  for (let i = 0; i < 10; i++) {
+    const item = itemMap.get(currentId);
+    if (!item) break;
+
+    // Check parentId (page hierarchy)
+    if (item.parentId && itemMap.has(item.parentId)) {
+      ancestors.push(item.parentId);
+      currentId = item.parentId;
+      continue;
+    }
+    // Check databaseId (DB-owned page)
+    if (item.databaseId && itemMap.has(item.databaseId)) {
+      ancestors.push(item.databaseId);
+      break;
+    }
+    break;
+  }
+
+  return ancestors;
 }
