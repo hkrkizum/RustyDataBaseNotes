@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import styles from "./FilterPanel.module.css";
 import type { PropertyDto, SortConditionDto } from "./types";
 
 interface SortPanelProps {
@@ -76,18 +75,25 @@ export function SortPanel({
   }, [onApply, onClose]);
 
   return (
-    <div className={styles.panel}>
-      <div className={styles.header}>
-        <span className={styles.title}>ソート</span>
-        <button type="button" className={styles.closeBtn} onClick={onClose}>
+    <div className="border border-border rounded-md bg-card p-3 mb-4 shadow-sm">
+      <div className="flex justify-between items-center mb-2">
+        <span className="font-semibold text-sm text-foreground">ソート</span>
+        <button
+          type="button"
+          className="bg-transparent border-none text-xl cursor-pointer text-muted-foreground px-1"
+          onClick={onClose}
+        >
           ×
         </button>
       </div>
-      <div className={styles.conditionList}>
+      <div className="flex flex-col gap-1.5 mb-2">
         {conditions.map((cond, i) => (
-          <div key={`sort-${cond.propertyId}`} className={styles.conditionRow}>
+          <div
+            key={`sort-${cond.propertyId}`}
+            className="flex gap-1.5 items-center"
+          >
             <select
-              className={styles.select}
+              className="px-2 py-1 border border-border rounded text-sm min-w-[100px]"
               value={cond.propertyId}
               onChange={(e) =>
                 handleChange(i, { ...cond, propertyId: e.target.value })
@@ -104,7 +110,7 @@ export function SortPanel({
                 ))}
             </select>
             <select
-              className={styles.select}
+              className="px-2 py-1 border border-border rounded text-sm min-w-[100px]"
               value={cond.direction}
               onChange={(e) =>
                 handleChange(i, {
@@ -118,7 +124,7 @@ export function SortPanel({
             </select>
             <button
               type="button"
-              className={styles.deleteBtn}
+              className="bg-transparent border-none cursor-pointer text-base text-destructive px-1"
               onClick={() => handleMoveUp(i)}
               disabled={i === 0}
               title="上へ"
@@ -127,7 +133,7 @@ export function SortPanel({
             </button>
             <button
               type="button"
-              className={styles.deleteBtn}
+              className="bg-transparent border-none cursor-pointer text-base text-destructive px-1"
               onClick={() => handleMoveDown(i)}
               disabled={i === conditions.length - 1}
               title="下へ"
@@ -136,7 +142,7 @@ export function SortPanel({
             </button>
             <button
               type="button"
-              className={styles.deleteBtn}
+              className="bg-transparent border-none cursor-pointer text-base text-destructive px-1"
               onClick={() => handleDelete(i)}
             >
               ×
@@ -144,26 +150,26 @@ export function SortPanel({
           </div>
         ))}
       </div>
-      <div className={styles.actions}>
+      <div className="flex justify-between items-center">
         <button
           type="button"
-          className={styles.addBtn}
+          className="px-2.5 py-1 border border-dashed border-border rounded bg-transparent cursor-pointer text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
           onClick={handleAdd}
           disabled={availableProperties.length === 0 || conditions.length >= 5}
         >
           + ソート条件を追加
         </button>
-        <div className={styles.actionRight}>
+        <div className="flex gap-1.5">
           <button
             type="button"
-            className={styles.clearBtn}
+            className="px-2.5 py-1 border border-border rounded bg-transparent cursor-pointer text-sm"
             onClick={handleClearAll}
           >
             すべて解除
           </button>
           <button
             type="button"
-            className={styles.applyBtn}
+            className="px-2.5 py-1 border border-primary rounded bg-primary text-primary-foreground cursor-pointer text-sm hover:bg-primary/90"
             onClick={handleApply}
           >
             適用

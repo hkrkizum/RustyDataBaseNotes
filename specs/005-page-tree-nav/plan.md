@@ -1,0 +1,242 @@
+# Implementation Plan: Page Tree Navigation
+
+**Branch**: `005-page-tree-nav` | **Date**: 2026-03-22 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/specs/005-page-tree-nav/spec.md`
+
+## Summary
+
+ページ階層（親子関係）をドメインモデルに導入し，サイドバーによるツリーナビゲーションを実装する。
+同時に Tailwind CSS + shadcn/ui へのデザインシステム全面移行を行い，既存の CSS Modules を廃止する。
+エディタの保存方式を手動保存から debounce 付き自動保存に統一する。
+
+技術的には，SQLite マイグレーションで `parent_id` / `sort_order` カラムを追加し，
+ドメイン層で循環参照検出・深度制限・データベースページの階層不参加を保証する。
+フロントエンドは shadcn/ui コンポーネント + @atlaskit/pragmatic-drag-and-drop によるツリー D&D を構築する。
+
+## Technical Context
+
+**Language/Version**: Rust 2024 (edition = "2024", toolchain 1.94.0), TypeScript ~5.8.3
+**Primary Dependencies**:
+- Backend: Tauri 2, sqlx 0.8 (SQLite), uuid 1 (v7), chrono 0.4, thiserror 2, serde 1, serde_json 1, tokio 1
+- Frontend: React 19, Sonner (toast), Biome 2.4.8
+- 新規追加予定: Tailwind CSS v4, @tailwindcss/vite, shadcn/ui, @atlaskit/pragmatic-drag-and-drop + hitbox, lucide-react
+**Storage**: SQLite (WAL mode), `{appDataDir}/rustydatabasenotes.db`, sqlx::migrate!() によるコンパイル時マイグレーション埋め込み。新規マイグレーション 0007 で `pages` テーブルに `parent_id TEXT` (自己参照 FK) と `sort_order INTEGER DEFAULT 0` を追加
+**Testing**: `cargo make qa`（fmt → clippy → nextest → doc-test → doc-check → lint-ts → ts-check → vitest）
+**Target Platform**: Desktop (Linux/WSL2 primary, Windows/macOS secondary)
+**Project Type**: desktop-app (Tauri 2)
+**Performance Goals**: サイドバー初回レンダリング ≤200ms @500ページ，ツリー展開/折りたたみ ≤50ms，サイドバークリック→画面遷移 ≤100ms，`list_sidebar_items` バックエンドクエリ合計 ≤50ms @500ページ <!-- added by checklist-apply: P-11 -->
+**Constraints**: 完全オフライン動作，外部ネットワーク通信禁止，アプリケーションコードでのパニック禁止
+**Scale/Scope**: 500+ ページ，最大5階層ネスト，数十データベース
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*Post-design re-check (2026-03-22): All 7 principles pass. No new violations.*
+
+- **I. Local-First Product Integrity**: ページ階層は SQLite の `parent_id` 外部キー制約で保証される。
+  階層変更（移動・親削除時の子昇格）はトランザクション内でアトミックに実行し，クラッシュ時は
+  WAL モードにより変更前の状態が保持される。サイドバーの UI 状態（展開/折りたたみ，表示/非表示，
+  最後に開いたアイテム）は localStorage に保持し，DB スキーマへの影響はない。
+  外部サービスは一切導入しない（FR-012）。
+
+- **II. Domain-Faithful Information Model**: `Page` エンティティに `parent_id` を追加し，
+  既存のページ・ブロック・データベース・ビュー・プロパティの語彙を一貫して使用する。
+  「スタンドアロンページ」（database_id なし）と「データベース所属ページ」（database_id あり）の
+  区分を維持し，後者はページ階層に参加しない（FR-009）。ドメイン層で強制する。
+
+- **III. Typed Boundaries and Domain-Driven Design**:
+  - **Rust 境界型**: `PageId`（既存），`ParentId`（`Option<PageId>` で表現），新規エラーバリアント
+    `PageError::CircularReference`, `PageError::MaxDepthExceeded`, `PageError::DatabasePageCannotNest`
+  - **IPC コントラクト**: 新規コマンド `list_sidebar_items`, `create_child_page`, `move_page`,
+    既存コマンド拡張 `PageDto` に `parentId: string | null` 追加
+  - **ストレージスキーマ**: マイグレーション 0007 で `parent_id`, `sort_order` カラム追加
+  - **影響する境界コンテキスト**: Page（主要），Editor（自動保存移行），Database（サイドバー表示）
+
+- **IV. Test-First Delivery and Quality Gates**:
+  - ドメイン層テスト（Red-Green-Refactor）: 循環参照検出，深度制限（6階層目の拒否），
+    親削除時の子昇格，データベースページの階層不参加，ページ移動の正当性検証
+  - リポジトリ統合テスト: `parent_id` を含む CRUD 操作
+  - フロントエンド Vitest: サイドバー描画，ツリー展開/折りたたみ状態管理
+  - 品質ゲート: `cargo make qa`（全チェック通過必須）
+
+- **V. Safe Rust, SOLID Principles, and Maintainability First**: `unsafe` 使用なし。
+  - SRP: ページ階層ロジックはドメインサービスとして分離（`PageHierarchyService` 等）
+  - OCP: `PageRepository` トレイトに新メソッド追加（既存実装の修正は最小限）
+  - DIP: ドメイン層は `PageRepository` トレイトに依存し，具象 `SqlxPageRepository` を知らない
+  - 投機的最適化なし。500ページ規模では仮想化は不要と判断し，必要性が計測されてから導入する
+
+- **VI. Rust Documentation Standards**: 新規公開アイテム（`create_child_page`, `move_page`,
+  `list_sidebar_items` 等の IPC コマンド，ドメインサービスメソッド，新規エラーバリアント）に
+  `///` ドキュメントコメントを付与。`# Examples`（自明なアクセサ免除），`# Errors` セクションを
+  含む。`cargo doc --no-deps` がクリーンに通過することを確認。
+
+- **VII. Defensive Error Handling**: `unwrap()`, `expect()`, `panic!()`, `todo!()`, `assert!()`
+  はアプリケーションコードで使用しない。階層操作のエラー条件は `thiserror` 列挙型で定義:
+  - `PageError::CircularReference { page_id, target_parent_id }` — 循環参照検出時
+  - `PageError::MaxDepthExceeded { page_id, current_depth, max_depth }` — 深度超過時
+  - `PageError::DatabasePageCannotNest { page_id }` — DB ページの階層操作時
+  Clippy ワークスペース lint（`unwrap_used = "deny"` 等）は設定済み。
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/005-page-tree-nav/
+├── plan.md              # This file
+├── research.md          # Phase 0: 技術調査
+├── data-model.md        # Phase 1: データモデル設計
+├── quickstart.md        # Phase 1: 開発ガイド
+├── contracts/           # Phase 1: IPC コントラクト
+│   └── ipc-commands.md  # 新規・変更コマンド一覧
+└── tasks.md             # Phase 2: タスク分解（/speckit.tasks）
+```
+
+### Source Code (repository root)
+
+```text
+src/
+├── components/
+│   ├── toast/               # Toaster（既存）
+│   └── ui/                  # shadcn/ui コンポーネント（新規）
+├── features/
+│   ├── editor/              # ブロックエディタ（自動保存移行）
+│   ├── database/            # テーブルビュー（デザイン移行）
+│   ├── pages/               # ページ管理（デザイン移行）
+│   └── sidebar/             # サイドバー（新規）
+│       ├── Sidebar.tsx
+│       ├── SidebarTree.tsx
+│       ├── SidebarItem.tsx
+│       ├── SidebarContextMenu.tsx
+│       ├── SidebarCreateButton.tsx
+│       └── useSidebar.ts
+├── hooks/                   # 共有フック（新規）
+│   ├── useLocalStorage.ts
+│   └── useAutoSave.ts
+└── lib/                     # ユーティリティ（新規）
+    └── utils.ts             # cn() ヘルパー（shadcn/ui 標準）
+
+src-tauri/
+├── src/
+│   ├── domain/
+│   │   ├── page/
+│   │   │   ├── entity.rs    # Page に parent_id, sort_order 追加
+│   │   │   ├── hierarchy.rs # 新規: 階層ドメインサービス
+│   │   │   ├── repository.rs # 新メソッド追加
+│   │   │   └── error.rs     # 新エラーバリアント追加
+│   │   ├── block/           # 変更なし
+│   │   ├── database/        # 変更なし
+│   │   ├── editor/
+│   │   │   └── session.rs   # EditorStateDto::is_dirty 削除（メソッドは残存）
+│   │   ├── property/        # 変更なし
+│   │   └── view/            # 変更なし
+│   ├── infrastructure/
+│   │   └── persistence/
+│   │       └── page_repository.rs  # 階層クエリ追加
+│   └── ipc/
+│       ├── dto.rs           # PageDto に parentId 追加, SidebarItemDto 新規
+│       ├── page_commands.rs # 階層操作コマンド追加
+│       └── editor_commands.rs # save_editor 自動保存対応
+└── migrations/
+    └── 0007_add_page_hierarchy.sql  # parent_id, sort_order 追加
+```
+
+<!-- refined by checklist-apply: P-06 -->
+**自動保存移行の影響箇所**:
+- `EditorSession::is_dirty()` / `mark_saved()` メソッドはバックエンドに**残存**する（save_editor の変更検出＝変更がある場合のみ DB 書き込みに使用）
+- `EditorStateDto::is_dirty` フィールドは IPC レスポンスから**削除**（フロントエンドで不使用）
+- `src/features/editor/` 配下で `isDirty` を参照するコンポーネント・フック → 参照削除
+- `UnsavedConfirmModal`（廃止対象）
+- `EditorToolbar` の保存ボタン・未保存インジケータ → 削除
+- Ctrl+S / Cmd+S → no-op（preventDefault で抑止）
+- `BlockEditor` のナビゲーション前確認ロジック → 削除
+
+**Structure Decision**: ページ階層ロジックは `domain/page/hierarchy.rs` に集約し，
+既存の `entity.rs` は Page 構造体の拡張に留める。サイドバーは `features/sidebar/` として
+独立した機能モジュールにする。shadcn/ui コンポーネントは `components/ui/` に配置し，
+shadcn/ui の標準的なプロジェクト構成に従う。
+
+## Frontend Design Decisions <!-- added by checklist-apply: FP-01〜FP-12 -->
+
+### サイドバー更新戦略 <!-- FP-06 -->
+
+サイドバーデータは起動時に `list_sidebar_items` で一括取得する。
+操作（作成・移動・削除・名前変更）後は**楽観的更新**（ローカル状態を即時反映）を行い，
+バックエンド応答で確定する。バックエンドがエラーを返した場合はローカル状態をロールバックし
+`list_sidebar_items` で再取得する。
+
+### 自動保存設計 <!-- FP-02, FP-03, refined by checklist-apply: P-01〜P-11 -->
+
+保存タイミングの制御はフロントエンド（`useAutoSave`）が担う。バックエンドは `save_editor` コマンドを受動的に実行するのみ。 <!-- added by checklist-apply: P-03 -->
+
+`useAutoSave` はエディタ専用のフックとする。既存のプロパティ自動保存（`features/database/` 内で `update_property_value` を直接呼び出す方式）は現行のまま独立して動作する。 <!-- added by checklist-apply: P-01, P-04 -->
+
+#### パラメータ
+
+- **デバウンス間隔**: 500ms（`useAutoSave.ts` 内で調整可能な定数として定義）
+- **リトライ戦略**: サイレントリトライ最大3回，間隔は指数バックオフ（1s → 2s → 4s）
+- **Toast メッセージ**（全リトライ失敗時）: 「保存に失敗しました」（表示時間: 5秒，自動消去）
+
+#### useAutoSave の責務 <!-- added by checklist-apply: P-02 -->
+
+1. **デバウンスタイマー管理**: エディタコンテンツ変更時に `scheduleSave` を呼び出し，500ms 後に `save_editor` を実行
+2. **リトライ**: 保存失敗時に指数バックオフで最大3回再試行。リトライは常に最新のエディタ状態を保存する（古いスナップショットではない） <!-- added by checklist-apply: P-06 -->
+3. **エラー種別判定**: 一時的エラー（DB ロック等）はリトライ対象。永続的エラー（`PageError::NotFound` 等，ページ削除済み）は即座に toast で通知しリトライしない <!-- added by checklist-apply: P-08 -->
+4. **Toast 通知**: 全リトライ失敗時に toast.warning を表示。継続的に保存が失敗する場合（次の変更でもリトライが全失敗），変更のたびに toast を表示する <!-- added by checklist-apply: P-11 -->
+5. **アンマウント時フラッシュ**: `useEffect` cleanup でデバウンスタイマーをキャンセルし，即時フラッシュ保存を実行する（ベストエフォート） <!-- added by checklist-apply: P-10 -->
+
+#### ページ遷移時の動作 <!-- added by checklist-apply: P-05, P-07 -->
+
+- ページ遷移時に `useAutoSave` のクリーンアップが発火し，前ページの pending save をフラッシュする。新ページでは新しい `useAutoSave` インスタンスが初期化される。並行 save は発生しない
+- リトライ中にユーザーがページを遷移する場合，進行中のリトライをキャンセルし遷移を許可する。未保存の変更が失われる可能性がある場合は遷移前に toast で警告する
+
+#### テスト修正方針 <!-- added by checklist-apply: P-09 -->
+
+- バックエンドの `EditorSession` テスト: `is_dirty()` / `mark_saved()` メソッドは残存するため，既存テストはそのまま維持
+- フロントエンドテスト: `useAutoSave` のデバウンス・リトライ・アンマウントフラッシュを Vitest で検証
+- 既存の手動保存テスト（保存ボタンクリック・Ctrl+S・UnsavedConfirmModal 関連）は移行後に削除
+
+### ドラッグ＆ドロップ詳細 <!-- FP-01, FP-05, FP-07 -->
+
+- **自動スクロール**: `@atlaskit/pragmatic-drag-and-drop` の `autoScrollForElements` addon を使用し，
+  サイドバー上下端でのスクロールを実現する
+- **コンテキストメニュー排他制御**: D&D 中（`isDragging` 状態）はコンテキストメニューの表示を無効化する
+- **ルートレベルへの昇格**: ツリーの最外周（サイドバーのアイテムが存在しない空白領域）へのドロップで
+  ルート昇格を実現する。ドロップ時にルートレベル用のインジケーターを表示する
+
+### キーボードショートカット制御 <!-- FP-08 -->
+
+インライン名前編集中およびエディタ編集中は，Cmd/Ctrl+B のイベント伝播を停止し
+サイドバートグルを発火させない。
+
+### サイドバーレイアウト <!-- FP-04 -->
+
+サイドバー非表示時はメインコンテンツがフル幅に展開する。
+CSS Flexbox でサイドバー幅を動的に制御し，トグル時のレイアウト遷移を実現する。
+
+### 起動時復元 <!-- FP-09 -->
+
+FR-017 の起動時復元で対象アイテムがツリー内の折りたたまれた子ページの場合，
+その祖先ノードの展開状態を localStorage 上で自動更新してから `scrollIntoView` で
+ビューポートに表示する。
+
+### パフォーマンス計測方法 <!-- FP-10 -->
+
+- **計測ツール**: React Profiler の commit duration
+- **ベンチマークデータ**: 500ページ・最大5階層のシードデータを使用した手動ベンチマーク
+- **計測ポイント**: ユーザーイベント発火（クリック / ドロップ）から React コミット完了まで
+
+### 品質検証手法 <!-- FP-11, FP-12 -->
+
+- **ビジュアルレビュー対象**: エディタ画面・テーブルビュー画面・サイドバーの3画面 ×
+  ライト/ダークの2テーマ = 6パターン。shadcn/ui のデザイントークン（color, spacing, radius）の
+  一貫性を確認する
+- **旧スタイリング方式の検証**: プロジェクト内の `*.module.css` / `*.module.scss` ファイルが
+  ゼロであること，および CSS Modules の `import` 文がゼロであることを `grep` で確認する
+
+## Complexity Tracking
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| `sort_order` カラムの先行追加（YAGNI 近似） | 将来の手動並べ替え機能のスキーマ変更を回避するビジネス判断 | マイグレーション追加はコストが低く，後からのカラム追加は既存データの一括更新が必要になる |
+| CSS Modules → Tailwind 全面移行（大規模変更） | デザインシステム統一（US1）の明示的要件 | 部分移行はスタイル二重管理を招き，保守コストが増大する |

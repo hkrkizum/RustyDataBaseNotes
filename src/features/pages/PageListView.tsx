@@ -1,5 +1,4 @@
 import { PageItem } from "./PageItem";
-import styles from "./PageListView.module.css";
 import type { Page } from "./types";
 
 interface PageListViewProps {
@@ -18,14 +17,16 @@ export function PageListView({
   onPageClick,
 }: PageListViewProps) {
   if (loading) {
-    return <div className={styles.empty}>読み込み中...</div>;
+    return (
+      <div className="text-center p-8 text-muted-foreground">読み込み中...</div>
+    );
   }
 
   if (pages.length === 0) {
     return (
-      <div className={styles.empty}>
+      <div className="text-center p-8 text-muted-foreground">
         <p>ページがありません</p>
-        <p className={styles.hint}>
+        <p className="text-sm mt-2">
           上のフォームから新しいページを作成してください
         </p>
       </div>
@@ -33,7 +34,7 @@ export function PageListView({
   }
 
   return (
-    <div className={styles.list}>
+    <div className="border border-border rounded-md overflow-hidden">
       {pages.map((page) => (
         <PageItem
           key={page.id}

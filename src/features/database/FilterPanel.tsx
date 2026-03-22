@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { FilterConditionRow } from "./FilterConditionRow";
-import styles from "./FilterPanel.module.css";
 import { getDefaultFilterValue } from "./filterUtils";
 import type { FilterConditionDto, PropertyDto } from "./types";
 
@@ -67,14 +66,18 @@ export function FilterPanel({
   }, [onApply, onClose]);
 
   return (
-    <div className={styles.panel}>
-      <div className={styles.header}>
-        <span className={styles.title}>フィルタ</span>
-        <button type="button" className={styles.closeBtn} onClick={onClose}>
+    <div className="border border-border rounded-md bg-card p-3 mb-4 shadow-sm">
+      <div className="flex justify-between items-center mb-2">
+        <span className="font-semibold text-sm text-foreground">フィルタ</span>
+        <button
+          type="button"
+          className="bg-transparent border-none text-xl cursor-pointer text-muted-foreground px-1"
+          onClick={onClose}
+        >
           ×
         </button>
       </div>
-      <div className={styles.conditionList}>
+      <div className="flex flex-col gap-1.5 mb-2">
         {conditions.map((cond, i) => (
           <FilterConditionRow
             key={`filter-${cond.propertyId}-${i.toString()}`}
@@ -86,21 +89,25 @@ export function FilterPanel({
           />
         ))}
       </div>
-      <div className={styles.actions}>
-        <button type="button" className={styles.addBtn} onClick={handleAdd}>
+      <div className="flex justify-between items-center">
+        <button
+          type="button"
+          className="px-2.5 py-1 border border-dashed border-border rounded bg-transparent cursor-pointer text-sm text-muted-foreground hover:border-foreground hover:text-foreground"
+          onClick={handleAdd}
+        >
           + 条件を追加
         </button>
-        <div className={styles.actionRight}>
+        <div className="flex gap-1.5">
           <button
             type="button"
-            className={styles.clearBtn}
+            className="px-2.5 py-1 border border-border rounded bg-transparent cursor-pointer text-sm"
             onClick={handleClearAll}
           >
             すべて解除
           </button>
           <button
             type="button"
-            className={styles.applyBtn}
+            className="px-2.5 py-1 border border-primary rounded bg-primary text-primary-foreground cursor-pointer text-sm hover:bg-primary/90"
             onClick={handleApply}
           >
             適用

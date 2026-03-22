@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import styles from "./FilterPanel.module.css";
 import {
   getDefaultFilterValue,
   getFilterDisplayValue,
@@ -117,9 +116,9 @@ export function FilterConditionRow({
   const showValueInput = !NO_VALUE_OPERATORS.includes(condition.operator);
 
   return (
-    <div className={styles.conditionRow}>
+    <div className="flex gap-1.5 items-center">
       <select
-        className={styles.select}
+        className="px-2 py-1 border border-border rounded text-sm min-w-[100px]"
         value={condition.propertyId}
         onChange={(e) => handlePropertyChange(e.target.value)}
       >
@@ -130,7 +129,7 @@ export function FilterConditionRow({
         ))}
       </select>
       <select
-        className={styles.select}
+        className="px-2 py-1 border border-border rounded text-sm min-w-[100px]"
         value={condition.operator}
         onChange={(e) =>
           handleOperatorChange(e.target.value as FilterOperatorDto)
@@ -145,7 +144,7 @@ export function FilterConditionRow({
       {showValueInput &&
         (propType === "select" ? (
           <select
-            className={styles.select}
+            className="px-2 py-1 border border-border rounded text-sm min-w-[100px]"
             value={getFilterDisplayValue(condition.value)}
             onChange={(e) => handleValueChange(e.target.value)}
           >
@@ -159,7 +158,7 @@ export function FilterConditionRow({
           </select>
         ) : (
           <input
-            className={styles.valueInput}
+            className="px-2 py-1 border border-border rounded text-sm flex-1 min-w-[80px]"
             type={
               propType === "number"
                 ? "number"
@@ -174,7 +173,7 @@ export function FilterConditionRow({
         ))}
       <button
         type="button"
-        className={styles.deleteBtn}
+        className="bg-transparent border-none cursor-pointer text-base text-destructive px-1"
         onClick={() => onDelete(index)}
       >
         ×

@@ -58,6 +58,15 @@ impl Serialize for CommandError {
             CommandError::Page(PageError::AlreadyInDatabase { .. }) => {
                 ("pageAlreadyInDatabase", self.to_string())
             }
+            CommandError::Page(PageError::CircularReference { .. }) => {
+                ("circularReference", self.to_string())
+            }
+            CommandError::Page(PageError::MaxDepthExceeded { .. }) => {
+                ("maxDepthExceeded", self.to_string())
+            }
+            CommandError::Page(PageError::DatabasePageCannotNest { .. }) => {
+                ("databasePageCannotNest", self.to_string())
+            }
             CommandError::Block(BlockError::ContentTooLong { .. }) => {
                 ("contentTooLong", self.to_string())
             }

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Page } from "../pages/types";
-import styles from "./DatabaseListView.module.css";
 import type { DatabaseDto } from "./types";
 
 type ListItem =
@@ -31,7 +30,9 @@ export function DatabaseListView({
   );
 
   if (loading) {
-    return <div className={styles.empty}>読み込み中...</div>;
+    return (
+      <div className="text-center p-8 text-muted-foreground">読み込み中...</div>
+    );
   }
 
   // Merge and sort by createdAt DESC
@@ -44,33 +45,42 @@ export function DatabaseListView({
 
   if (items.length === 0) {
     return (
-      <div className={styles.empty}>
+      <div className="text-center p-8 text-muted-foreground">
         <p>ページやデータベースがありません</p>
-        <p className={styles.hint}>上のフォームから新しく作成してください</p>
+        <p className="text-sm text-muted-foreground/70">
+          上のフォームから新しく作成してください
+        </p>
       </div>
     );
   }
 
   return (
     <>
-      <div className={styles.list}>
+      <div className="flex flex-col gap-2">
         {items.map((item) => {
           if (item.kind === "database") {
             return (
-              <div key={item.data.id} className={styles.item}>
+              <div
+                key={item.data.id}
+                className="flex items-center gap-2 px-4 py-3 border border-border rounded-md transition-colors hover:bg-accent"
+              >
                 <button
                   type="button"
-                  className={styles.itemBtn}
+                  className="flex items-center gap-2 flex-1 overflow-hidden p-0 border-none bg-transparent font-inherit text-left cursor-pointer"
                   onClick={() => onDatabaseClick(item.data)}
                 >
-                  <span className={styles.icon}>📊</span>
-                  <span className={styles.title}>{item.data.title}</span>
-                  <span className={styles.badge}>データベース</span>
+                  <span className="text-xl shrink-0">📊</span>
+                  <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                    {item.data.title}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">
+                    データベース
+                  </span>
                 </button>
                 {onRequestDeleteDatabase && (
                   <button
                     type="button"
-                    className={styles.deleteBtn}
+                    className="text-sm px-2 py-0.5 border border-border rounded cursor-pointer text-muted-foreground hover:text-destructive hover:border-destructive"
                     onClick={() => setConfirmDeleteDb(item.data)}
                   >
                     削除
@@ -80,18 +90,23 @@ export function DatabaseListView({
             );
           }
           return (
-            <div key={item.data.id} className={styles.item}>
+            <div
+              key={item.data.id}
+              className="flex items-center gap-2 px-4 py-3 border border-border rounded-md transition-colors hover:bg-accent"
+            >
               <button
                 type="button"
-                className={styles.itemBtn}
+                className="flex items-center gap-2 flex-1 overflow-hidden p-0 border-none bg-transparent font-inherit text-left cursor-pointer"
                 onClick={() => onPageClick(item.data)}
               >
-                <span className={styles.icon}>📄</span>
-                <span className={styles.title}>{item.data.title}</span>
+                <span className="text-xl shrink-0">📄</span>
+                <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {item.data.title}
+                </span>
               </button>
               <button
                 type="button"
-                className={styles.deleteBtn}
+                className="text-sm px-2 py-0.5 border border-border rounded cursor-pointer text-muted-foreground hover:text-destructive hover:border-destructive"
                 onClick={() => onRequestDeletePage(item.data)}
               >
                 削除
@@ -104,7 +119,7 @@ export function DatabaseListView({
       {confirmDeleteDb && (
         /* biome-ignore lint/a11y/noStaticElementInteractions: confirm overlay */
         <div
-          className={styles.confirmOverlay}
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100]"
           role="presentation"
           onClick={() => setConfirmDeleteDb(null)}
           onKeyDown={(e) => {
@@ -114,24 +129,24 @@ export function DatabaseListView({
           {/* biome-ignore lint/a11y/noStaticElementInteractions: confirm dialog */}
           {/* biome-ignore lint/a11y/useKeyWithClickEvents: confirm dialog */}
           <div
-            className={styles.confirmDialog}
+            className="bg-card rounded-lg p-6 w-[360px] shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className={styles.confirmMessage}>
+            <p className="m-0 mb-4 text-[0.95rem] leading-relaxed">
               データベース「{confirmDeleteDb.title}
               」を削除しますか？プロパティと値はすべて削除されます。ページ自体は残ります。
             </p>
-            <div className={styles.confirmActions}>
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
-                className={styles.confirmCancelBtn}
+                className="px-4 py-2 border border-border rounded cursor-pointer text-sm bg-transparent hover:bg-accent"
                 onClick={() => setConfirmDeleteDb(null)}
               >
                 キャンセル
               </button>
               <button
                 type="button"
-                className={styles.confirmDeleteBtn}
+                className="px-4 py-2 border-none rounded bg-destructive text-white cursor-pointer text-sm hover:bg-destructive/80"
                 onClick={() => {
                   if (onRequestDeleteDatabase) {
                     onRequestDeleteDatabase(confirmDeleteDb);

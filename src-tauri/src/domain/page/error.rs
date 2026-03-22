@@ -32,4 +32,31 @@ pub enum PageError {
         /// The database ID.
         database_id: DatabaseId,
     },
+
+    /// Moving a page would create a circular reference in the hierarchy.
+    #[error("circular reference detected: page {page_id} cannot be moved under {target_parent_id}")]
+    CircularReference {
+        /// The page being moved.
+        page_id: String,
+        /// The target parent that would cause a cycle.
+        target_parent_id: String,
+    },
+
+    /// The resulting nesting depth would exceed the maximum allowed.
+    #[error("maximum nesting depth ({max_depth}) exceeded for page {page_id}")]
+    MaxDepthExceeded {
+        /// The page being moved or created.
+        page_id: String,
+        /// The depth that would result from the operation.
+        current_depth: usize,
+        /// The maximum allowed depth.
+        max_depth: usize,
+    },
+
+    /// A database-owned page cannot participate in the page hierarchy.
+    #[error("database page {page_id} cannot participate in page hierarchy")]
+    DatabasePageCannotNest {
+        /// The database-owned page ID.
+        page_id: String,
+    },
 }
