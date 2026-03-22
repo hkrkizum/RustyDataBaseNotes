@@ -1,15 +1,15 @@
 # Checklist Apply Changelog: Page Tree Navigation
-**実行日時**: 2026-03-22
-**入力**: review-report.md
+**実行日時**: 2026-03-22 (2nd apply — frontend-ux)
+**入力**: review-report.md (3rd pass, frontend-ux section)
 **モード**: 差分更新（非破壊）
 
 ---
 
-## 変更統計
-- spec.md: 2箇所 追記 (G-01, G-02, G-05) / 2箇所 補完 (G-03, G-04) / 0箇所 移動受入
-- plan.md: 1箇所 追記 (P-11) / 1箇所 補完 (P-06) / 0箇所 移動受入
-- data-model.md: 3箇所 追記 (P-02, P-08, P-12) / 4箇所 補完 (P-04, P-05×2, P-09)
-- contracts/ipc-commands.md: 2箇所 追記 (P-01, P-07) / 2箇所 補完 (P-03, P-10)
+## 変更統計（累計）
+- spec.md: 10箇所 補完 (FG-01〜FG-19) / 1箇所 追記 (FG-19: US2 scenario) / 前回分 5箇所
+- plan.md: 1箇所 追記 (Frontend Design Decisions セクション, FP-01〜FP-12) / 前回分 2箇所
+- data-model.md: 前回分 7箇所（今回変更なし）
+- contracts/ipc-commands.md: 前回分 4箇所（今回変更なし）
 - 新規作成ファイル: なし
 - 簡素化提案（要判断）: 0箇所
 
@@ -66,6 +66,63 @@
 review-report.md で指摘された未カバー原則:
 - **VI. Rust ドキュメント標準**: plan.md §Constitution Check (L68-71) で既に言及済み。チェックリスト項目としての未設置は checklist の粒度問題であり，spec/plan の追記は不要と判断
 - **IV. Test-First（テストシナリオ網羅性）**: CC-005 でテスト要件を列挙済み。個別テストケースの入力条件・期待結果の明確性は tasks.md / 実装時に詳細化する領域と判断
+
+---
+
+---
+
+## Frontend/UX 変更詳細（2nd apply）
+
+### spec.md の変更
+
+| レポートID | 変更種別 | 対象箇所 | 変更内容の要約 |
+|-----------|---------|---------|--------------|
+| FG-01 | 補完 | FR-010 | 「240–260px」に「実装時に決定」の注記を追加 |
+| FG-02 | 補完 | FR-006 | インデント・5階層視認性・トランケーション要件を追記 |
+| FG-03 | 補完 | FR-006 | テキストオーバーフロー処理（ellipsis）を追記（FG-02 と同時） |
+| FG-04 | 補完 | FR-013 | 「...」ボタン「アイテム右端に即時表示」を明記 |
+| FG-05 | 補完 | FR-013 | インライン編集バリデーション UX（空文字→復帰，maxLength 255）を追記 |
+| FG-06 | 補完 | FR-001 | サイドバーのスクロール動作・ヘッダー固定表示を追記 |
+| FG-07 | 補完 | FR-002 | アクティブアイテムへの自動スクロールを追記 |
+| FG-08 | 補完 | FR-002 | shadcn/ui「具体的コンポーネント選択は実装時に決定」と明記 |
+| FG-09 | 補完 | FR-013 | 「ドロップダウン等」→「ドロップダウンメニュー」に確定 |
+| FG-10 | 補完 | FR-007 | D&D の意味「ドロップ先の子になる」を明記，同一親内並び替えは後続 |
+| FG-11 | 補完 | FR-011 | 表示順を「ルートレベルおよび同一親内の子ページ」に拡張 |
+| FG-12 | 補完 | FR-013 | 自動遷移時に last-opened-item を更新する旨を追記 |
+| FG-13 | 補完 | FR-013 | 削除確認ダイアログ＋子ページ昇格の説明を追記 |
+| FG-14 | 補完 | FR-002 | DB 所属ページのクリック→エディタ遷移を明記 |
+| FG-15 | 補完 | FR-013 | 最大深度で「子ページ作成」メニュー非表示を追記 |
+| FG-16 | 補完 | FR-007 | 無効ドロップ先に「自分自身」を追加 |
+| FG-17 | 補完 | FR-013 | フォーカスアウト時は確定として扱う旨を追記 |
+| FG-18 | 補完 | FR-014, FR-017 | localStorage 破損時のデフォルト値フォールバックを追記 |
+| FG-19 | 追記 | US2 Scenario 5 | 空状態→新規作成→自動遷移→インライン編集のシナリオを追加 |
+
+### plan.md の変更
+
+| レポートID | 変更種別 | 対象箇所 | 変更内容の要約 |
+|-----------|---------|---------|--------------|
+| FP-01 | 追記 | Frontend Design Decisions > D&D 詳細 | auto-scroll addon の使用を追記 |
+| FP-02 | 追記 | Frontend Design Decisions > 自動保存 | デバウンス間隔 500ms を追記 |
+| FP-03 | 追記 | Frontend Design Decisions > 自動保存 | リトライ間隔（指数バックオフ）・toast 内容を追記 |
+| FP-04 | 追記 | Frontend Design Decisions > レイアウト | サイドバー非表示時フル幅展開を追記 |
+| FP-05 | 追記 | Frontend Design Decisions > D&D 詳細 | D&D 中のコンテキストメニュー無効化を追記 |
+| FP-06 | 追記 | Frontend Design Decisions > 更新戦略 | 楽観的更新＋エラー時ロールバック＋再取得を追記 |
+| FP-07 | 追記 | Frontend Design Decisions > D&D 詳細 | ルート昇格のドロップ UI を追記 |
+| FP-08 | 追記 | Frontend Design Decisions > ショートカット | テキスト入力中のイベント伝播停止を追記 |
+| FP-09 | 追記 | Frontend Design Decisions > 起動時復元 | 折りたたまれた祖先の自動展開を追記 |
+| FP-10 | 追記 | Frontend Design Decisions > パフォーマンス | React Profiler 計測方法を追記 |
+| FP-11 | 追記 | Frontend Design Decisions > 品質検証 | ビジュアルレビュー 6パターンを追記 |
+| FP-12 | 追記 | Frontend Design Decisions > 品質検証 | 旧スタイリング方式の grep 検証を追記 |
+
+### 要判断項目（人間のレビューが必要）
+
+なし。全項目を自動適用済み。
+
+### spec.md への FP-09 要件反映について
+
+FP-09（起動時復元の祖先自動展開）は plan.md への技術設計追記に加え，
+FR-017 にもユーザー向け要件として反映済み（「復元対象が折りたたまれた子ページの場合，
+祖先ノードを自動展開してからスクロール」）。
 
 ---
 
