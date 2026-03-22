@@ -109,7 +109,7 @@ data-model.md error mapping. Editor has a stateful flow test.
 
 - [ ] T028 [US3] Create WebDriverIO configuration in `e2e/wdio.conf.ts` per contracts/test-helpers.md (tauri:options, mocha framework, spec reporter, 30s timeout)
 - [ ] T029 [P] [US3] Implement E2E helpers (`clearDatabase()`, `waitForApp()`, `findByTestId()`) in `e2e/helpers/app.ts` per contracts/test-helpers.md
-- [ ] T030 [P] [US3] Add `data-testid` attributes to React components needed for E2E selectors (sidebar page list, page title input, editor block elements, database table view, filter controls)
+- [ ] T030 [P] [US3] Add `data-testid` attributes to React components needed for E2E selectors: sidebar page list (`src/features/pages/PageListView.tsx`, `PageItem.tsx`), page title input (`PageItem.tsx` editing mode), editor block elements (`src/features/editor/BlockEditor.tsx`, `BlockItem.tsx`), database table view (`src/features/database/TableView.tsx`, `TableRow.tsx`), filter controls (`src/features/database/FilterPanel.tsx`, `FilterConditionRow.tsx`)
 
 ### E2E Workflow Tests
 

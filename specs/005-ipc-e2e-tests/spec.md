@@ -48,8 +48,7 @@
 **Acceptance Scenarios**:
 
 1. **Given** テストが実行可能な環境がある, **When** IPC テストスイートを実行する, **Then** 全ドメイン（Database, Page, Property, Editor, Table, View）の CRUD 操作が正しい結果を返す。「正しい結果」とは返却 DTO の各フィールドが入力値および [data-model.md](./data-model.md) の「IPC 境界で検証する項目」と一致することを指す <!-- refined by checklist-apply: G-01, G-10 -->
-2. **Given** 存在しないリソースの ID を渡す, **When** 取得・更新・削除・追加コマンドを呼び出す, **Then** [data-model.md](./data-model.md) のエラー種別マッピングに準拠したエラー種別（kind）とメッセージが返される <!-- refined by checklist-apply: G-09, G-14 -->
-3. **Given** 不正な入力（空文字列，不正な型）を渡す, **When** コマンドを呼び出す, **Then** [data-model.md](./data-model.md) のエラー種別マッピングに従ったバリデーションエラーが返され，データベースの状態は変化しない <!-- refined by checklist-apply: G-08 -->
+2. **Given** エディタを open し，ブロックを追加・編集・移動・削除して save し close する, **When** 一連のフローを IPC テストとして実行する, **Then** 各操作が期待どおりの EditorStateDto を返し，save 後のデータが永続化される <!-- moved from US2-S9 by analyze: F2 -->
 
 ---
 
@@ -74,7 +73,7 @@
 6. **Given** 存在しない database_id を指定する, **When** add_page_to_database を呼び出す, **Then** databaseNotFound エラーが返される <!-- added by checklist-apply: G-02 -->
 7. **Given** エディタセッションが既に開かれている, **When** 同じページを再度 open する, **Then** 既存セッションが返されるか，適切なエラーが返される <!-- added by checklist-apply: G-12 -->
 8. **Given** エディタセッションを close した後, **When** ブロック操作コマンドを呼び出す, **Then** セッション未開始エラーが返される <!-- added by checklist-apply: G-12 -->
-9. **Given** エディタを open し，ブロックを追加・編集・移動・削除して save し close する, **When** 一連のフローを IPC テストとして実行する, **Then** 各操作が期待どおりの EditorStateDto を返し，save 後のデータが永続化される <!-- added by checklist-apply: G-04 -->
+9. **Given** 不正な入力（空文字列，不正な型）を渡す, **When** コマンドを呼び出す, **Then** [data-model.md](./data-model.md) のエラー種別マッピングに従ったバリデーションエラーが返され，データベースの状態は変化しない <!-- moved from US1-S3 by analyze: F1 -->
 
 ---
 
