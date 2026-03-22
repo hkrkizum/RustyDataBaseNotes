@@ -627,4 +627,33 @@ mod tests {
         let result = apply_filters(&rows, &conditions, &types);
         assert_eq!(result, vec![1]);
     }
+
+    #[test]
+    fn filter_select_is_matches_by_option_id_not_display_value() {
+        let pid = PropertyId::new();
+        let pids = pid.to_string();
+        let option_uuid = "550e8400-e29b-41d4-a716-446655440000";
+        let rows = vec![HashMap::from([(
+            pids.clone(),
+            make_select(Some(option_uuid)),
+        )])];
+        let types = HashMap::from([(pids.clone(), PropertyType::Select)]);
+
+        // option ID で検索 → マッチ
+        let cond_by_id = vec![FilterCondition {
+            property_id: pid.clone(),
+            operator: FilterOperator::Is,
+            value: Some(FilterValue::SelectOption(option_uuid.to_owned())),
+        }];
+        assert_eq!(apply_filters(&rows, &cond_by_id, &types), vec![0]);
+
+        // 表示値で検索 → 不一致（フロントは UUID を送る必要がある）
+        let cond_by_display = vec![FilterCondition {
+            property_id: pid,
+            operator: FilterOperator::Is,
+            value: Some(FilterValue::SelectOption("1".to_owned())),
+        }];
+        let empty: Vec<usize> = vec![];
+        assert_eq!(apply_filters(&rows, &cond_by_display, &types), empty);
+    }
 }
