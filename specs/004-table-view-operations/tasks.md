@@ -112,16 +112,16 @@ tested, and reviewed independently.
 
 ### Tests for User Story 5
 
-- [ ] T031 [P] [US5] Write failing tests for full round-trip persistence: set sort (2 conditions) + filter (3 conditions) + group_condition + collapsed_groups (2 groups), reload view, verify all conditions restored in `src-tauri/src/infrastructure/persistence/view_repository.rs`
-- [ ] T032 [P] [US5] Write failing tests for remove_property_references: property deletion removes sort/filter/group conditions referencing that property_id, property type change removes incompatible filter operators, select option deletion removes referencing filter conditions in `src-tauri/src/infrastructure/persistence/view_repository.rs`
-- [ ] T033 [P] [US5] Write failing tests for JSON deserialization fallback: corrupt sort_conditions JSON returns default empty view instead of error (FR-015) in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [X] T031 [P] [US5] Write failing tests for full round-trip persistence: set sort (2 conditions) + filter (3 conditions) + group_condition + collapsed_groups (2 groups), reload view, verify all conditions restored in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [X] T032 [P] [US5] Write failing tests for remove_property_references: property deletion removes sort/filter/group conditions referencing that property_id, property type change removes incompatible filter operators, select option deletion removes referencing filter conditions in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [X] T033 [P] [US5] Write failing tests for JSON deserialization fallback: corrupt sort_conditions JSON returns default empty view instead of error (FR-015) in `src-tauri/src/infrastructure/persistence/view_repository.rs`
 
 ### Implementation for User Story 5
 
-- [ ] T034 [US5] Implement remove_property_references (property deletion), remove_incompatible_filters (property type change), and remove_select_option_references (select option deletion) in SqlxViewRepository in `src-tauri/src/infrastructure/persistence/view_repository.rs`
-- [ ] T035 [US5] Integrate remove_property_references into delete_property command in `src-tauri/src/ipc/property_commands.rs`, remove_incompatible_filters into update_property_config, and remove_select_option_references into reset_select_option
-- [ ] T036 [US5] Implement JSON deserialization fallback in SqlxViewRepository::find_by_database_id — on serde error, reset to default conditions and log warning in `src-tauri/src/infrastructure/persistence/view_repository.rs`
-- [ ] T037 [US5] Add resetView IPC invocation and "設定をリセット" button to toolbar in `src/features/database/useTableData.ts` and `src/features/database/TableView.tsx`
+- [X] T034 [US5] Implement remove_property_references (property deletion), remove_incompatible_filters (property type change), and remove_select_option_references (select option deletion) in SqlxViewRepository in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [X] T035 [US5] Integrate remove_property_references into delete_property command in `src-tauri/src/ipc/property_commands.rs`, remove_incompatible_filters into update_property_config, and remove_select_option_references into reset_select_option
+- [X] T036 [US5] Implement JSON deserialization fallback in SqlxViewRepository::find_by_database_id — on serde error, reset to default conditions and log warning in `src-tauri/src/infrastructure/persistence/view_repository.rs`
+- [X] T037 [US5] Add resetView IPC invocation and "設定をリセット" button to toolbar in `src/features/database/useTableData.ts` and `src/features/database/TableView.tsx`
 
 **Checkpoint**: View settings persist across restart. Property deletion auto-repairs view settings. Reset restores defaults.
 
@@ -135,14 +135,14 @@ tested, and reviewed independently.
 
 ### Tests for User Story 3
 
-- [ ] T038 [P] [US3] Write failing tests for multi-column sort: primary key ties broken by secondary key, 3+ sort conditions chaining, and sort condition reordering in `src-tauri/src/domain/view/sort.rs`
+- [X] T038 [P] [US3] Write failing tests for multi-column sort: primary key ties broken by secondary key, 3+ sort conditions chaining, and sort condition reordering in `src-tauri/src/domain/view/sort.rs`
 
 ### Implementation for User Story 3
 
-- [ ] T039 [US3] Verify and extend apply_sort to handle chained multi-key comparison (Ordering::then_with pattern) if not already complete in `src-tauri/src/domain/view/sort.rs`
-- [ ] T040 [P] [US3] Create SortPanel component with add-condition button (property + direction selectors), per-condition delete button, and up/down reorder buttons in `src/features/database/SortPanel.tsx`
-- [ ] T041 [US3] Update header-click behavior: if multi-sort active, clear all and switch to clicked column's single sort in `src/features/database/TableHeader.tsx`
-- [ ] T042 [US3] Add SortPanel toggle to toolbar and integrate with updateSortConditions in `src/features/database/useTableData.ts` and `src/features/database/TableView.tsx`
+- [X] T039 [US3] Verify and extend apply_sort to handle chained multi-key comparison (Ordering::then_with pattern) if not already complete in `src-tauri/src/domain/view/sort.rs`
+- [X] T040 [P] [US3] Create SortPanel component with add-condition button (property + direction selectors), per-condition delete button, and up/down reorder buttons in `src/features/database/SortPanel.tsx`
+- [X] T041 [US3] Update header-click behavior: if multi-sort active, clear all and switch to clicked column's single sort in `src/features/database/TableHeader.tsx`
+- [X] T042 [US3] Add SortPanel toggle to toolbar and integrate with updateSortConditions in `src/features/database/useTableData.ts` and `src/features/database/TableView.tsx`
 
 **Checkpoint**: Multi-column sort works via SortPanel. Header click resets to single sort.
 
@@ -156,18 +156,18 @@ tested, and reviewed independently.
 
 ### Tests for User Story 4
 
-- [ ] T043 [P] [US4] Write failing tests for grouping logic: Text (case-insensitive exact match), Number (f64 identity), Date (day/minute granularity), Select (option value match, definition order), Checkbox (true/false groups), null→"未設定" group at end, empty group exclusion, and group ordering rules per FR-006 in `src-tauri/src/domain/view/group.rs`
-- [ ] T044 [P] [US4] Write failing tests for update_group_condition (set/clear, collapsed_groups cleared on property change) and toggle_group_collapsed (add/remove from set, null for "未設定" group) IPC commands in `src-tauri/src/ipc/view_commands.rs`
+- [X] T043 [P] [US4] Write failing tests for grouping logic: Text (case-insensitive exact match), Number (f64 identity), Date (day/minute granularity), Select (option value match, definition order), Checkbox (true/false groups), null→"未設定" group at end, empty group exclusion, and group ordering rules per FR-006 in `src-tauri/src/domain/view/group.rs`
+- [X] T044 [P] [US4] Write failing tests for update_group_condition (set/clear, collapsed_groups cleared on property change) and toggle_group_collapsed (add/remove from set, null for "未設定" group) IPC commands in `src-tauri/src/ipc/view_commands.rs`
 
 ### Implementation for User Story 4
 
-- [ ] T045 [US4] Implement group_rows function with type-aware grouping keys, group ordering (Select: position, Checkbox: checked→unchecked, Text/Number/Date: ascending, null last), and GroupInfo computation in `src-tauri/src/domain/view/group.rs`
-- [ ] T046 [US4] Implement update_group_condition (with collapsed_groups clear on change) and toggle_group_collapsed (HashSet toggle, null support) IPC commands in `src-tauri/src/ipc/view_commands.rs` and register in `src-tauri/src/lib.rs`
-- [ ] T047 [US4] Extend get_table_data to apply grouping after filter+sort: compute GroupInfoDto list, reorder rows by group, exclude collapsed group rows from response in `src-tauri/src/ipc/table_commands.rs`
-- [ ] T048 [P] [US4] Create GroupPanel component with property selector dropdown and "グルーピング解除" button in `src/features/database/GroupPanel.tsx`
-- [ ] T049 [P] [US4] Create GroupHeader component displaying group value (or "未設定"), count badge, and collapse/expand toggle with aria-expanded in `src/features/database/GroupHeader.tsx`
-- [ ] T050 [US4] Add updateGroupCondition and toggleGroupCollapsed IPC invocations to `src/features/database/useTableData.ts`
-- [ ] T051 [US4] Extend TableView.tsx with grouping toolbar button, GroupHeader rendering between row groups, and panel toggle (mutually exclusive with sort/filter panels) in `src/features/database/TableView.tsx`
+- [X] T045 [US4] Implement group_rows function with type-aware grouping keys, group ordering (Select: position, Checkbox: checked→unchecked, Text/Number/Date: ascending, null last), and GroupInfo computation in `src-tauri/src/domain/view/group.rs`
+- [X] T046 [US4] Implement update_group_condition (with collapsed_groups clear on change) and toggle_group_collapsed (HashSet toggle, null support) IPC commands in `src-tauri/src/ipc/view_commands.rs` and register in `src-tauri/src/lib.rs`
+- [X] T047 [US4] Extend get_table_data to apply grouping after filter+sort: compute GroupInfoDto list, reorder rows by group, exclude collapsed group rows from response in `src-tauri/src/ipc/table_commands.rs`
+- [X] T048 [P] [US4] Create GroupPanel component with property selector dropdown and "グルーピング解除" button in `src/features/database/GroupPanel.tsx`
+- [X] T049 [P] [US4] Create GroupHeader component displaying group value (or "未設定"), count badge, and collapse/expand toggle with aria-expanded in `src/features/database/GroupHeader.tsx`
+- [X] T050 [US4] Add updateGroupCondition and toggleGroupCollapsed IPC invocations to `src/features/database/useTableData.ts`
+- [X] T051 [US4] Extend TableView.tsx with grouping toolbar button, GroupHeader rendering between row groups, and panel toggle (mutually exclusive with sort/filter panels) in `src/features/database/TableView.tsx`
 
 **Checkpoint**: All planned user stories are independently functional. Grouping works with sort and filter (filter→sort→group pipeline).
 

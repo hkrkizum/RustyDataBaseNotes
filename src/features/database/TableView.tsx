@@ -4,12 +4,16 @@ import { toast } from "sonner";
 import type { Page } from "../pages/types";
 import { AddPageModal } from "./AddPageModal";
 import { FilterPanel } from "./FilterPanel";
+import { GroupHeader } from "./GroupHeader";
+import { GroupPanel } from "./GroupPanel";
+import { SortPanel } from "./SortPanel";
 import { TableHeader } from "./TableHeader";
 import { TableRow } from "./TableRow";
 import styles from "./TableView.module.css";
 import type {
   DatabaseDto,
   FilterConditionDto,
+  GroupConditionDto,
   PropertyValueInputDto,
   SortConditionDto,
 } from "./types";
@@ -59,6 +63,8 @@ export function TableView({
     removePageFromDatabase,
     updateSortConditions,
     updateFilterConditions,
+    updateGroupCondition,
+    toggleGroupCollapsed,
     resetView,
   } = useTableData(database.id);
 
@@ -191,6 +197,8 @@ export function TableView({
   );
 
   const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [showSortPanel, setShowSortPanel] = useState(false);
+  const [showGroupPanel, setShowGroupPanel] = useState(false);
 
   const handleFilterApply = useCallback(
     async (conditions: FilterConditionDto[]) => {
@@ -206,10 +214,33 @@ export function TableView({
     [updateSortConditions],
   );
 
+  const handleSortPanelApply = useCallback(
+    async (conditions: SortConditionDto[]) => {
+      await updateSortConditions(conditions);
+    },
+    [updateSortConditions],
+  );
+
+  const handleGroupApply = useCallback(
+    async (condition: GroupConditionDto | null) => {
+      await updateGroupCondition(condition);
+    },
+    [updateGroupCondition],
+  );
+
+  const handleGroupToggle = useCallback(
+    async (groupValue: string | null) => {
+      await toggleGroupCollapsed(groupValue);
+    },
+    [toggleGroupCollapsed],
+  );
+
   const rows = tableData?.rows ?? [];
   const view = tableData?.view ?? null;
+  const groups = tableData?.groups ?? null;
   const sortCount = view?.sortConditions?.length ?? 0;
   const filterCount = view?.filterConditions?.length ?? 0;
+  const hasGroup = view?.groupCondition != null;
 
   return (
     <div className={styles.container}>
@@ -282,14 +313,35 @@ export function TableView({
         <button
           type="button"
           className={styles.existingBtn}
-          onClick={() => setShowFilterPanel((v) => !v)}
+          onClick={() => {
+            setShowSortPanel((v) => !v);
+            setShowFilterPanel(false);
+          }}
+        >
+          ソート{sortCount > 0 ? ` (${sortCount})` : ""}
+        </button>
+        <button
+          type="button"
+          className={styles.existingBtn}
+          onClick={() => {
+            setShowFilterPanel((v) => !v);
+            setShowSortPanel(false);
+          }}
         >
           フィルタ{filterCount > 0 ? ` (${filterCount})` : ""}
         </button>
-        {sortCount > 0 && (
-          <span className={styles.toolbarBadge}>ソート: {sortCount}件</span>
-        )}
-        {(sortCount > 0 || filterCount > 0 || view?.groupCondition) && (
+        <button
+          type="button"
+          className={styles.existingBtn}
+          onClick={() => {
+            setShowGroupPanel((v) => !v);
+            setShowSortPanel(false);
+            setShowFilterPanel(false);
+          }}
+        >
+          グループ{hasGroup ? " ●" : ""}
+        </button>
+        {(sortCount > 0 || filterCount > 0 || hasGroup) && (
           <button
             type="button"
             className={styles.existingBtn}
@@ -299,6 +351,24 @@ export function TableView({
           </button>
         )}
       </div>
+
+      {showSortPanel && (
+        <SortPanel
+          properties={properties}
+          conditions={view?.sortConditions ?? []}
+          onApply={handleSortPanelApply}
+          onClose={() => setShowSortPanel(false)}
+        />
+      )}
+
+      {showGroupPanel && (
+        <GroupPanel
+          properties={properties}
+          currentCondition={view?.groupCondition ?? null}
+          onApply={handleGroupApply}
+          onClose={() => setShowGroupPanel(false)}
+        />
+      )}
 
       {showFilterPanel && (
         <FilterPanel
@@ -353,6 +423,42 @@ export function TableView({
                   </button>
                 )}
               </div>
+            ) : groups ? (
+              (() => {
+                const elements: React.ReactNode[] = [];
+                let rowCursor = 0;
+                for (const group of groups) {
+                  elements.push(
+                    <GroupHeader
+                      key={`group-${group.value ?? "__null__"}`}
+                      group={group}
+                      onToggle={handleGroupToggle}
+                    />,
+                  );
+                  if (!group.isCollapsed) {
+                    for (let j = 0; j < group.count; j++) {
+                      const row = rows[rowCursor];
+                      if (row) {
+                        elements.push(
+                          <TableRow
+                            key={row.page.id}
+                            page={row.page}
+                            properties={properties}
+                            values={row.values}
+                            onPageClick={handlePageClick}
+                            onSaveValue={handleSaveValue}
+                            onClearValue={handleClearValue}
+                            onRemoveFromDatabase={handleRemoveFromDatabase}
+                            onDeletePage={handleDeletePage}
+                          />,
+                        );
+                      }
+                      rowCursor++;
+                    }
+                  }
+                }
+                return elements;
+              })()
             ) : (
               rows.map((row) => (
                 <TableRow

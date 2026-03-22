@@ -284,6 +284,73 @@ pub async fn get_table_data(
             .collect();
     }
 
+    // 9. Apply grouping if condition exists
+    let groups = if let Some(gc) = view.group_condition() {
+        let gc_prop_id_str = gc.property_id.to_string();
+        let gc_prop_type = property_types
+            .get(&gc_prop_id_str)
+            .copied()
+            .unwrap_or(crate::domain::property::entity::PropertyType::Text);
+        let gc_config = properties
+            .iter()
+            .find(|p| p.id().to_string() == gc_prop_id_str)
+            .and_then(|p| p.config());
+
+        // Rebuild row values for grouped rows
+        let grouped_row_values: Vec<HashMap<String, RowPropertyValue>> = rows
+            .iter()
+            .map(|row| {
+                row.values
+                    .iter()
+                    .map(|(prop_id, pv_dto)| {
+                        (
+                            prop_id.clone(),
+                            RowPropertyValue {
+                                text_value: pv_dto.text_value.clone(),
+                                number_value: pv_dto.number_value,
+                                date_value: pv_dto.date_value.as_ref().and_then(|d| d.parse().ok()),
+                                boolean_value: pv_dto.boolean_value,
+                            },
+                        )
+                    })
+                    .collect()
+            })
+            .collect();
+
+        let (group_infos, grouped_indices) = crate::domain::view::group::compute_groups(
+            &grouped_row_values,
+            gc,
+            gc_prop_type,
+            gc_config,
+            view.collapsed_groups(),
+        );
+
+        // Reorder rows by group order, excluding collapsed groups
+        let original = rows;
+        rows = Vec::new();
+        for (gi, indices) in group_infos.iter().zip(grouped_indices.iter()) {
+            if !gi.is_collapsed {
+                for &idx in indices {
+                    rows.push(original[idx].clone());
+                }
+            }
+        }
+
+        Some(
+            group_infos
+                .into_iter()
+                .map(|gi| crate::ipc::dto::GroupInfoDto {
+                    value: gi.value,
+                    display_value: gi.display_value,
+                    count: gi.count,
+                    is_collapsed: gi.is_collapsed,
+                })
+                .collect(),
+        )
+    } else {
+        None
+    };
+
     let property_dtos: Vec<PropertyDto> = properties.into_iter().map(PropertyDto::from).collect();
 
     Ok(TableDataDto {
@@ -291,6 +358,6 @@ pub async fn get_table_data(
         properties: property_dtos,
         rows,
         view: ViewDto::from(&view),
-        groups: None,
+        groups,
     })
 }
