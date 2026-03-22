@@ -46,6 +46,8 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@main
+        with:
+          use-flakehub: false  # FlakeHubを明示的に無効化
 
       - name: Cache Rust toolchain and build artifacts
         uses: actions/cache@v4
