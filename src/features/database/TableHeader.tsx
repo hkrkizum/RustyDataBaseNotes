@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { AddPropertyModal } from "./AddPropertyModal";
 import { PropertyConfigPanel } from "./PropertyConfigPanel";
-import styles from "./TableHeader.module.css";
 import type {
   PropertyConfigDto,
   PropertyDto,
@@ -109,14 +108,14 @@ export function TableHeader({
         <button
           type="button"
           key={prop.id}
-          className={styles.headerCell}
+          className="px-2.5 py-2 text-sm font-semibold text-muted-foreground min-w-[150px] flex-1 border-r border-border overflow-hidden text-ellipsis whitespace-nowrap flex items-center bg-transparent cursor-pointer font-inherit text-left hover:bg-accent"
           onClick={() => handleHeaderClick(prop)}
         >
           {/* biome-ignore lint/a11y/useSemanticElements: nested sort trigger */}
           <span
             role="button"
             tabIndex={0}
-            className={styles.sortArea}
+            className="cursor-pointer"
             onClick={(e) => handleSortClick(e, prop)}
             onKeyDown={(e) => {
               if (e.key === "Enter")
@@ -126,14 +125,14 @@ export function TableHeader({
             {prop.name}
             {getSortIndicator(prop.id)}
           </span>
-          <span className={styles.typeHint}>
+          <span className="font-normal text-muted-foreground/60 text-xs ml-1">
             {TYPE_LABELS[prop.propertyType] ?? prop.propertyType}
           </span>
         </button>
       ))}
       <button
         type="button"
-        className={styles.addColumnBtn}
+        className="px-3 py-2 bg-transparent border-none cursor-pointer text-base text-muted-foreground min-w-[40px] text-center flex items-center justify-center hover:text-ring hover:bg-ring/10"
         onClick={handleOpenModal}
         title="プロパティを追加"
       >

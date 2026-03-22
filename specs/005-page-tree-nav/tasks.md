@@ -66,17 +66,17 @@ tested, and reviewed independently.
 
 ### Tests for User Story 1
 
-- [ ] T017 [P] [US1] Write Vitest test verifying zero `*.module.css` files exist under `src/` and zero CSS Modules `import` statements in `src/**/*.{ts,tsx}` — file: `src/__tests__/design-system.test.ts`
+- [x] T017 [P] [US1] Write Vitest test verifying zero `*.module.css` files exist under `src/` and zero CSS Modules `import` statements in `src/**/*.{ts,tsx}` — file: `src/__tests__/design-system.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Set up ThemeProvider for OS-based dark/light theme in `src/App.tsx`: add theme provider with `defaultTheme="system"`, toggle `dark` class on `document.documentElement` based on `prefers-color-scheme`
-- [ ] T019 [P] [US1] Migrate editor components from CSS Modules to Tailwind in `src/features/editor/`: `BlockEditor.tsx` (BlockEditor.module.css), `EditorToolbar.tsx` (EditorToolbar.module.css), `BlockItem.tsx` (BlockItem.module.css), `UnsavedConfirmModal.tsx` (UnsavedConfirmModal.module.css) — replace `styles.xxx` class references with Tailwind utility classes and shadcn/ui components
-- [ ] T020 [P] [US1] Migrate pages components from CSS Modules to Tailwind in `src/features/pages/`: `PageListView.tsx` (PageListView.module.css), `PageItem.tsx` (PageItem.module.css), `CreatePageForm.tsx` (CreatePageForm.module.css), `DeleteConfirmModal.tsx` (DeleteConfirmModal.module.css)
-- [ ] T021 [P] [US1] Migrate database components from CSS Modules to Tailwind in `src/features/database/`: `DatabaseListView.tsx`, `TableView.tsx`, `TableHeader.tsx`, `TableRow.tsx`, `PropertyCell.tsx`, `GroupHeader.tsx`, `FilterPanel.tsx`, `PropertyConfigPanel.tsx`, `AddPageModal.tsx`, `AddPropertyModal.tsx` (10 corresponding .module.css files)
-- [ ] T022 [US1] Delete all 18 `*.module.css` files under `src/features/` and delete `src/App.css` — verify no remaining CSS Modules imports in any `.tsx` file
-- [ ] T023 [US1] Visual review: verify design consistency (color, spacing, border-radius) across editor, table view, and page list in both ライト/ダーク themes (6 patterns: 3 screens × 2 themes)
-- [ ] T024 [US1] Run `cargo make check-all` to verify no regressions after design system migration
+- [x] T018 [US1] Set up ThemeProvider for OS-based dark/light theme in `src/App.tsx`: add theme provider with `defaultTheme="system"`, toggle `dark` class on `document.documentElement` based on `prefers-color-scheme`
+- [x] T019 [P] [US1] Migrate editor components from CSS Modules to Tailwind in `src/features/editor/`: `BlockEditor.tsx` (BlockEditor.module.css), `EditorToolbar.tsx` (EditorToolbar.module.css), `BlockItem.tsx` (BlockItem.module.css), `UnsavedConfirmModal.tsx` (UnsavedConfirmModal.module.css) — replace `styles.xxx` class references with Tailwind utility classes and shadcn/ui components
+- [x] T020 [P] [US1] Migrate pages components from CSS Modules to Tailwind in `src/features/pages/`: `PageListView.tsx` (PageListView.module.css), `PageItem.tsx` (PageItem.module.css), `CreatePageForm.tsx` (CreatePageForm.module.css), `DeleteConfirmModal.tsx` (DeleteConfirmModal.module.css)
+- [x] T021 [P] [US1] Migrate database components from CSS Modules to Tailwind in `src/features/database/`: `DatabaseListView.tsx`, `TableView.tsx`, `TableHeader.tsx`, `TableRow.tsx`, `PropertyCell.tsx`, `GroupHeader.tsx`, `FilterPanel.tsx`, `PropertyConfigPanel.tsx`, `AddPageModal.tsx`, `AddPropertyModal.tsx` (10 corresponding .module.css files)
+- [x] T022 [US1] Delete all 18 `*.module.css` files under `src/features/` and delete `src/App.css` — verify no remaining CSS Modules imports in any `.tsx` file
+- [x] T023 [US1] Visual review: verify design consistency (color, spacing, border-radius) across editor, table view, and page list in both ライト/ダーク themes (6 patterns: 3 screens × 2 themes)
+- [x] T024 [US1] Run `cargo make check-all` to verify no regressions after design system migration
 
 **Checkpoint**: US1 complete — all screens use Tailwind/shadcn, zero CSS Modules remain, both themes work
 

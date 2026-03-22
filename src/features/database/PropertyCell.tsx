@@ -1,5 +1,4 @@
 import { type ChangeEvent, useCallback, useState } from "react";
-import styles from "./PropertyCell.module.css";
 import type {
   PropertyConfigDto,
   PropertyDto,
@@ -79,7 +78,11 @@ export function PropertyCell({
         />
       );
     default:
-      return <span className={styles.cell}>-</span>;
+      return (
+        <span className="flex items-center min-h-[32px] text-muted-foreground">
+          -
+        </span>
+      );
   }
 }
 
@@ -112,7 +115,7 @@ function TextCell({
 
   return (
     <input
-      className={styles.textInput}
+      className="w-full px-1.5 py-1 border border-transparent rounded-sm text-sm bg-transparent outline-none focus:border-border focus:bg-card hover:bg-muted/50"
       type="text"
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
@@ -154,7 +157,7 @@ function NumberCell({
 
   return (
     <input
-      className={styles.numberInput}
+      className="w-full px-1.5 py-1 border border-transparent rounded-sm text-sm bg-transparent outline-none focus:border-border focus:bg-card hover:bg-muted/50"
       type="number"
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
@@ -212,7 +215,7 @@ function DateCell({
 
   return (
     <input
-      className={styles.dateInput}
+      className="w-full px-1.5 py-1 border border-transparent rounded-sm text-sm bg-transparent outline-none focus:border-border focus:bg-card hover:bg-muted/50"
       type={inputType}
       value={toInputDate(currentValue, isDateTime)}
       onChange={handleChange}
@@ -256,7 +259,7 @@ function SelectCell({
 
   return (
     <select
-      className={styles.selectInput}
+      className="w-full px-1.5 py-1 border border-transparent rounded-sm text-sm bg-transparent outline-none focus:border-border focus:bg-card hover:bg-muted/50"
       value={currentValue ?? ""}
       onChange={handleChange}
     >
@@ -292,7 +295,7 @@ function CheckboxCell({
 
   return (
     <input
-      className={styles.checkboxInput}
+      className="w-4 h-4 cursor-pointer"
       type="checkbox"
       checked={currentValue}
       onChange={handleChange}

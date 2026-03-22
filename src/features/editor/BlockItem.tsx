@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import styles from "./BlockItem.module.css";
 import type { Block } from "./types";
 
 interface BlockItemProps {
@@ -47,20 +46,20 @@ export function BlockItem({
   }
 
   return (
-    <div className={styles.item}>
+    <div className="flex items-start gap-2 px-3 py-2 border border-border rounded mb-2">
       <textarea
         ref={textareaRef}
-        className={styles.textarea}
+        className="flex-1 min-h-12 p-1 border border-input rounded-sm font-[inherit] resize-y leading-relaxed focus:border-primary focus:outline-none"
         value={localContent}
         onChange={(e) => setLocalContent(e.target.value)}
         onBlur={handleBlur}
         maxLength={10000}
         placeholder="テキストを入力..."
       />
-      <div className={styles.actions}>
+      <div className="flex gap-1 shrink-0">
         <button
           type="button"
-          className={styles.actionButton}
+          className="bg-transparent border border-input rounded-sm py-0.5 px-1.5 text-xs cursor-pointer leading-none hover:enabled:border-primary hover:enabled:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
           onClick={() => onMoveUp(block.id)}
           disabled={isFirst}
           title="上に移動"
@@ -69,7 +68,7 @@ export function BlockItem({
         </button>
         <button
           type="button"
-          className={styles.actionButton}
+          className="bg-transparent border border-input rounded-sm py-0.5 px-1.5 text-xs cursor-pointer leading-none hover:enabled:border-primary hover:enabled:text-primary disabled:opacity-30 disabled:cursor-not-allowed"
           onClick={() => onMoveDown(block.id)}
           disabled={isLast}
           title="下に移動"
@@ -78,7 +77,7 @@ export function BlockItem({
         </button>
         <button
           type="button"
-          className={styles.deleteButton}
+          className="bg-transparent border border-input rounded-sm py-0.5 px-1.5 text-sm cursor-pointer text-muted-foreground leading-none hover:border-destructive hover:text-destructive"
           onClick={() => onRemove(block.id)}
           title="削除"
         >

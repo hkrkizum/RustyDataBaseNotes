@@ -1,5 +1,3 @@
-import styles from "./EditorToolbar.module.css";
-
 interface EditorToolbarProps {
   pageTitle: string;
   isDirty: boolean;
@@ -14,15 +12,19 @@ export function EditorToolbar({
   onSave,
 }: EditorToolbarProps) {
   return (
-    <div className={styles.toolbar}>
-      <button type="button" className={styles.backButton} onClick={onBack}>
+    <div className="flex items-center gap-3 px-3 py-2 border-b border-border mb-4">
+      <button type="button" className="py-1.5 px-3 text-sm" onClick={onBack}>
         ← 戻る
       </button>
-      <h2 className={styles.title}>{pageTitle}</h2>
-      <span className={styles.dirtyIndicator}>{isDirty ? "未保存" : ""}</span>
+      <h2 className="flex-1 m-0 text-lg overflow-hidden text-ellipsis whitespace-nowrap">
+        {pageTitle}
+      </h2>
+      <span className="text-destructive text-xs whitespace-nowrap">
+        {isDirty ? "未保存" : ""}
+      </span>
       <button
         type="button"
-        className={styles.saveButton}
+        className="py-1.5 px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={onSave}
         disabled={!isDirty}
       >

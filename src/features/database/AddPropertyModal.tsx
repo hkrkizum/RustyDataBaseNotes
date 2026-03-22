@@ -1,5 +1,4 @@
 import { type FormEvent, useCallback, useState } from "react";
-import styles from "./AddPropertyModal.module.css";
 import type { PropertyConfigDto, PropertyDto, PropertyTypeDto } from "./types";
 
 interface SelectOptionEntry {
@@ -91,7 +90,7 @@ export function AddPropertyModal({ onSubmit, onClose }: AddPropertyModalProps) {
     <>
       {/* biome-ignore lint/a11y/noStaticElementInteractions: overlay backdrop dismiss */}
       <div
-        className={styles.overlay}
+        className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100]"
         role="presentation"
         onClick={onClose}
         onKeyDown={(e) => {
@@ -100,35 +99,48 @@ export function AddPropertyModal({ onSubmit, onClose }: AddPropertyModalProps) {
       >
         {/* biome-ignore lint/a11y/noStaticElementInteractions: stopPropagation on modal container */}
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: stopPropagation on modal container */}
-        <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-          <div className={styles.header}>
-            <h3 className={styles.title}>プロパティを追加</h3>
-            <button type="button" className={styles.closeBtn} onClick={onClose}>
+        <div
+          className="bg-card rounded-lg w-[420px] max-h-[80vh] flex flex-col shadow-lg"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h3 className="m-0 text-lg">プロパティを追加</h3>
+            <button
+              type="button"
+              className="bg-transparent border-none text-xl cursor-pointer text-muted-foreground px-2 py-0.5 hover:text-foreground"
+              onClick={onClose}
+            >
               x
             </button>
           </div>
           <form onSubmit={handleSubmit}>
-            <div className={styles.body}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="prop-name">
+            <div className="px-5 py-4 overflow-y-auto flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label
+                  className="text-sm font-semibold text-muted-foreground"
+                  htmlFor="prop-name"
+                >
                   名前
                 </label>
                 <input
                   id="prop-name"
-                  className={styles.input}
+                  className="px-3 py-2 border border-border rounded text-[0.95rem] outline-none focus:border-ring"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="プロパティ名"
                 />
               </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="prop-type">
+              <div className="flex flex-col gap-1.5">
+                <label
+                  className="text-sm font-semibold text-muted-foreground"
+                  htmlFor="prop-type"
+                >
                   タイプ
                 </label>
                 <select
                   id="prop-type"
-                  className={styles.select}
+                  className="px-3 py-2 border border-border rounded text-[0.95rem] bg-card"
                   value={propertyType}
                   onChange={(e) =>
                     setPropertyType(e.target.value as PropertyTypeDto)
@@ -145,13 +157,16 @@ export function AddPropertyModal({ onSubmit, onClose }: AddPropertyModalProps) {
               </div>
 
               {propertyType === "date" && (
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="date-mode">
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    className="text-sm font-semibold text-muted-foreground"
+                    htmlFor="date-mode"
+                  >
                     日付モード
                   </label>
                   <select
                     id="date-mode"
-                    className={styles.select}
+                    className="px-3 py-2 border border-border rounded text-[0.95rem] bg-card"
                     value={dateMode}
                     onChange={(e) =>
                       setDateMode(e.target.value as "Date" | "DateTime")
@@ -164,13 +179,15 @@ export function AddPropertyModal({ onSubmit, onClose }: AddPropertyModalProps) {
               )}
 
               {propertyType === "select" && (
-                <div className={styles.field}>
-                  <span className={styles.label}>選択肢</span>
-                  <div className={styles.optionsSection}>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    選択肢
+                  </span>
+                  <div className="flex flex-col gap-2">
                     {selectOptions.map((opt) => (
-                      <div key={opt.tempId} className={styles.optionRow}>
+                      <div key={opt.tempId} className="flex items-center gap-2">
                         <input
-                          className={styles.optionInput}
+                          className="flex-1 px-2.5 py-1.5 border border-border rounded text-sm"
                           type="text"
                           value={opt.value}
                           onChange={(e) =>
@@ -180,7 +197,7 @@ export function AddPropertyModal({ onSubmit, onClose }: AddPropertyModalProps) {
                         />
                         <button
                           type="button"
-                          className={styles.removeBtn}
+                          className="bg-transparent border border-border rounded cursor-pointer text-sm text-muted-foreground px-2.5 py-1 hover:text-destructive hover:border-destructive"
                           onClick={() => handleRemoveOption(opt.tempId)}
                         >
                           削除
@@ -189,7 +206,7 @@ export function AddPropertyModal({ onSubmit, onClose }: AddPropertyModalProps) {
                     ))}
                     <button
                       type="button"
-                      className={styles.addOptionBtn}
+                      className="px-3 py-1.5 border border-dashed border-border rounded bg-transparent cursor-pointer text-sm text-muted-foreground self-start hover:border-foreground hover:text-foreground"
                       onClick={handleAddOption}
                     >
                       + 選択肢を追加
@@ -198,17 +215,17 @@ export function AddPropertyModal({ onSubmit, onClose }: AddPropertyModalProps) {
                 </div>
               )}
             </div>
-            <div className={styles.footer}>
+            <div className="px-5 py-3 border-t border-border flex justify-end gap-2">
               <button
                 type="button"
-                className={styles.cancelBtn}
+                className="px-4 py-2 border border-border rounded bg-transparent cursor-pointer text-sm hover:bg-accent"
                 onClick={onClose}
               >
                 キャンセル
               </button>
               <button
                 type="submit"
-                className={styles.submitBtn}
+                className="px-4 py-2 border-none rounded bg-primary text-primary-foreground cursor-pointer text-sm hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed"
                 disabled={!name.trim() || submitting}
               >
                 追加

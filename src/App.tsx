@@ -1,5 +1,4 @@
 import { useState } from "react";
-import "./App.css";
 import { Toaster } from "./components/toast/Toaster";
 import { DatabaseListView } from "./features/database/DatabaseListView";
 import { TableView } from "./features/database/TableView";
@@ -10,6 +9,7 @@ import { CreatePageForm } from "./features/pages/CreatePageForm";
 import { DeleteConfirmModal } from "./features/pages/DeleteConfirmModal";
 import type { Page } from "./features/pages/types";
 import { usePages } from "./features/pages/usePages";
+import { useSystemTheme } from "./hooks/useSystemTheme";
 
 type CurrentView =
   | { type: "list" }
@@ -17,6 +17,7 @@ type CurrentView =
   | { type: "table"; database: DatabaseDto };
 
 function App() {
+  useSystemTheme();
   const { pages, loading, createPage, deletePage } = usePages();
   const {
     databases,
@@ -57,7 +58,7 @@ function App() {
 
   if (currentView.type === "editor") {
     return (
-      <main className="container">
+      <main className="flex min-h-screen flex-col">
         <BlockEditor
           pageId={currentView.pageId}
           pageTitle={currentView.pageTitle}
@@ -70,7 +71,7 @@ function App() {
 
   if (currentView.type === "table") {
     return (
-      <main className="container">
+      <main className="flex min-h-screen flex-col">
         <TableView
           database={currentView.database}
           onNavigateBack={handleNavigateBack}
@@ -83,12 +84,13 @@ function App() {
   }
 
   return (
-    <main className="container">
-      <h1>RustyDataBaseNotes</h1>
+    <main className="flex min-h-screen flex-col items-center pt-[10vh]">
+      <h1 className="text-2xl font-bold text-foreground">RustyDataBaseNotes</h1>
       <CreatePageForm onSubmit={createPage} />
-      <div style={{ marginTop: "0.5rem", marginBottom: "1rem" }}>
+      <div className="mt-2 mb-4">
         <button
           type="button"
+          className="rounded-lg border border-border bg-card px-5 py-2.5 font-medium text-card-foreground shadow-sm transition-colors hover:bg-accent"
           onClick={async () => {
             const title = prompt("データベースのタイトルを入力してください");
             if (title) {

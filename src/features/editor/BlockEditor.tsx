@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from "react";
-import styles from "./BlockEditor.module.css";
 import { BlockItem } from "./BlockItem";
 import { EditorToolbar } from "./EditorToolbar";
 import { UnsavedConfirmModal } from "./UnsavedConfirmModal";
@@ -97,14 +96,16 @@ export function BlockEditor({
   }
 
   if (loading || !editorState) {
-    return <div className={styles.loading}>読み込み中...</div>;
+    return (
+      <div className="text-center p-8 text-muted-foreground">読み込み中...</div>
+    );
   }
 
   const blocks = editorState.blocks;
   const justAdded = blocks.length > prevBlockCount.current;
 
   return (
-    <div className={styles.editor}>
+    <div className="text-left">
       <EditorToolbar
         pageTitle={pageTitle}
         isDirty={editorState.isDirty}
@@ -112,14 +113,14 @@ export function BlockEditor({
         onSave={handleSave}
       />
       {blocks.length === 0 ? (
-        <div className={styles.empty}>
+        <div className="text-center p-8 text-muted-foreground">
           <p>ブロックがありません</p>
-          <p className={styles.hint}>
+          <p className="text-sm mt-2">
             下のボタンからブロックを追加してください
           </p>
         </div>
       ) : (
-        <div className={styles.blockList}>
+        <div className="mb-4">
           {blocks.map((block, index) => (
             <BlockItem
               key={block.id}
@@ -139,7 +140,7 @@ export function BlockEditor({
       )}
       <button
         type="button"
-        className={styles.addButton}
+        className="w-full p-2 text-sm border border-dashed border-border rounded bg-transparent cursor-pointer text-muted-foreground hover:border-primary hover:text-primary"
         onClick={handleAddBlock}
       >
         + ブロック追加

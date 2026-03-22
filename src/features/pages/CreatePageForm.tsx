@@ -1,5 +1,4 @@
 import { useState } from "react";
-import styles from "./CreatePageForm.module.css";
 
 interface CreatePageFormProps {
   onSubmit: (title: string) => Promise<unknown>;
@@ -25,9 +24,9 @@ export function CreatePageForm({ onSubmit }: CreatePageFormProps) {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit}>
+    <form className="flex gap-2 mb-4" onSubmit={handleSubmit}>
       <input
-        className={styles.input}
+        className="flex-1 px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/15 disabled:opacity-60"
         type="text"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -36,7 +35,7 @@ export function CreatePageForm({ onSubmit }: CreatePageFormProps) {
         disabled={submitting}
       />
       <button
-        className={styles.button}
+        className="px-4 py-2 bg-primary text-primary-foreground border-none rounded-md text-sm cursor-pointer hover:bg-primary/85 disabled:opacity-60 disabled:cursor-not-allowed"
         type="submit"
         disabled={!title.trim() || submitting}
       >
